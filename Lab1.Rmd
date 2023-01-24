@@ -1,30 +1,396 @@
 ---
-title: "Lab1"
-author: "Vanessa Avilez"
-date: "2023-01-24"
-output: github_document
+title: 'Lab Assignment #1'
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due January 25, 2023"
+output: pdf_document
 ---
 
-```{r setup, include=FALSE}
+# Instructions
+
+This is an R Markdown file. This file allows you to include both your R code and your commentary in a single file. All lab work - code and answers - should be done in this notebook.
+
+When you click *Knit*, R Studio creates (or overwrites) a pdf file containing your answers as well as the code and output. Note that creating a pdf file requires your $LaTeX$ distribution to work nicely with R Studio, which some students have reported problems with. You can change the output type to a HTML file by changing the `output: pdf_document` line to `output: html_document`, which should allow you to still produce a solution file while you figure out what the issue is and how to fix it.
+
+R code is written in chunks. Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl/Cmd+Alt+I*. A chunk looks like this:
+
+```{r Name Your Chunk, eval=FALSE}
+# write your R comments here
+write your R code here
+```
+
+Note that the text in curly braces must start with the name of the language your code is written in (`r`) followed immediately by a (unique) chunk name, a comma, and options for how R Studio should print the code and output. Some common options are:
+
+- `echo`: by default `echo = FALSE` hides the code in the chunk. You typically want to set this to `echo = TRUE` in the global options so that I can see your code.
+- `eval`: by default `eval = TRUE`: R Studio will run the code chunk and display the output. Many of the chunks in the lab and homework files set `eval = FALSE` because the code does not run properly. Once you get a chunk to run the way you want, you should remove that.
+- `include`: by default `include = TRUE`: R Studio will display the code (if `echo = TRUE`) and results (if `eval = TRUE`) for the chunk. Use `include = FALSE` if you want R Studio to run the code but display neither the code nor the output.
+- `message`: by default `message = TRUE`: R Studio will print in the file any messages from R. Generally you want to keep this, but you can use `message = FALSE` if there is an annoying persistent message that isn't informative.
+- `warning`: by default `warning = TRUE`: if the code runs but produces a warning message, R Studio will print the warning message. Generally you want to keep this, but you can use `warning = FALSE` if you don't want, for example, a bunch of reminders about the version of R the most updated versions of the packages were written in.
+
+To run an individual chunk, click the green triangle (Play button) in the top right of the chunk.
+
+This lab assignment is worth a total of **15 points**.
+
+## Pair Programming
+
+*Pair programming* is a collaborative technique used in all disciplines of software development (including data science). In typical pair programming, the "driver" has total control over the keyboard and mouse, but can only type in response to instructions from the "navigator."
+
+I expect that these roles will be fluid throughout the semester, depending on who is present and how comfortable each group member is with R and the content. However, it is in everyone's best interest to work collaboratively on these problems. If you feel confident with R programming, especially early on, please consider giving up keyboard/mouse duties to someone who is less confident and helping them to learn the syntax.
+
+Please do not have one person in the group control *both* the keyboard and the group's thought process if multiple group members are present. Also, please do not split up and tackle problems individually during the lab section (though this may be necessary if your group does not finish during the allotted time).
+
+# Problem 1: Introductory Material (Code: 1 pt)
+
+You should always include two chunks at the beginning of your R Markdown file. The first chunk is the default chunk that R Studio puts in when you create a new R Markdown file:
+
+```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+This chunk sets the global options for printing code and output. Generally the only global option you need to change is the one already in the default chunk.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+The second chunk that you should include at the beginning of the file is a chunk that imports the packages (a package is a set of additional functions and data) and datasets you will be using. For example, let's import the *Auto* dataset from the ISLR2 package.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+If you do not have the ISLR2 package installed, in R Studio, click on the *Packages* tab (in the bottom right) and install the package.
 
-```{r cars}
-summary(cars)
+```{r load Auto data, warning=FALSE}
+library(ISLR2)  # load the library
+View(Auto) # View the data in a separate window, you can also use the fix() function
 ```
 
-## Including Plots
+Generally, to import a dataset from Canvas, download the file and then click *Import Dataset* in the *Environment* tab (top right). Select the right type of file (usually you want `From Text (readr)` for my csv files), click *Browse* and find the file, then copy the code from the *Code Preview* section.
 
-You can also embed plots, for example:
+Note that the code to import your dataset includes your entire file structure, which means that I and your partners won't be able to replicate your data import. To fix this, type `setwd("Your Working Directory")` in the *Console* tab (bottom left) and run it, make sure that the dataset(s) you are importing are in that directory, and then fix the data import code to include only the filename.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+The first thing you want to do after importing a dataset is do some sanity checks to make sure everything imported okay. 
+
+Typically you should check that the number of observations and number of variables in the dataset are what you expected:
+
+```{r check dimensions}
+dim(Auto)  # number of observations and number of variables
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+It's also good to check the names of your variables. Generally, variable names in R should be one word or multiple words separated by underscores (_) or periods (.).
+
+```{r check variable names}
+names(Auto)  # names of variables in the dataset
+```
+
+Sometimes it may be useful to see a summary of the variables in the dataset, including missing data.
+
+```{r look at summary}
+summary(Auto)  # brief summary of each variable in the dataset
+```
+
+To view information about a dataset or help about a function, you can type `?` followed by the name of the dataset or function, or just search for it in the *Help* tab in R Studio.
+
+# Problem 2: More Basic R Commands
+
+## Part a (Code: 1 pt)
+
+Work through ISLR Lab 2.3.1. Copy each chunk in the lab to its own chunk in this file.
+
+```{r BC 1 }
+x <- c(1,3,2,5)
+x
+```
+
+```{r BC 2}
+x= c(1, 6, 2)
+x
+y= c(1, 4, 3)
+```
+
+```{r BC 3}
+length(x)
+length(y)
+x+y
+```
+
+```{r BC 4}
+ls()
+rm(x,y)
+```
+
+```{r BC 5}
+ls()
+```
+
+```{r BC 6}
+rm(list = ls())
+```
+
+```{r BC 7}
+?matrix
+```
+
+
+```{r BC 8}
+ x <- matrix (data = c(1, 2, 3, 4), nrow = 2, ncol = 2)
+x
+```
+
+```{r BC 9}
+x <- matrix (c(1, 2, 3, 4), 2, 2)
+x
+```
+
+```{r BC 10}
+matrix (c(1, 2, 3, 4), 2, 2, byrow = TRUE)
+```
+
+```{r BC 11}
+sqrt (x)
+x^2
+
+```
+
+```{r BC 12}
+x <- rnorm (50)
+y <- x + rnorm (50, mean = 50, sd = .1)
+cor (x, y)
+```
+
+```{r BC 13}
+set.seed (1303)
+rnorm (50)
+```
+
+```{r BC 14}
+set.seed (3)
+y <- rnorm (100)
+mean (y)
+var (y)
+sqrt ( var (y))
+sd(y)
+```
+
+## Part b (Explanation: 1 pt)
+
+Explain in your own words the purpose of the `set.seed()` function. What happens if you *don't* include this line before running the `rnorm` function?
+
+# Problem 3: Indexing Data
+
+## Part a (Code: 1 pt)
+
+Work through ISLR Lab 2.3.3. Copy each chunk in the lab to its own chunk in this file.
+
+## Part b (Code: 0.5 pts)
+
+When you import data into R, it usually will be stored in a *data frame* object instead of a matrix. There are a variety of ways to extract an individual column from a data frame.
+
+```{r Auto2}
+Auto2 <- Auto[1:10,]  # first 10 rows
+```
+
+```{r Auto2-subset1}
+Auto2[, 1]
+```
+
+```{r Auto2-subset2}
+Auto2[[1]]
+```
+```{r Auto2-subset3}
+Auto2$mpg
+```
+
+Note that each of these methods extracts the column as a vector. There are also ways to extract the column as a one-column data frame:
+
+```{r Auto2-subset4}
+Auto2[, 1, drop = FALSE]
+```
+
+```{r Auto2-subset5}
+Auto2["mpg"]
+```
+
+In the code chunks below, find two ways to subset the `Auto2` data to get a two-column dataset containing `mpg` and `horsepower` (columns 1 and 4). Note that `drop = FALSE` is only necessary when you want a one-column data frame.
+
+```{r hint-use numbers}
+
+```
+
+
+```{r hint-use variable names}
+
+```
+
+# Problem 4: Hypothesis Testing in R
+
+## Part a (Code: 1 pt)
+
+Fix the chunk below to create a vector `x` consisting of 50 random numbers from a normal distribution with mean 100 and standard deviation 15 and a vector `y` consisting of 50 random numbers from a normal distribution with mean 90 and standard deviation 15. (Refer back to the end of Problem 2 if you need help.)
+
+```{r simulation-1, eval = FALSE}
+set.seed(pick a number)
+x <- rnorm(...) # replace the ... with appropriate arguments and values
+y <- rnorm(...)
+```
+
+Now, run the chunk below to perform a two-sample t-test to determine whether the population means of `x` and `y` are different, and store the output in a variable called `t_test_sim`:
+
+```{r simulation-2, eval = FALSE}
+t_test_sim <- t.test(x,y, alternative = "t") # "t" for two-sided
+```
+
+After you run this chunk, the variable `t_test_sim` should appear in your Environment tab as a "List of 10." In R, the output of a hypothesis test is an *htest* object containing information about the methods and results of the inference. Let's see what information we can get out of the `t_test_sim` object:
+
+```{r simulation-3, eval = FALSE}
+names(t_test_sim)
+```
+
+We can extract the p-value for our test using the `$` operator:
+
+```{r simulation-4, eval = FALSE}
+t_test_sim$p.value
+```
+
+## Part b (Code: 1 pt)
+
+Sometimes our data is in this "wide" format (where each column represents the values from a group and we can use the individual vectors as the arguments), but more often our data is in "long" format (where each column represents a variable). Let's see what this data would look like in long format:
+
+```{r long, eval = FALSE}
+group_values <- rep(c("x", "y"), each = 50) # 50 x followed by 50 y
+numerical_values <- c(x, y)
+sim_df_long <- data.frame(
+  group = group_values,
+  value = numerical_values
+)
+```
+
+Write code in the chunk below that finds the number of rows and columns in the `sim_df_long` data frame.
+
+```{r size of sim_df}
+
+```
+
+Write code in the chunk below that finds the names of the variables in the data frame.
+
+```{r variable names of sim_df}
+
+```
+
+To perform a two-sample t-test when the data is in "long" format, we use a *formula* argument of the form `response ~ explanatory`:
+
+```{r t-test2, eval = FALSE}
+t_test_sim_long <- t.test(value ~ group, data = sim_df_long, alternative = "t")
+```
+
+## Part c (Explanation: 0.5 pts)
+
+Write a chunk to extract the p-value from `t_test_sim_long`. Do you get the same p-value that you got originally?
+
+## Part d (Explanation: 1.5 pts)
+
+What information is contained the `statistic`,  `parameter`, and `conf.int` objects within `t_test_sim` and `t_test_sim_long`? (You can write and run code chunks to verify your answer.)
+
+# Problem 5: Graphing with Base R
+
+For parts (a) through (c):
+
+* Create the requested plot using the *Auto* dataset. Make sure each plot has appropriate labels for the x-and y-axis. You can find all of the relevant code in ISLR Lab 2.3.5.
+* Write a short paragraph describing the graph to someone who does not know anything about the *Auto* dataset. When I describe a graph, I use the TAME strategy to orient the reader/listener:
+
+  **T**opic: what data (observational units and variables) you are graphing
+  
+  **A**xes: what variables are being mapped to the x-axis and y-axis (and other properties, e.g., color)
+  
+  **M**ain point: the most important takeaway (for one variable, this usually deals with the mode of the distribution; for two variables, this usually deals with the association)
+  
+  **E**xtra information (optional): anything else that you find interesting to point out
+
+
+## Part a (Code: 0.5 pts; Explanation: 1 pt)
+
+Create and describe a scatterplot of `mpg` (response) against `cylinders` (numerical predictor). Do not attach the dataset; use the `$` sign to select the variables.
+
+## Part b (Code: 0.5 pts; Explanation: 1 pt)
+
+Create and describe a boxplot of `mpg` (response) by `cylinders` (categorical predictor). The boxes should be horizontal and red.
+
+## Part c (Code: 0.5 pts; Explanation: 1 pt)
+
+Create and describe a histogram of `mpg`. The bars should be red and there should be roughly 15 bars.
+
+## Part d (Code: 0.5 pts)
+
+Using the `pairs` function, create a scatterplot matrix showing `mpg`, `displacement`, `horsepower`, `weight`, and `acceleration`.
+
+
+# Problem 6: Graphing with ggplot2
+
+The plotting commands in the textbook are designed to work with base R. However, most people who use R find the base R graphics system to be cumbersome and use use either the *ggplot2* package or the *lattice* package. We will use the *ggplot2* package. This problem just requires you to run the code chunks and understand the commands.
+
+Install the package if you do not have it installed, then load the package.
+
+```{r load ggplot2}
+library(ggplot2)
+```
+
+(This is probably a good chunk to set options `message = FALSE, warning = FALSE` for.)
+
+## Part a (Code: 0.5 pts)
+
+Now let's start by creating the basic scatterplot.
+
+```{r scatterplot}
+plot_setup <- ggplot(data = Auto, mapping = aes(x = cylinders, y = mpg))  # setup the plot
+scatterplot <- plot_setup + geom_point()  # add a scatterplot to the setup
+print(scatterplot)  # show what's been created
+```
+
+Yes, it took three lines to do what we did in one line in Problem 1. So why do we use ggplot2? Customization is much easier and intuitive in ggplot2. For example, to create the red points:
+
+```{r red scatterplot}
+scatterplot_red <- plot_setup + geom_point(color = "red")
+print(scatterplot_red)
+```
+
+We can also add a title and axis labels using the `labs` function:
+
+```{r labeled scatterplot}
+scatterplot_labeled <- plot_setup + geom_point(color = "red") +
+  labs(title = "Gas Mileage by Number of Cylinders for Old Cars",
+       x = "Number of Cylinders",
+       y = "Miles per Gallon")
+print(scatterplot_labeled)
+```
+
+## Part b (Code: 0.5 pts)
+
+What about making a set of boxplots?
+
+```{r boxplots}
+Auto.factor <- Auto
+Auto.factor$cylinders <- as.factor(Auto.factor$cylinders) # convert to factor variable
+boxplot_setup <- ggplot(data = Auto.factor, mapping = aes(x = cylinders, y = mpg))
+boxplot_red_horizontal <- boxplot_setup + geom_boxplot(color = "red") + coord_flip() # flips what goes on the x vs y axis - gets us horizontal boxplots
+print(boxplot_red_horizontal)
+```
+
+What about adding labels?
+
+```{r boxplots labeled}
+boxplot_labeled <- boxplot_red_horizontal + 
+  labs(title = "Gas Mileage by Number of Cylinders", 
+       x = "Number of Cylinders", 
+       y = "Miles Per Gallon") # yes, it's weird, you still need to pretend you didn't flip x and y
+print(boxplot_labeled)
+```
+
+Sometimes, especially if you are trying to plot multiple datasets on the same graph, it is easier to specify the data and mappings in the `geom_` function itself:
+
+```{r scatterplot-2}
+plot_bare <- ggplot()  # no setup
+boxplot2 <- plot_bare + geom_boxplot(data = Auto.factor, mapping = aes(x = cylinders, y = mpg))  # add a scatterplot to the setup
+print(boxplot2)  # show what's been created
+```
+
+## Part c (Code: 0.5 pts)
+
+The *ggplot2* package cannot create a scatterplot matrix by itself, but the *GGally* package can. Install it and load it, then run the chunk below.
+
+```{r scatterplot matrix}
+library(GGally)
+ggpairs(Auto.factor, columns = c("mpg", "displacement", "horsepower", "weight", "acceleration"))
+```
+
