@@ -1,0 +1,75 @@
+---
+title: 'Homework Assignment #1'
+author: "Math 437 - Modern Data Analysis"
+date: "Due February 10, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+You should submit either two or three files:
+
+1. You should write your solutions to the Simulation and Applied Problems in this R Markdown file and submit the (.Rmd) file.
+2. You should knit the final solution file to pdf and submit the pdf. If you are having trouble getting code chunks to run, add `eval = FALSE` to the chunks that do not run. If you are having trouble getting R Studio to play nice with your LaTeX distribution, I will begrudgingly accept an HTML file instead. 
+3. Solutions to the Key Terms and Conceptual Problems can be submitted in a separate Word or pdf file or included in the same files as your solutions to the Simulation and Applied Problems.
+
+This homework assignment is worth a total of **40 points**.
+
+# Key Terms (5 pts)
+
+Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
+
+1. What is the difference between an *input variable* and an *output variable* in a model? Provide synonyms for each term.
+2. What is the difference between *reducible error* and *irreducible error*? Give an example (other than those given in the book) of a situation in which the irreducible error is greater than zero.
+3. Generally, what types of questions are answered using *inference* and what types are answered using *prediction*? Is it possible to use the same model for both inference and prediction?
+4. Generally, what types of prediction questions are answered using *regression* methods and what types are answered using *classification* methods?
+5. What are the major advantages of using a *nonparametric* method over a *parametric* method? What are the disadvantages?
+6. In prediction, we typically aim to minimize a *loss function* that more-or-less represents the total error in our predictions. Give one example each for regression and classification problems of a measure of model (in)accuracy.
+7. Why do we only fit the model on a *training set*? What do we do with the rest of the data?
+8. Generally, as a model becomes more complex, what happens to the *bias* of the model and why? What happens to the *variance* of the model and why?
+9. What is meant by the term *overfitting*? Explain this in terms of the bias-variance trade-off.
+10. Briefly explain how a *Bayes classifier* works.
+
+# Conceptual Problems
+
+## Conceptual Problem 1 (4 pts)
+
+Write me a brief (2-3 paragraphs) summary of what you learned in the P-Values and Power in-class activity about how the distribution of p-values (over very many tests) is affected by the validity/violation of test assumptions and the power of the test. Did anything surprise you or clarify a concept for you? Support your writing with a few graphs you produced in class (it is easiest to copy and re-run the relevant code chunks).
+
+## Conceptual Problem 2 (3 pts) 
+
+Textbook Exercise 2.4.4
+
+## Conceptual Problem 3 (3 pts) 
+
+Textbook Exercise 13.7.2
+
+# Simulation Problems
+
+## Simulation Problem 1 (Code: 4 pts; Explanation: 6 pts)
+
+From the Parametric vs. Nonparametric Tests: Two-Sample Tests activity, copy to this homework your simulation code/results from the *Assumptions Violated, Ha True* section of each test as well as the results tables for all simulations (in the Class Results section). 
+
+From the Parametrics vs. Nonparametric Tests: Multi-Sample Tests activity, copy to this homework your simulation code/results from the *Both Assumptions Violated* section of each test as well as the results tables for all simulations (in the Class Results section).
+
+Write a couple of paragraphs explaining the difference between parametric and nonparametric methods and explain why classic nonparametric methods (Mann-Whitney and Kruskal-Wallis) are a better choice than the corresponding parametric methods (two-sample t-test and one-way ANOVA) when the assumptions of the parametric method are clearly violated.
+
+# Applied Problems
+
+## Applied Problem 1 (Code: 6 pts; Explanation: 3 pts)
+
+Textbook Exercise 2.4.8 with the following changes:
+
+* Use the `College` dataset already in the `ISLR2` package instead of doing parts (a) and (b).
+* Replace the four lines of code in part (c.iv) with a single line that accomplishes the same thing, using the `mutate` and either `if_else` or `case_when` functions from the `dplyr` package.
+* As part of your brief summary in part (c.vi), identify at least one data point that cannot possibly have been recorded correctly, and explain why.
+
+## Applied Problem 2 (Code: 1 pt; Explanation: 2 pts)
+
+Molitor (1989) hypothesized that children who watched violent film and television were more tolerant of violent "real-life" behavior. A sample of 42 children were randomly assigned to watch footage from either the 1984 Summer Olympics (non-violent) or the movie \emph{The Karate Kid} (violent). They were then told to watch (by video monitor) two younger children in the next room and get the research assistant if they "got into trouble" (the monitor actually showed a pre-recorded video of the children getting progressively more violent).
+
+The file \emph{violence.csv} contains the time (in seconds) that each child stayed in the room. Longer stays are assumed to indicate more tolerance of violent behavior. Produce an appropriate graph showing the sample data and, based on your graph, explain why a two-sample t-test might not be the best idea.
+
+## Applied Problem 3 (Code: 1 pt; Explanation: 2 pts)
+
+Use the permutation test function you wrote in Lab 2 to determine whether the research hypothesis in the previous question was supported. Be sure to follow all steps of hypothesis testing, up to and including writing a conclusion that answers the research question in context.
