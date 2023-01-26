@@ -359,13 +359,10 @@ Create and describe a scatterplot of `mpg` (response) against `cylinders` (numer
 plot(Auto$cylinders, Auto$mpg)
 ```
 
-**T**opic: what data (observational units and variables) you are graphing 
+
 We are graphing the  Auto data to observe between cylinders which is a nuerical value and mpg which is also a numerical value.
-  
-  **A**xes: what variables are being mapped to the x-axis and y-axis (and other properties, e.g., color)
-  The x-axis is the predictor variable (cylinders) and the y-axis is the response variable (mpg).
-  
-  **M**ain point: the most important takeaway (for one variable, this usually deals with the mode of the distribution; for two variables, this usually deals with the association) Higher even amount of cylinders is associated with lower mpg. An odd amount of cylinders is associated with lower mpg than an even amount of cylinders.
+The x-axis is the predictor variable (cylinders) and the y-axis is the response variable (mpg).
+Higher even amount of cylinders is associated with lower mpg. An odd amount of cylinders is associated with lower mpg than an even amount of cylinders.
   
   
 ## Part b (Code: 0.5 pts; Explanation: 1 pt)
@@ -378,12 +375,9 @@ plot(cylind,Auto$mpg, col = "red", horizontal=T)
 ```
 
 
-  **T**opic: what data (observational units and variables) you are graphing
-  
-  **A**xes: what variables are being mapped to the x-axis and y-axis (and other properties, e.g., color)
-  
-  **M**ain point: the most important takeaway (for one variable, this usually deals with the mode of the distribution; for two variables, this usually deals with the association)
-  
+We are graphing the amount of cylinders versus mpg shown as a boxplot. 
+This is a box plot shows the minimum, first quartile, median, third quartile,and maximum. The red box shows the first quantile on the very left of each red box, a bold line for the mean, and the very right is the third quantile. 
+If a car has four cylinders, it gets the most range of mpg out of all the cylinders. This means that the amount of cylinders in a car changes the range of mpg that the car gets. 
   **E**xtra information (optional): anything else that you find interesting to point out
 
 
@@ -397,11 +391,11 @@ hist(Auto$mpg, col = "red", breaks = 15)
 
 
   **T**opic: what data (observational units and variables) you are graphing
-  
+  We are graphing the range of mpg a car gets.
   **A**xes: what variables are being mapped to the x-axis and y-axis (and other properties, e.g., color)
-  
+  The x-axis is the frequency of mpg of all cars, while the y-axis is the amount of mpg.
   **M**ain point: the most important takeaway (for one variable, this usually deals with the mode of the distribution; for two variables, this usually deals with the association)
-  
+  The cars are likely to have mpg from 12 to 38.
   **E**xtra information (optional): anything else that you find interesting to point out
 
 
@@ -420,7 +414,7 @@ The plotting commands in the textbook are designed to work with base R. However,
 
 Install the package if you do not have it installed, then load the package.
 
-```{r load ggplot2}
+```{r load ggplot2, message = FALSE, warning = FALSE}
 library(ggplot2)
 ```
 
