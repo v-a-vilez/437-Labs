@@ -31,6 +31,7 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 10. Briefly explain how a *Bayes classifier* works.
 
 # Conceptual Problems
+## Phuong
 
 ## Conceptual Problem 1 (4 pts)
 
@@ -45,6 +46,7 @@ Textbook Exercise 2.4.4
 Textbook Exercise 13.7.2
 
 # Simulation Problems
+# Vanessa 
 
 ## Simulation Problem 1 (Code: 4 pts; Explanation: 6 pts)
 
@@ -55,6 +57,7 @@ From the Parametrics vs. Nonparametric Tests: Multi-Sample Tests activity, copy 
 Write a couple of paragraphs explaining the difference between parametric and nonparametric methods and explain why classic nonparametric methods (Mann-Whitney and Kruskal-Wallis) are a better choice than the corresponding parametric methods (two-sample t-test and one-way ANOVA) when the assumptions of the parametric method are clearly violated.
 
 # Applied Problems
+#Michael
 
 ## Applied Problem 1 (Code: 6 pts; Explanation: 3 pts)
 
