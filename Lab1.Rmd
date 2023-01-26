@@ -2,7 +2,7 @@
 title: 'Lab Assignment #1'
 author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due January 25, 2023"
-output: pdf_document
+output: github_document
 ---
 
 # Instructions
@@ -123,7 +123,6 @@ rm(list = ls())
 ?matrix
 ```
 
-
 ```{r BC 8}
  x <- matrix (data = c(1, 2, 3, 4), nrow = 2, ncol = 2)
 x
@@ -168,11 +167,42 @@ sd(y)
 
 Explain in your own words the purpose of the `set.seed()` function. What happens if you *don't* include this line before running the `rnorm` function?
 
+set.seed() allows the user to replicate data that was randomly generated. This is beneficial when re-running code or going back and fixing issues. If you don't use this, then when re-running the rnorm function, you will generate a different set of numbers or data, leading to different computed data.
+
 # Problem 3: Indexing Data
 
 ## Part a (Code: 1 pt)
 
 Work through ISLR Lab 2.3.3. Copy each chunk in the lab to its own chunk in this file.
+
+```{r ID 1}
+A <- matrix(1:16, 4,4)
+A
+```
+
+```{r ID 2}
+A[2,3]
+```
+
+```{r ID 3}
+A[c(1,3),c(2,4)]
+A[1:3,2:4]
+A[1:2, ]
+A[,1:2]
+```
+
+```{r ID 4}
+A[1, ]
+```
+
+```{r ID 5}
+A[-c(1,3), ]
+A[-c(1,3), -c(1,3,4)]
+```
+
+```{r ID 6}
+dim(A)
+```
 
 ## Part b (Code: 0.5 pts)
 
@@ -206,12 +236,14 @@ Auto2["mpg"]
 In the code chunks below, find two ways to subset the `Auto2` data to get a two-column dataset containing `mpg` and `horsepower` (columns 1 and 4). Note that `drop = FALSE` is only necessary when you want a one-column data frame.
 
 ```{r hint-use numbers}
-
+Auto2 <- Auto[1:10, c(1,4)]
+Auto2
 ```
 
 
 ```{r hint-use variable names}
-
+Auto2 <- Auto[1:10, c("mpg","horsepower")]
+Auto2
 ```
 
 # Problem 4: Hypothesis Testing in R
@@ -221,9 +253,9 @@ In the code chunks below, find two ways to subset the `Auto2` data to get a two-
 Fix the chunk below to create a vector `x` consisting of 50 random numbers from a normal distribution with mean 100 and standard deviation 15 and a vector `y` consisting of 50 random numbers from a normal distribution with mean 90 and standard deviation 15. (Refer back to the end of Problem 2 if you need help.)
 
 ```{r simulation-1, eval = FALSE}
-set.seed(pick a number)
-x <- rnorm(...) # replace the ... with appropriate arguments and values
-y <- rnorm(...)
+set.seed(10)
+x <- rnorm(n = 50, mean= 100, sd = 15) # replace the ... with appropriate arguments and values
+y <- rnorm(n = 50, mean = 90, sd=15)
 ```
 
 Now, run the chunk below to perform a two-sample t-test to determine whether the population means of `x` and `y` are different, and store the output in a variable called `t_test_sim`:
@@ -260,13 +292,13 @@ sim_df_long <- data.frame(
 Write code in the chunk below that finds the number of rows and columns in the `sim_df_long` data frame.
 
 ```{r size of sim_df}
-
+dim(sim_df_long)
 ```
 
 Write code in the chunk below that finds the names of the variables in the data frame.
 
 ```{r variable names of sim_df}
-
+names(sim_df_long)
 ```
 
 To perform a two-sample t-test when the data is in "long" format, we use a *formula* argument of the form `response ~ explanatory`:
@@ -279,9 +311,28 @@ t_test_sim_long <- t.test(value ~ group, data = sim_df_long, alternative = "t")
 
 Write a chunk to extract the p-value from `t_test_sim_long`. Do you get the same p-value that you got originally?
 
+```{r extract p from t_test}
+t_test_sim_long$p.value
+```
+
+Yes, we got the same p-value number as before. 
+
+
 ## Part d (Explanation: 1.5 pts)
 
-What information is contained the `statistic`,  `parameter`, and `conf.int` objects within `t_test_sim` and `t_test_sim_long`? (You can write and run code chunks to verify your answer.)
+What information is contained in the `statistic`,  `parameter`, and `conf.int` objects within `t_test_sim` and `t_test_sim_long`? (You can write and run code chunks to verify your answer.)
+
+```{r extract stat, parameter and conf from variables}
+t_test_sim$statistic
+t_test_sim$parameter
+t_test_sim$conf.int
+
+t_test_sim_long$statistic
+t_test_sim_long$parameter
+t_test_sim_long$conf.int
+```
+Statistic gives us the test statistic used in computation. Parameter gives us the degrees of freedom. Conf.int gives us a confidence interval and the confidence level.
+
 
 # Problem 5: Graphing with Base R
 
@@ -303,17 +354,64 @@ For parts (a) through (c):
 
 Create and describe a scatterplot of `mpg` (response) against `cylinders` (numerical predictor). Do not attach the dataset; use the `$` sign to select the variables.
 
+
+```{r plotting mpg v cylinder}
+plot(Auto$cylinders, Auto$mpg)
+```
+
+**T**opic: what data (observational units and variables) you are graphing 
+We are graphing the  Auto data to observe between cylinders which is a nuerical value and mpg which is also a numerical value.
+  
+  **A**xes: what variables are being mapped to the x-axis and y-axis (and other properties, e.g., color)
+  The x-axis is the predictor variable (cylinders) and the y-axis is the response variable (mpg).
+  
+  **M**ain point: the most important takeaway (for one variable, this usually deals with the mode of the distribution; for two variables, this usually deals with the association) Higher even amount of cylinders is associated with lower mpg. An odd amount of cylinders is associated with lower mpg than an even amount of cylinders.
+  
+  
 ## Part b (Code: 0.5 pts; Explanation: 1 pt)
 
 Create and describe a boxplot of `mpg` (response) by `cylinders` (categorical predictor). The boxes should be horizontal and red.
+
+```{r boxplot}
+cylind <- as.factor(Auto$cylinders)
+plot(cylind,Auto$mpg, col = "red", horizontal=T)
+```
+
+
+  **T**opic: what data (observational units and variables) you are graphing
+  
+  **A**xes: what variables are being mapped to the x-axis and y-axis (and other properties, e.g., color)
+  
+  **M**ain point: the most important takeaway (for one variable, this usually deals with the mode of the distribution; for two variables, this usually deals with the association)
+  
+  **E**xtra information (optional): anything else that you find interesting to point out
+
 
 ## Part c (Code: 0.5 pts; Explanation: 1 pt)
 
 Create and describe a histogram of `mpg`. The bars should be red and there should be roughly 15 bars.
 
+```{r histogram}
+hist(Auto$mpg, col = "red", breaks = 15)
+```
+
+
+  **T**opic: what data (observational units and variables) you are graphing
+  
+  **A**xes: what variables are being mapped to the x-axis and y-axis (and other properties, e.g., color)
+  
+  **M**ain point: the most important takeaway (for one variable, this usually deals with the mode of the distribution; for two variables, this usually deals with the association)
+  
+  **E**xtra information (optional): anything else that you find interesting to point out
+
+
 ## Part d (Code: 0.5 pts)
 
 Using the `pairs` function, create a scatterplot matrix showing `mpg`, `displacement`, `horsepower`, `weight`, and `acceleration`.
+
+```{r pairs funcion}
+pairs(~ mpg+displacement+horsepower+weight+acceleration,data = Auto)
+```
 
 
 # Problem 6: Graphing with ggplot2
