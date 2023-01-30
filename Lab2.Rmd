@@ -1,0 +1,379 @@
+---
+title: 'Lab Assignment #2'
+author: "Math 437 - Modern Data Analysis"
+date: "Due February 3, 2023"
+output: html_document
+---
+
+# Instructions
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The purpose of this lab is to introduce you to writing *functions* in R. A function is a reproducible bit of code that produces output based on user-specified inputs rather than the "hard-coded" values in your script.
+
+```{r libraries, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+```
+
+This lab assignment is worth a total of **20 points**.
+
+# Problem 1: Introduction to Functions
+
+This problem is adapted from ISLR Chapter 4, Exercise 15.
+
+## Part a (0.5 pts)
+
+In the chunk below, write a single line of R code that prints the result of raising the number 2 to the 3rd power. 
+
+```{r two to the third}
+
+```
+
+## Part b (Code: 0.5 pts, Testing: 0.5 pts)
+
+Complete the R chunk below to create and test a function that prints the result of raising *any* number to the 3rd power. Make sure to delete the "eval = FALSE" in the chunk options after you get a chunk that works the way you expect!
+
+```{r cube function, eval = FALSE}
+## Cube function
+Cube <- function(x){
+  # Copy your code from part a here, but replace 2 with x
+}
+```
+
+It is always a good idea to test any function you write to make sure that it works as you expected.
+
+What do you expect to get when you call the `Cube` function on a single number? Confirm that your function works as expected. Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.
+
+```{r test cube-1, eval = FALSE}
+Cube(2)
+```
+
+What happens when you input a vector instead of a single number? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+```{r test cube-2, eval = FALSE}
+Cube(c(2, 5, 10))
+```
+
+What happens when you input a character string instead of a number? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+```{r test cube-3, eval = FALSE}
+Cube("Math 437")
+```
+
+## Part c (Code: 0.5 pts, Testing: 0.5 pts)
+
+Now, we will write another function that prints the result of raising *any* number to *any* exponent. This requires two arguments to the function: the base and the exponent.
+
+It is good form to document all arguments to your function, either before the function or in the first few lines.
+
+```{r power function, eval = FALSE}
+Power <- function(x, a){
+  # x: the base of the power
+  # a: the exponent
+  
+  # Copy your code from part b here, but replace 3 with a
+}
+```
+
+What do you expect to get when you run this line of code? Did you get what you expected? If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+```{r test power-1, eval = FALSE}
+Power(2, 3)
+```
+
+What happens when you use a vector instead of a number for the first argument? What about for the second argument? What about for both arguments? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+```{r test power-2, eval = FALSE}
+Power(c(2, 5, 10), 3)
+Power(2, c(2, 3, 4))
+Power(c(2, 5, 10), c(1, 2, 3))
+```
+
+What happens if you only give one argument? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+```{r test power-3, eval = FALSE}
+Power(2) # What does this do?
+```
+
+## Part d (Code: 0.5 pts, Testing: 0.5 pts)
+
+Usually we want to *return* the result of the function rather than *print* it, so that we can store the output in an R object.
+
+```{r power return, eval = FALSE}
+Power_return <- function(x, a){
+  # x: the base of the power
+  # a: the exponent
+  
+  # Copy your code from part c here, but replace "print" with "return"
+}
+```
+
+Let's confirm that we still get $2^3 = 8$ out when we run this line of code. Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.
+
+```{r test power-return 1, eval = FALSE}
+Power_return(2, 3) # Does this still output 2^3 = 8?
+```
+
+Explain the difference between these two lines of code. (Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.) Where did the 8 go when you ran the second line?
+
+```{r test power-return 2, eval = FALSE}
+result1 <- Power(2, 3)
+result2 <- Power_return(2, 3)
+```
+
+## Part e (Code: 0.5 pts; Testing: 0.5 pts)
+
+What if we *usually* want to cube a number, but we also want to give the user the flexibility to include a different exponent if necessary? We can use a *default* argument:
+
+```{r power default, eval = FALSE}
+Power_default <- function(x, a = 3){
+  # x: the base of the power
+  # a (= 3): the exponent
+  
+  # Copy your code from part d here
+  
+}
+```
+
+Let's confirm that we still get $2^3 = 8$ out when we run this line of code.
+
+```{r power-default test-1, eval = FALSE}
+Power_default(2, 3)
+```
+
+What happens if you only give one argument? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+```{r power-default test-2, eval = FALSE}
+Power_default(2)
+```
+
+By convention, arguments without a default value go at the beginning of the list of arguments and arguments with a default value go at the end.
+
+## Part f (Code and Testing: 0.5 pts)
+
+We rarely write one-line functions. Usually we want to store the intermediate and final results in objects within the function, then use `return` to output the final result.
+
+```{r power final, eval = FALSE}
+Power_result <- function(x, a = 3){
+  # x: the base of the power
+  # a (= 3): the exponent
+  
+  result <- # finish this line
+  return(result)
+}
+```
+
+Let's just do our usual test to make sure we keep getting $2^3 = 8$ out. Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.
+
+```{r power final test, eval = FALSE}
+Power_result(2, 3)
+```
+
+# Problem 2: From Concept to Code
+
+When we write more complex functions, it is usually easiest to first create a high-level overview of what you want the function to do, then write *pseudocode* explaining step-by-step how you will accomplish it, and then finally turn your algorithm into code in the appropriate programming language.
+
+In this problem, we are going to create a function to perform a two-sample permutation test as an alternative to a two-sample t-test.
+
+## Part a (Explanation: 1 pt)
+
+In the high-level overview, we need to think about what we want the function to *output* and what *inputs* we have to give it. The code chunk below takes a data frame and outputs various properties of the indicated two-sample t-test.
+
+```{r t-test, eval = FALSE}
+t.test(formula = , data = , alternative = , var.equal = TRUE)
+```
+
+Explain what each of the four arguments (`formula`, `data`, `alternative`, `var.equal`) contributes towards telling R what to do in the pre-built `t.test` function. 
+
+Which arguments (if any) will we need to include when creating our custom permutation test function? What additional arguments (if any) will need to be included because we are using resampling-based methods instead of theory-based methods?
+
+## Part b (Explanation: 1 pt)
+
+Although R returns an `htest` object when the `t.test` function is called, the `htest` object is basically just a `list` with some extra functionality attached. When we run our permutation test function, what should be included in our list of things to output?
+
+## Part c (Explanation: 3 pts)
+
+Now let's write some *pseudocode*. Pseudocode is basically a step-by-step algorithmic description explaining how we're going to accomplish turning our input arguments into the output arguments. We don't actually write any code; the idea is to first informally define our plan before formally implementing it in the chosen programming language. I've started the algorithm below. Based on your understanding of permutation tests from lecture, finish Steps 4 and 5.
+
+Step 1: Run the t-test on the original dataset and obtain the observed t-statistic value
+
+Step 2: Create a vector to store the simulated t-statistics in
+
+Step 3: Set a seed for reproducibility of the resampling
+
+Step 4: For i in 1 to number of permutation resamples:
+
+  Step 4a:
+  
+  Step 4b:
+  
+Step 5:
+
+Step 6: Create a list containing all the components of the output and then output it
+
+This is actually more detail than is necessary; in real life you'd probably only include steps 1, 4, and 5 in your pseudocode.
+
+## Part d (Code: 3 pts)
+
+Now we take our pseudocode and write a script. I've taken care of most of the tricky code, but you need to finish the script. Only Step 1 is fully complete. Once you've completed the other steps and your script runs, remember to delete `eval = FALSE`.
+
+```{r pseudocode to script, eval = FALSE}
+# Step 0: Initialize the arguments to your function
+set.seed(9034)
+data <- data.frame(group = rep(c("Group 1", "Group 2"), 50),
+                   y = rnorm(100)) # simulated data
+formula <- y ~ group
+alternative <- "t"
+# Initialize and assign values to any other arguments you identified in Part a
+
+# Step 1: Run the t-test on the original dataset and obtain the observed t-statistic value
+
+# Creating this permutation_df will allow us to ignore other variables in the data frame.
+# This will make Step 4 much easier - see comments in Step 4a.
+  permutation_df <- model.frame(formula = formula, data = data)
+
+# We only care about the t-statistic, but we need to store it in a variable
+  t_obs <- t.test(formula = formula, data = permutation_df, 
+                  alternative = , var.equal = TRUE)$stat
+
+# Step 2: Create a vector to store the simulated t-statistics in
+  t_perm <- 
+  
+# Step 3: Set a seed for reproducibility of the resampling
+  
+# Step 4: For i in 1 to number of permutation resamples:
+for (i in ){ # Complete the syntax
+  
+  # Step 4a
+  permutation_df[[1]] <-
+  # Use the course notes as a template for doing this step
+  # Note: Once we get to Part e and put this script inside a function environment,
+  # using the actual name of the response variable requires much more advanced R.
+  # Remember from Lab 1 that this is an alternative way to do the column indexing
+  # and we set up permutation_df so that the first column is the response variable.
+    
+  # Step 4b
+  t_perm[i] <- 
+}
+
+# Step 5    
+  # Use the course notes as a template for getting p_left and p_right
+  p_left <- 
+  p_right <- 
+  
+  # Use the switch function to compute the correct p-value
+  p_value <- dplyr::case_when(alternative == "g" ~ p_right,
+                              alternative == "l" ~ p_left,
+                              alternative == "t" ~ 2*min(p_left, p_right),
+                              TRUE ~ NaN # output NaN if alternative is anything else
+  )
+  
+# Step 6: Create a list containing all the components of the output and then output it
+# I've started the list, but you may need to finish it
+  results <- list(obs = t_obs,
+                  sim = t_perm)
+
+```
+
+Assuming your code runs, you can check what's in `results` by viewing it or
+
+```{r structure of results}
+str(results)
+```
+
+## Part e (Code and Testing: 2 pts)
+
+Finally, we define our function, include the variables we defined in Step 0 as the input arguments, use a `return()` statement at the end to return our output, and copy the remainder of the script into the function.
+
+```{r script to function}
+permutation_t_test <- function(formula, data, alternative = "t"){
+  # remember to include any other arguments you initialized in Step 0
+  # I recommend giving those arguments default values = what you set in Step 0
+  
+  # Copy your complete script of Steps 1-6 in Part d
+  
+  return(results) # Last line of the function returns our output
+}
+```
+
+Test the function by completing and running the chunk below.
+
+```{r test function}
+set.seed(9035)
+df_new <- data.frame(group = rep(c("Group A", "Group B"), 50),
+                   value = rnorm(100))
+test_output <- permutation_t_test(formula = value ~ group,
+                   data = df_new,
+                   alternative = "g",
+                   ...)
+# if you did not include default values for your new arguments, make sure to give them values in your function call!
+```
+
+Produce a histogram of the simulated t-statistics and add a vertical line at the observed t-statistic value (it is easiest to use the regular `hist` and `abline` functions). Using the histogram, confirm that the reported p-value seems reasonable.
+
+# Problem 3: Doing a Permutation t-Test
+
+24 "alcohol-dependent" male patients at an alcohol treatment facility were randomly assigned to a traditional treatment program (Control) or a treatment program plus social skills training (SST). 23 patients faithfully reported their alcohol intake for a year (one patient in the SST group never reported). Their group assignment, and alcohol intake over the year (in centiliters of pure alcohol), is found in the *alcohol* dataset on Canvas.
+
+```{r import alcohol data}
+alcohol <- read.csv("alcohol.csv")
+```
+
+In this problem, we will test the null hypothesis that there is no difference between the groups against the alternative that the Control Group (the default Group 1) had a higher alcohol intake.
+
+## Part a (Explanation: 0.5 pts)
+
+Run the chunk below to plot a histogram showing the distribution of Intake in each group.
+
+```{r plot intake, eval = FALSE}
+ggplot(data = alcohol, mapping = aes(x = Intake)) +
+  geom_histogram(center = 1000, binwidth = 200) +
+  facet_wrap(~Group)
+```
+
+What do the `center` and `binwidth` arguments do? What does `facet_wrap` do?
+
+## Part b (Code: 0.5 pts)
+
+Complete the code chunk below to find the mean and standard deviation of Intake in each group. Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.
+
+```{r summarize intake, eval = FALSE}
+alcohol %>% group_by() %>% # what do we group by?
+  summarize(mean_intake = , # how do we compute the mean of Intake
+            sd_intake = ) # how do we compute the sd of Intake?
+```
+
+## Part c (Code: 1 pt, Explanation: 1 pt)
+
+Using the function you wrote in Problem 2, perform a permutation test of the null hypothesis that there is no difference between the groups against the alternative that the Control Group (the default Group 1) had a *higher* alcohol intake.
+
+Store the output of your function in the variable `alcohol_t_test`, that is, run `alcohol_t_test <- permutation_t_test(...)` and replace the `...` with what you need to run the test. Perform the following sanity checks to make sure your code worked as intended:
+
+```{r sanity check-1, eval = FALSE}
+# Check to make sure you computed the t-statistic correctly
+t.test()$statistic # remember to fill in the t.test arguments!
+alcohol_t_test$statistic.observed # replace statistic.observed with the name of the variable in the output you stored the observed t-statistic in
+```
+
+```{r sanity check-2, eval = FALSE}
+# Check to make sure you have the correct number of resamples
+# Is this equal to the number of times you told R to do the permutation resampling?
+length(alcohol_t_test$statistic.simulated) # replace statistic.simulated with the name of the variable in the output you stored the simulated t-statistics in
+
+```
+
+Based on the permutation test, using a 5% significance level, what should we conclude about the effectiveness of the SST program at reducing alcohol intake? Why?
+
+## Part d (Code: 1 pt; Explanation: 1 pt)
+
+Using the `College` dataset from the ISLR2 package, and the `permutation_t_test` function you created in Problem 2, perform a permutation t-test to determine if public schools (`Private = No`) charge *less* in out-of-state tuition (`Outstate`) than private schools (`Private = Yes`). Use 999 permutation resamples and seed 12345.
+
+Store the output of your function in the variable `tuition_t_test`, that is, run `tuition_t_test <- permutation_t_test(...)` and replace the `...` with what you need to run the test.
+
+Report the observed value of the t-statistic and the p-value. Additionally, create a histogram of the simulated t-statistic values and add a vertical line at the observed t-statistic value, like you did in Problem 2e. You may have to change the x-axis limits (e.g., `xlim` argument to the base `plot` function) to get the line to show up.
+
+Based on the permutation test, using a 5% significance level, what should we conclude about the difference in average out-of-state tuition between public and private colleges? Why?
