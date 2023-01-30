@@ -30,17 +30,18 @@ This problem is adapted from ISLR Chapter 4, Exercise 15.
 In the chunk below, write a single line of R code that prints the result of raising the number 2 to the 3rd power. 
 
 ```{r two to the third}
-
+print(2^3)
 ```
 
 ## Part b (Code: 0.5 pts, Testing: 0.5 pts)
 
 Complete the R chunk below to create and test a function that prints the result of raising *any* number to the 3rd power. Make sure to delete the "eval = FALSE" in the chunk options after you get a chunk that works the way you expect!
 
-```{r cube function, eval = FALSE}
+```{r cube function}
 ## Cube function
 Cube <- function(x){
   # Copy your code from part a here, but replace 2 with x
+  print(x^3)
 }
 ```
 
@@ -48,17 +49,23 @@ It is always a good idea to test any function you write to make sure that it wor
 
 What do you expect to get when you call the `Cube` function on a single number? Confirm that your function works as expected. Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.
 
-```{r test cube-1, eval = FALSE}
+We expect the function to return 8 when x = 2.
+
+```{r test cube-1}
 Cube(2)
 ```
 
 What happens when you input a vector instead of a single number? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
 
-```{r test cube-2, eval = FALSE}
+If we input a vector instead of single number, the function will return a vector of the numbers cubed.
+
+```{r test cube-2}
 Cube(c(2, 5, 10))
 ```
 
 What happens when you input a character string instead of a number? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+If we input a character string instead of a number, we are expecting an error. 
 
 ```{r test cube-3, eval = FALSE}
 Cube("Math 437")
@@ -70,30 +77,39 @@ Now, we will write another function that prints the result of raising *any* numb
 
 It is good form to document all arguments to your function, either before the function or in the first few lines.
 
-```{r power function, eval = FALSE}
+```{r power function}
 Power <- function(x, a){
   # x: the base of the power
   # a: the exponent
   
   # Copy your code from part b here, but replace 3 with a
+  print(x^a)
 }
 ```
 
 What do you expect to get when you run this line of code? Did you get what you expected? If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
 
-```{r test power-1, eval = FALSE}
+We expect to get 8 when we run the next line of code. 
+
+```{r test power-1}
 Power(2, 3)
 ```
+Yes. 
 
 What happens when you use a vector instead of a number for the first argument? What about for the second argument? What about for both arguments? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+We expect to get vector if we input a vector for x. We expect a vector if we input a vector for a. We expect a matrix if we input a vector for x and a. 
 
 ```{r test power-2, eval = FALSE}
 Power(c(2, 5, 10), 3)
 Power(2, c(2, 3, 4))
 Power(c(2, 5, 10), c(1, 2, 3))
 ```
+While our expectation was close, we found that instead of a matrix in the third case, the function is applied to the corresponding elements in each vector.
 
 What happens if you only give one argument? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
+
+It will give us an error since there is no default input in the function. 
 
 ```{r test power-3, eval = FALSE}
 Power(2) # What does this do?
@@ -103,51 +119,56 @@ Power(2) # What does this do?
 
 Usually we want to *return* the result of the function rather than *print* it, so that we can store the output in an R object.
 
-```{r power return, eval = FALSE}
+```{r power return}
 Power_return <- function(x, a){
   # x: the base of the power
   # a: the exponent
   
   # Copy your code from part c here, but replace "print" with "return"
+  return(x^a)
 }
 ```
 
 Let's confirm that we still get $2^3 = 8$ out when we run this line of code. Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.
 
-```{r test power-return 1, eval = FALSE}
+```{r test power-return 1}
 Power_return(2, 3) # Does this still output 2^3 = 8?
 ```
 
 Explain the difference between these two lines of code. (Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.) Where did the 8 go when you ran the second line?
 
-```{r test power-return 2, eval = FALSE}
+```{r test power-return 2}
 result1 <- Power(2, 3)
 result2 <- Power_return(2, 3)
 ```
+The difference between the functions is how "print" works compared to "return". "print" will show the output while "return" will do it but not output it. 
+
 
 ## Part e (Code: 0.5 pts; Testing: 0.5 pts)
 
 What if we *usually* want to cube a number, but we also want to give the user the flexibility to include a different exponent if necessary? We can use a *default* argument:
 
-```{r power default, eval = FALSE}
+```{r power default}
 Power_default <- function(x, a = 3){
   # x: the base of the power
   # a (= 3): the exponent
-  
+
   # Copy your code from part d here
-  
+  return(x^a)
 }
 ```
 
 Let's confirm that we still get $2^3 = 8$ out when we run this line of code.
 
-```{r power-default test-1, eval = FALSE}
+```{r power-default test-1}
 Power_default(2, 3)
 ```
 
 What happens if you only give one argument? Make a guess, then run the chunk below to see whether your guess was correct. If you get an output, remove `eval = FALSE`; if you get an error, keep `eval = FALSE` so that you can still knit without running the code.
 
-```{r power-default test-2, eval = FALSE}
+Since a has a default value, then x will be assigned the value of 2, so we will get an output of 8.
+
+```{r power-default test-2}
 Power_default(2)
 ```
 
@@ -157,19 +178,19 @@ By convention, arguments without a default value go at the beginning of the list
 
 We rarely write one-line functions. Usually we want to store the intermediate and final results in objects within the function, then use `return` to output the final result.
 
-```{r power final, eval = FALSE}
+```{r power final}
 Power_result <- function(x, a = 3){
   # x: the base of the power
   # a (= 3): the exponent
   
-  result <- # finish this line
+  result <- x^a # finish this line
   return(result)
 }
 ```
 
 Let's just do our usual test to make sure we keep getting $2^3 = 8$ out. Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.
 
-```{r power final test, eval = FALSE}
+```{r power final test}
 Power_result(2, 3)
 ```
 
@@ -189,11 +210,17 @@ t.test(formula = , data = , alternative = , var.equal = TRUE)
 
 Explain what each of the four arguments (`formula`, `data`, `alternative`, `var.equal`) contributes towards telling R what to do in the pre-built `t.test` function. 
 
+Formula tells us which numeric variable is the response and which variables are the predictor variables. Data is where put which data frame to pull from. Alternative is where we specify the Ha in terms of 'greater', 'less ', and 'two.sided'. var.equal tells the function how to treat the two variances.  
+
 Which arguments (if any) will we need to include when creating our custom permutation test function? What additional arguments (if any) will need to be included because we are using resampling-based methods instead of theory-based methods?
+
+We need to include formula, data, alternative and B in the permutation test function. 
 
 ## Part b (Explanation: 1 pt)
 
 Although R returns an `htest` object when the `t.test` function is called, the `htest` object is basically just a `list` with some extra functionality attached. When we run our permutation test function, what should be included in our list of things to output?
+
+We should list the p-value, the permutations, and the observed values.  
 
 ## Part c (Explanation: 3 pts)
 
