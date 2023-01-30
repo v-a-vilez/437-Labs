@@ -1,0 +1,278 @@
+---
+title: "P-Values and Power"
+author: "Math 437 Spring 2023"
+date: "1/25/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The P-Value Is a Random Variable
+
+Recall that the p-value is the probability of getting a sample that provides equivalent (or more convincing) evidence against the null hypothesis, assuming said null hypothesis is true.
+
+In other words, the p-value is a function that takes two inputs (a population distribution and a sample size) and returns a number between 0 and 1. In statistics we typically consider the population distribution to be the distribution of a random variable; thus, the p-value is a *function of a random variable* and so is itself a random variable.
+
+What is the distribution of the p-value under $H_0$? Let's do some simulations to find out.
+
+### Dr. Wynne's Simulation
+
+I'm going to simulate 10,000 samples of size 100 from a normal distribution with mean $\mu = 70$ and standard deviation $\sigma = 10$:
+
+```{r Dr. Wynne Simulation 1}
+set.seed(23)
+n <- 100
+mu <- 70
+sigma <- 10
+
+xbar <- numeric(10000) # empty vector to store sample means in
+
+for(i in 1:10000){
+  sim_values <- rnorm(n, mean = mu, sd = sigma)
+  xbar[i] <- mean(sim_values)
+}
+```
+
+Notice that on each simulation we perfectly meet the assumptions of a one-sample z-test for a population mean: we have a random sample from a normal population distribution for which $\sigma$ is known. Therefore, we can construct $z$ test statistics from our simulated samples:
+
+```{r z test stat}
+z_scores <- (xbar - mu)/(sigma/sqrt(n))
+
+hist(z_scores)
+```
+
+And convert the z-scores to two-sided p-values.
+
+```{r z to p}
+p_lower <- pnorm(z_scores, mean = 0, sd = 1, lower.tail = TRUE)
+p_upper <- pnorm(z_scores, mean = 0, sd = 1, lower.tail = FALSE)
+two_sided_p_value <- 2*pmin(p_lower, p_upper)
+# pmin is a pairwise minimum, comparing the values at each index in the vectors
+# Here it will return p_lower when z < 0 and p_upper when z > 0
+
+hist(two_sided_p_value)
+```
+
+Finally, we can plot the empirical cumulative distribution function (the estimate of the true cdf based on simulated/observed values):
+
+```{r simulated ecdf}
+plot(ecdf(two_sided_p_value),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+```
+
+The histogram and empirical cdf show us visually that when the assumptions of a hypothesis test are met *exactly* and $H_0$ is true, we should expect the p-values to have a uniform distribution on the interval $[0, 1]$.
+
+### Problem 1
+
+I've copied most of the simulation code into the chunk below. To complete the simulation, you need to:
+
+1. Pick a different distribution to simulate from. Distributions that you may be familiar with from Math 335/338 include binomial (`rbinom`), uniform (`runif`), Poisson (`rpois`), and exponential (`rexp`), but you are not limited to these distributions. Look up in R help the parameters of the function to do the simulation, and give them values.
+
+2. Finish the code inside the `for` loop to simulate 10,000 samples of size 100 from your chosen population distribution.
+
+3. Find the mean and standard deviation of the population distribution in terms of the parameters you used in Step 1 (you may need to review Math 335/338), and store them in variables `mu` and `sigma`.
+
+5. Run the chunk
+
+```{r Your Simulation 1}
+set.seed(23)
+
+# assign the value of n
+n <- 100
+lamb <- 10
+xbar <- numeric(10000) # empty vector to store sample means in
+
+  
+# create variables representing your distribution parameters and assign them reasonable values
+
+for(i in 1:10000){
+  # simulate n values from your distribution and store it in the vector sim_values
+  sim_values <- rpois(n, lambda = lamb)
+  xbar[i] <- mean(sim_values)
+}
+
+# define the variables mu and sigma and assign their values using the appropriate formulas
+mu = lamb
+sigma = sqrt(lamb)
+
+z_scores <- (xbar - mu)/(sigma/sqrt(n))
+
+hist(z_scores)
+
+p_lower <- pnorm(z_scores, mean = 0, sd = 1, lower.tail = TRUE)
+p_upper <- pnorm(z_scores, mean = 0, sd = 1, lower.tail = FALSE)
+two_sided_p_value <- 2*pmin(p_lower, p_upper)
+
+hist(two_sided_p_value)
+
+plot(ecdf(two_sided_p_value),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+```
+
+### Problem 2
+
+Compare the histogram and empirical cdf that you obtained with the graphs I obtained using a normal distribution (i.e., when the assumptions of a one-sample z-test for mean are exactly met). Would you trust the p-value from a one-sample z-test based on a single sample of size $n = 100$ to be "somewhat accurate" when the distribution you specified is the true population distribution? Why or why not?
+
+The histograms look similar but have different z-score ranges in different directions. The histogram of the normal distribution has more z-scores in the negatives while the histogram of the poisson distribution has more z-scores in the positives. 
+The histograms of the two-sided p-value have obvious differences. The normal distribution is more uniform across the p-values, while the poisson distribution has more variation with the frequency of each p-value.
+The empirical cdf's of both distributions have a similar shape, but the normal distribution is continuous while the poisson distribution is discrete. 
+
+we would trust the p-value from a one-sample z-test, but not fully because while both histograms are uniform, they are still varied.   
+
+### Problem 3
+
+Compare your answers to Problems 1 and 2 to the answers obtained by other groups that used a different distribution family or different parameters. Can you infer a general rule about when the p-value is somewhat trustworthy and when the p-value is not?
+
+if the histograms of the z-score and p-values are uniform looking then we would consider the p-value to be trustworthy. 
+
+## 80% Power
+
+What does it mean to have 80% power? Let's work with z test statistics to make our lives easier.
+
+For a two-sided test, we know that the critical region is of the form $|z_{obs}| \geq z^{**}$ (the $^{**}$ is my non-standard notation - two stars for two-sided critical region). For $\alpha = 0.05$, we find that the appropriate critical region is:
+
+```{r critical region 1}
+alpha <- 0.05
+(z_alpha <- qnorm(alpha/2, mean = 0, sd = 1)) # alpha/2 because half in each tail
+```
+
+We will arbitrarily assume that the distribution under $H_a$ is the same as the distribution under $H_0$, just shifted to the right. At sufficiently large power, the probability of being in the left tail of the critical region under $H_a$ is negligible. Therefore, we can safely assume that for 80% power, we need to find the $z^*$ critical value corresponding to 80% in the right tail:
+
+```{r critical region 2}
+power <- 0.80
+(z_beta <- qnorm(power, mean = 0, sd = 1, lower.tail = FALSE))
+```
+
+Therefore, the right critical value under $H_0$ is equal to the (left-sided) critical value under $H_a$, and the means of the distributions must be:
+
+```{r critical region 3}
+(delta_z <- abs(z_alpha + z_beta)) 
+# z_alpha and z_beta are both negative so we take absolute value of the sum
+```
+
+approximately 2.8 standard deviations apart. 
+
+What proportion of our p-values should we expect to be below 0.05 if $H_a$ is correct and we have 80% power?
+
+We know that our critical values *are* the z-scores that produce a p-value of exactly 0.05. Anything further out in the tails (in particular, out in the right tail), will produce a lower p-value. Therefore, to find this proportion, we need to find the probability of getting a z-score of at least the $z^{**}$ critical value under $H_0$:
+
+```{r p-value 1}
+(pz <- pnorm(abs(z_alpha), mean = delta_z, sd = 1, lower.tail = FALSE))
+```
+
+As expected, if $H_a$ is correct and we have 80% power, 80% of p-values will be below 0.05.
+
+What if our sample data perfectly estimates the true parameter value under $H_a$? Then, given 80% power, the sample must be converted to a z-score of $\Delta_z = 2.80$. The  p-value is then:
+
+```{r p-value 2}
+(pvalue <- pnorm(delta_z, mean = 0, sd = 1, lower.tail = FALSE)*2)
+# x2 because it's a two-sided critical region under H0 so we need a two-sided p-value
+```
+
+But if $H_a$ is correct, and we have 80% power, then the probability of observing data that convert to an even larger z-score is:
+
+```{r p-value 3}
+(pz <- pnorm(delta_z, mean = delta_z, sd = 1, lower.tail = FALSE))
+# again we ignore the left tail as there is limited probability there
+```
+
+Again, unsurprising: 50%. This means that if $H_a$ is correct and we have 80% power, half of all p-values will be $\leq 0.005$!
+
+### Problem 4
+
+Load the `pvalue_cdf` function below by running the chunk.
+
+```{r p-value cdf function}
+pvalue_cdf <- function(alpha = 0.05, power = 0.80){
+  
+  z_alpha <- qnorm(alpha/2, mean = 0, sd = 1, lower.tail = TRUE)
+  z_beta <- qnorm(power, mean = 0, sd = 1, lower.tail = FALSE) 
+  # z_beta is an overestimate but difference is negligible at high power 
+  delta_z <- abs(z_alpha + z_beta)
+  
+  graph_title <- paste0("CDF of the P-Value with ", 
+                        round(alpha*100, floor(-log10(alpha) + 2)), 
+                        "% Sig. Level and ", 
+                        round(power*100, floor(-log10(power) + 2)), 
+                        "% Power" )
+  
+  z <- seq(0.1, 5, by = 0.01)
+  pvalue <- pnorm(z, 0, 1, lower.tail = FALSE)*2
+  pz <- pnorm(z, delta_z, 1, lower.tail = FALSE)
+  plot(pvalue, pz, type = "l", col = "blue", log = "x",
+       xlab = "P-Value",
+       ylab = "Probability of Getting a Smaller P-Value",
+       ylim = c(0,1),
+       main = graph_title)
+  
+  lines(pvalue, pvalue, lty = "dashed")
+
+  legend("topleft",
+         legend = c("Under H0", "Under Ha"),
+         col = c("black", "blue"),
+         lty = c("dashed", "solid"))
+  
+  pvalue_df <- data.frame(pvalue = pvalue,
+                          psmaller = pz)
+  
+  invisible(pvalue_df)
+}
+
+```
+
+In the chunk below, write a single line of R code to call this function with `alpha = 0.01` and `power = 0.90`. Briefly explain what the function does.
+
+```{r first pvalue_cdf call}
+pvalue_cdf(alpha = 0.01, power= 0.90)
+```
+
+The function pvalue_cdf gives us a graph of the 90% of p-values for each Ho and Ha with their respective probabilities.  
+
+### Problem 5
+
+Call the function a few more times using different values for `alpha`. Do not bother setting `power` equal to anything - this will ensure that every time you call the function, `power` will be set to the default value of 0.80.
+
+```{r calling function with different alphas}
+pvalue_cdf(alpha = 0.0001)
+pvalue_cdf(alpha = 0.085)
+pvalue_cdf(alpha = 0.03)
+pvalue_cdf(alpha = 0.1)
+pvalue_cdf(alpha = 0.69)
+```
+
+How does the cumulative distribution function of the p-value under $H_a$ compare to the cdf under $H_0$ when the significance level is low? High? *Very* low? *Very* high?
+
+When alpha is low the cdf the probabilities of getting a smaller p-value has a higher range. when alpha is high, there is less of a possibility of getting a smaller p-value. When alpha is very low, the probability of getting a smaller p-value increases. When alpha is very high, there is less of a a chance of getting a small p-value. 
+
+## Problem 6
+
+Call the function a few more times using different values for `power`. Do not bother setting `alpha` equal to anything - this will ensure that every time you call the function, `alpha` will be set to the default value of 0.05.
+
+```{r calling function with different powers}
+pvalue_cdf(power = .1)
+pvalue_cdf(power = .5)
+pvalue_cdf(power = .69)
+pvalue_cdf(power = .82)
+pvalue_cdf(power = .9999999999)
+```
+
+
+How does the cumulative distribution function of the p-value under $H_a$ compare to the cdf under $H_0$ for adequately powered studies? Underpowered studies? *Severely* underpowered studies?
+
+Under adequately powered studies, the probability of 82% of the p-values to being smaller is generally higher under Ha compared to Ho. In underpowered studies, the probability under Ha gets generally lower. In severely underpowered studies, Ha and Ho have almost the same probabilities, even being lower than Ho with sufficiently low powers. In all cases, the probability under Ho is always the same.
+
+
+
+
+
+
+
+
+
