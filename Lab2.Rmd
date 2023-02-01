@@ -210,17 +210,17 @@ t.test(formula = , data = , alternative = , var.equal = TRUE)
 
 Explain what each of the four arguments (`formula`, `data`, `alternative`, `var.equal`) contributes towards telling R what to do in the pre-built `t.test` function. 
 
-Formula tells us which numeric variable is the response and which variables are the predictor variables. Data is where put which data frame to pull from. Alternative is where we specify the Ha in terms of 'greater', 'less ', and 'two.sided'. var.equal tells the function how to treat the two variances.  
+->Formula tells us which numeric variable is the response and which variables are the predictor variables. Data is where put which data frame to pull from. Alternative is where we specify the Ha in terms of 'greater', 'less ', and 'two.sided'. var.equal tells the function how to treat the two variances.  
 
 Which arguments (if any) will we need to include when creating our custom permutation test function? What additional arguments (if any) will need to be included because we are using resampling-based methods instead of theory-based methods?
 
-We need to include formula, data, alternative and B in the permutation test function. 
+->We need to include formula, data, alternative and B in the permutation test function. 
 
 ## Part b (Explanation: 1 pt)
 
 Although R returns an `htest` object when the `t.test` function is called, the `htest` object is basically just a `list` with some extra functionality attached. When we run our permutation test function, what should be included in our list of things to output?
 
-We should list the p-value, the permutations, and the observed values.  
+-> We should list the p-value, the permutations, and the observed values.  
 
 ## Part c (Explanation: 3 pts)
 
@@ -234,11 +234,11 @@ Step 3: Set a seed for reproducibility of the resampling
 
 Step 4: For i in 1 to number of permutation resamples:
 
-  Step 4a:
+  Step 4a: re-randomize the response variable
   
-  Step 4b:
+  Step 4b: Obtain the value of the test statistic
   
-Step 5:
+Step 5: Obtain the p-value
 
 Step 6: Create a list containing all the components of the output and then output it
 
@@ -268,29 +268,31 @@ alternative <- "t"
                   alternative = , var.equal = TRUE)$stat
 
 # Step 2: Create a vector to store the simulated t-statistics in
-  t_perm <- 
+  t_perm <- numeric(99)
   
 # Step 3: Set a seed for reproducibility of the resampling
+  set.seed(15)
   
 # Step 4: For i in 1 to number of permutation resamples:
-for (i in ){ # Complete the syntax
+for (i in 99){ # Complete the syntax
   
-  # Step 4a
-  permutation_df[[1]] <-
+  # Step 4a re-randomize the response variable
+  permutation_df[[1]] <- sample(data$y, size = length(data$y), replace = FALSE)
   # Use the course notes as a template for doing this step
   # Note: Once we get to Part e and put this script inside a function environment,
   # using the actual name of the response variable requires much more advanced R.
   # Remember from Lab 1 that this is an alternative way to do the column indexing
   # and we set up permutation_df so that the first column is the response variable.
     
-  # Step 4b
-  t_perm[i] <- 
+  # Step 4b Obtain the value of the test statistic
+  t_perm[i] <- t.test(permutation_df)
 }
 
-# Step 5    
+# Step 5 Obtain the p-value    
   # Use the course notes as a template for getting p_left and p_right
-  p_left <- 
-  p_right <- 
+  t_all <- c(t_obs, t_perm)
+  p_left <- sum(t_all <= t_obs)/(100)
+  p_right <- sum(t_all >= t_obs)/(100)
   
   # Use the switch function to compute the correct p-value
   p_value <- dplyr::case_when(alternative == "g" ~ p_right,
@@ -302,7 +304,8 @@ for (i in ){ # Complete the syntax
 # Step 6: Create a list containing all the components of the output and then output it
 # I've started the list, but you may need to finish it
   results <- list(obs = t_obs,
-                  sim = t_perm)
+                  sim = t_perm,
+                  p_v = p_value)
 
 ```
 
