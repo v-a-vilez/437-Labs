@@ -1,0 +1,374 @@
+---
+title: 'Parametric vs. Nonparametric Tests: Two-Sample Tests'
+author: "Math 437 Spring 2023"
+date: "1/30/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Two-Sample T-Test
+
+In the P-Values and Power in-class activity, we examined the *robustness* of the one-sample z test for mean to violations of the normality assumption. Now let's investigate the robustness of the two-sample t-test to violations of the normality assumption. The steps should be familiar from the activity:
+
+Step 1. Create an empty vector to store the p-values from our simulations in.
+
+```{r p-values1 example, eval = FALSE}
+pvalues <- numeric(length = 10000)
+```
+
+Step 2. Create a for loop. On each iteration of the for loop, simulated data will be created and the p-value for the test will be obtained.
+
+```{r p-values2 example, eval = FALSE}
+nG <- 25# fill in your value of nG
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- c()# finish this line
+  y <- c()# finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- # finish this line
+    
+}
+```
+
+Step 3. Create a histogram and empirical cdf of the p-values and find the proportion of p-values less than or equal to our usual default $\alpha = 0.05$.
+
+```{r p-values 3 example, eval = FALSE}
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+Typically an introductory stats textbook will say something like, "you need at least 15 observations in each group to even think about doing a two-sample t-test." Let's see if this conventional wisdom is really true.
+
+### All Assumptions Met, H0 True
+
+Copy the example chunks and fill in Step 2 such that x and y both contain `nG` random numbers from $N(\mu = 0, \sigma = 1)$. Your group will pick one value of $n_G$ (10, 25, or 50). We will do group signups on the board to ensure that we have enough groups at each value of $n_G$.
+
+Remember to remove `eval = FALSE` from the chunk settings if you knit this activity!
+```{r all assumptions met ho true}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- rnorm(nG) # finish this line
+  y <- rnorm(nG) # finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- t.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+
+### Assumptions Violated, H0 True
+
+Copy your chunks from the previous part but change Step 2 so that x and y both contain 90% random numbers from a $N(\mu = 0, \sigma = \sqrt(0.19))$ distribution and 10% random numbers from a $N(\mu = 3, \sigma = \sqrt{0.19})$ distribution. (Changing to $\sigma = \sqrt{0.19}$ in the two mixture components ensures x and y both have theoretical standard deviation 1.) Use a two-sided test.
+
+In addition, plot a histogram of one of your simulated `x` vectors and briefly describe the shape of the distribution (as if `x` was real data I gave you).
+
+```{r assumptions violated}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- c(rnorm(22,mean = 0,sd=sqrt(0.19)),rnorm(3,mean = 3,sd=sqrt(0.19)))
+  y <- c(rnorm(22,mean = 0,sd=sqrt(0.19)),rnorm(3,mean = 3,sd=sqrt(0.19)))
+  # Perform the t-test and get the p-value
+  pvalues[i] <- t.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+
+### All Assumptions Met, Ha True
+
+In social science, the most common measure of an "effect size" is Cohen's d. Assuming equal variance between groups,
+
+$$
+d = \frac{\mu_1 - \mu_2}{\sigma}
+$$
+
+Cohen suggested that $d = 0.2$ represented a small effect size, $d = 0.5$ represented a medium effect size, and $d = 0.8$ represented a large effect size.
+
+We are going to systematically vary $d$ and $n_G$ to see how the power of the test is affected by the sample size and effect size. Your group will pick one value of $d$ (0.2, 0.5, or 0.8) and keep your chosen value of $n_G$ (10, 25, or 50). We will do group signups on the board to ensure that all 9 combinations are covered.
+
+Once you have signed up for your values of $d$ and $n_G$, copy the chunks from the *All Assumptions Met, H0 True* part but change Step 2 so that y now contains `nG` random numbers from $N(\mu = d, \sigma = 1)$.
+
+Based on this simulation, what is the power of the two-sample t-test to detect your chosen value of $d$ given your sample size in each group?
+
+The power of the t test was 40% which means that 40% of the p-values could reject the null.
+
+```{r all assumptions met ha true}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+d <- 0.5
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- rnorm(nG) # finish this line
+  y <- rnorm(nG,mean = d) # finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- t.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+
+### Assumptions Violated, Ha True
+
+Copy the chunks from the *Assumptions Violated, Ha True* part but change Step 2 so that y now contains 90% random numbers from a $N(\mu = d, \sigma = \sqrt{0.19})$ distribution and 10% random numbers from a $N(\mu = 3 + d, \sigma = \sqrt{0.19})$. Use the same value of $d$ as you used in the previous part.
+
+Based on this simulation, what is the power of the two-sample t-test to detect your chosen value of $d$ given your sample size in each group?
+
+The power of the t-test was 89% which mean that 89% of the p-values rejected the null
+
+```{r assumptions violated ha true, eval=FALSE}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+d = 0.5
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- rnorm(nG) # finish this line
+  y <- c(rnorm(22,mean=d,sd = sqrt(0.19)),rnorm(3, mean = 3+d, sd = sqrt(0.19))) # finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- t.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+
+## Mann-Whitney/Wilcoxon Ranked-Sum Test
+
+Repeat the four simulations in the Two-Sample t-Test Section using your values of $n_G$ and $d$, but use `wilcox.test` instead of `t.test`. 
+
+```{r all assumptions met ho true}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- rnorm(nG) # finish this line
+  y <- rnorm(nG) # finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- wilcox.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+```{r assumptions violated}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- c(rnorm(22,mean = 0,sd=sqrt(0.19)),rnorm(3,mean = 3,sd=sqrt(0.19)))
+  y <- c(rnorm(22,mean = 0,sd=sqrt(0.19)),rnorm(3,mean = 3,sd=sqrt(0.19)))
+  # Perform the t-test and get the p-value
+  pvalues[i] <- wilcox.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+```{r all assumptions met ha true}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+d <- 0.5
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- rnorm(nG) # finish this line
+  y <- rnorm(nG,mean = d) # finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- wilcox.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+```{r assumptions violated ha true}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+d = 0.5
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- rnorm(nG) # finish this line
+  y <- c(rnorm(22,mean=d,sd = sqrt(0.19)),rnorm(3, mean = 3+d, sd = sqrt(0.19))) # finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- wilcox.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+## Class Results
+
+Our simulations estimated the following.
+
+For the two sample t-test using $\alpha = 0.05$:
+
+$$
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+$n_G$ & t-Test Assumptions & Type I Error Rate & Power at $d = 0.2$ & Power at $d = 0.5$ & Power at $d = 0.8$\\
+\hline
+10 & Met & 0.05 & 6.95% & 18.18% & 38.3% \\
+\hline
+25 & Met & 0.05 & 10.32% & 40% & 79% \\
+\hline
+50 & Met & 0.05 & 15.92% & 68.12% & 98% \\
+\hline
+10 & Violated & 0 & 0.02% & 16.34% & 20.4% \\
+\hline
+25 & Violated & 0 & 0.06% & 89% & 93% \\
+\hline
+50 & Violated & 0 & 1.23% & 86.55% & 100% \\
+\hline
+\end{tabular}
+$$
+
+For the Mann-Whitney test using $\alpha = 0.05$:
+
+$$
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+$n_G$ & t-Test Assumptions & Type I Error Rate & Power at $d = 0.2$ & Power at $d = 0.5$ & Power at $d = 0.8$\\
+\hline
+10 & Met & 0.05 & 6.16% & 1.5% & 34.5% \\
+\hline
+25 & Met & 0.05 & 10.19% & 39% & 77% \\
+\hline
+50 & Met & 0.05 & 15.53% & 66.22% & 100% \\
+\hline
+10 & Violated & 0.02 & 6.65% & 42.44% & 86.5% \\
+\hline
+25 & Violated & 0.02 & 17.66% & 78% & 99.97% \\
+\hline
+50 & Violated & 0.02 & 41.39% & 99.86% & 100% \\
+\hline
+\end{tabular}
+$$
+
