@@ -234,11 +234,11 @@ Step 3: Set a seed for reproducibility of the resampling
 
 Step 4: For i in 1 to number of permutation resamples:
 
-  Step 4a: re-randomize the response variable
+  Step 4a: re-randomize the response variable/ randomly reorder the response variable 
   
-  Step 4b: Obtain the value of the test statistic
+  Step 4b: Obtain the value of the test statistic/Run a t test on the new data
   
-Step 5: Obtain the p-value
+Step 5: Get the p-value
 
 Step 6: Create a list containing all the components of the output and then output it
 
@@ -248,7 +248,7 @@ This is actually more detail than is necessary; in real life you'd probably only
 
 Now we take our pseudocode and write a script. I've taken care of most of the tricky code, but you need to finish the script. Only Step 1 is fully complete. Once you've completed the other steps and your script runs, remember to delete `eval = FALSE`.
 
-```{r pseudocode to script, eval = FALSE}
+```{r pseudocode to script}
 # Step 0: Initialize the arguments to your function
 set.seed(9034)
 data <- data.frame(group = rep(c("Group 1", "Group 2"), 50),
@@ -256,7 +256,7 @@ data <- data.frame(group = rep(c("Group 1", "Group 2"), 50),
 formula <- y ~ group
 alternative <- "t"
 # Initialize and assign values to any other arguments you identified in Part a
-
+n_sim <- 10^2 -1
 # Step 1: Run the t-test on the original dataset and obtain the observed t-statistic value
 
 # Creating this permutation_df will allow us to ignore other variables in the data frame.
@@ -265,16 +265,16 @@ alternative <- "t"
 
 # We only care about the t-statistic, but we need to store it in a variable
   t_obs <- t.test(formula = formula, data = permutation_df, 
-                  alternative = , var.equal = TRUE)$stat
+                  alternative = alternative, var.equal = TRUE)$stat
 
 # Step 2: Create a vector to store the simulated t-statistics in
-  t_perm <- numeric(99)
+  t_perm <- numeric(n_sim)
   
 # Step 3: Set a seed for reproducibility of the resampling
   set.seed(15)
   
 # Step 4: For i in 1 to number of permutation resamples:
-for (i in 99){ # Complete the syntax
+for (i in 1:n_sim){ # Complete the syntax
   
   # Step 4a re-randomize the response variable
   permutation_df[[1]] <- sample(data$y, size = length(data$y), replace = FALSE)
@@ -285,7 +285,8 @@ for (i in 99){ # Complete the syntax
   # and we set up permutation_df so that the first column is the response variable.
     
   # Step 4b Obtain the value of the test statistic
-  t_perm[i] <- t.test(permutation_df)
+  t_perm[i] <- t.test(formula = formula, data = permutation_df, 
+                  alternative = alternative, var.equal = TRUE)$stat
 }
 
 # Step 5 Obtain the p-value    
@@ -320,11 +321,66 @@ str(results)
 Finally, we define our function, include the variables we defined in Step 0 as the input arguments, use a `return()` statement at the end to return our output, and copy the remainder of the script into the function.
 
 ```{r script to function}
-permutation_t_test <- function(formula, data, alternative = "t"){
+permutation_t_test <- function(formula, data, alternative = "t",n_sim = 99){
   # remember to include any other arguments you initialized in Step 0
   # I recommend giving those arguments default values = what you set in Step 0
-  
+  set.seed(9034)
+#data <- data.frame(group = rep(c("Group 1", "Group 2"), 50), y = rnorm(100)) # simulated data
+#formula <- y ~ group
+#alternative <- "t"
+# Initialize and assign values to any other arguments you identified in Part a
+#n_sim <- 10^2 -1
   # Copy your complete script of Steps 1-6 in Part d
+  # Step 1: Run the t-test on the original dataset and obtain the observed t-statistic value
+
+# Creating this permutation_df will allow us to ignore other variables in the data frame.
+# This will make Step 4 much easier - see comments in Step 4a.
+  permutation_df <- model.frame(formula = formula, data = data)
+
+# We only care about the t-statistic, but we need to store it in a variable
+  t_obs <- t.test(formula = formula, data = permutation_df, 
+                  alternative = alternative, var.equal = TRUE)$stat
+
+# Step 2: Create a vector to store the simulated t-statistics in
+  t_perm <- numeric(n_sim)
+  
+# Step 3: Set a seed for reproducibility of the resampling
+  set.seed(15)
+  
+# Step 4: For i in 1 to number of permutation resamples:
+for (i in 1:n_sim){ # Complete the syntax
+  
+  # Step 4a re-randomize the response variable
+  permutation_df[[1]] <- sample(permutation_df[[1]], size = length(permutation_df[[1]]), replace = FALSE)
+  # Use the course notes as a template for doing this step
+  # Note: Once we get to Part e and put this script inside a function environment,
+  # using the actual name of the response variable requires much more advanced R.
+  # Remember from Lab 1 that this is an alternative way to do the column indexing
+  # and we set up permutation_df so that the first column is the response variable.
+    
+  # Step 4b Obtain the value of the test statistic
+  t_perm[i] <- t.test(formula = formula, data = permutation_df, 
+                  alternative = alternative, var.equal = TRUE)$stat
+}
+
+# Step 5 Obtain the p-value    
+  # Use the course notes as a template for getting p_left and p_right
+  t_all <- c(t_obs, t_perm)
+  p_left <- sum(t_all <= t_obs)/(100)
+  p_right <- sum(t_all >= t_obs)/(100)
+  
+  # Use the switch function to compute the correct p-value
+  p_value <- dplyr::case_when(alternative == "g" ~ p_right,
+                              alternative == "l" ~ p_left,
+                              alternative == "t" ~ 2*min(p_left, p_right),
+                              TRUE ~ NaN # output NaN if alternative is anything else
+  )
+  
+# Step 6: Create a list containing all the components of the output and then output it
+# I've started the list, but you may need to finish it
+  results <- list(obs = t_obs,
+                  sim = t_perm,
+                  p_v = p_value)
   
   return(results) # Last line of the function returns our output
 }
@@ -338,12 +394,17 @@ df_new <- data.frame(group = rep(c("Group A", "Group B"), 50),
                    value = rnorm(100))
 test_output <- permutation_t_test(formula = value ~ group,
                    data = df_new,
-                   alternative = "g",
-                   ...)
+                   alternative = "g")
 # if you did not include default values for your new arguments, make sure to give them values in your function call!
 ```
 
 Produce a histogram of the simulated t-statistics and add a vertical line at the observed t-statistic value (it is easiest to use the regular `hist` and `abline` functions). Using the histogram, confirm that the reported p-value seems reasonable.
+
+```{r histogram}
+hist(results$sim)
+abline(v = results$obs)
+```
+
 
 # Problem 3: Doing a Permutation t-Test
 
@@ -359,7 +420,7 @@ In this problem, we will test the null hypothesis that there is no difference be
 
 Run the chunk below to plot a histogram showing the distribution of Intake in each group.
 
-```{r plot intake, eval = FALSE}
+```{r plot intake}
 ggplot(data = alcohol, mapping = aes(x = Intake)) +
   geom_histogram(center = 1000, binwidth = 200) +
   facet_wrap(~Group)
@@ -367,36 +428,48 @@ ggplot(data = alcohol, mapping = aes(x = Intake)) +
 
 What do the `center` and `binwidth` arguments do? What does `facet_wrap` do?
 
+Center centers the graph along the given value. Binwidth determines the width of the bins. Facet_wrap graphs two sets on the same panel side by side. 
+
 ## Part b (Code: 0.5 pts)
 
 Complete the code chunk below to find the mean and standard deviation of Intake in each group. Remember to remove `eval = FALSE` after you get the chunk to run the way it's supposed to.
 
-```{r summarize intake, eval = FALSE}
-alcohol %>% group_by() %>% # what do we group by?
-  summarize(mean_intake = , # how do we compute the mean of Intake
-            sd_intake = ) # how do we compute the sd of Intake?
+```{r summarize intake}
+alcohol %>% group_by(Group) %>% # what do we group by?
+  summarize(mean_intake = mean(Intake), # how do we compute the mean of Intake
+            sd_intake = sd(Intake)) # how do we compute the sd of Intake?
 ```
 
 ## Part c (Code: 1 pt, Explanation: 1 pt)
 
 Using the function you wrote in Problem 2, perform a permutation test of the null hypothesis that there is no difference between the groups against the alternative that the Control Group (the default Group 1) had a *higher* alcohol intake.
 
-Store the output of your function in the variable `alcohol_t_test`, that is, run `alcohol_t_test <- permutation_t_test(...)` and replace the `...` with what you need to run the test. Perform the following sanity checks to make sure your code worked as intended:
-
-```{r sanity check-1, eval = FALSE}
-# Check to make sure you computed the t-statistic correctly
-t.test()$statistic # remember to fill in the t.test arguments!
-alcohol_t_test$statistic.observed # replace statistic.observed with the name of the variable in the output you stored the observed t-statistic in
+```{r test function on alcohol }
+#permutation_t_test <- function(formula, data, alternative = "t")
+alcohol_t_test <- permutation_t_test(formula = Intake ~ Group, data = alcohol, alternative = "g")
 ```
 
-```{r sanity check-2, eval = FALSE}
+
+Store the output of your function in the variable `alcohol_t_test`, that is, run `alcohol_t_test <- permutation_t_test(...)` and replace the `...` with what you need to run the test. Perform the following sanity checks to make sure your code worked as intended:
+
+
+```{r sanity check-1}
+# Check to make sure you computed the t-statistic correctly
+t.test(formula = Intake ~ Group, data = alcohol, alternative = "g")$statistic # remember to fill in the t.test arguments!
+alcohol_t_test$obs # replace statistic.observed with the name of the variable in the output you stored the observed t-statistic in
+```
+
+```{r sanity check-2}
 # Check to make sure you have the correct number of resamples
+n_sim
 # Is this equal to the number of times you told R to do the permutation resampling?
-length(alcohol_t_test$statistic.simulated) # replace statistic.simulated with the name of the variable in the output you stored the simulated t-statistics in
+length(alcohol_t_test$sim) # replace statistic.simulated with the name of the variable in the output you stored the simulated t-statistics in
 
 ```
 
 Based on the permutation test, using a 5% significance level, what should we conclude about the effectiveness of the SST program at reducing alcohol intake? Why?
+
+
 
 ## Part d (Code: 1 pt; Explanation: 1 pt)
 
