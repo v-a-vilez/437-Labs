@@ -1,6 +1,6 @@
 ---
 title: 'Homework Assignment #1'
-author: "Math 437 - Modern Data Analysis"
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due February 10, 2023"
 output: pdf_document
 ---
@@ -25,14 +25,22 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 
 1. What is the difference between an *input variable* and an *output variable* in a model? Provide synonyms for each term.
 2. What is the difference between *reducible error* and *irreducible error*? Give an example (other than those given in the book) of a situation in which the irreducible error is greater than zero.
+-> A reducible error can be improved to estimate the response variable using statistical techniques where as a irreducible cannot be improved or change but is always greater than zero. An example of an irreducible error is the risk of an inaccurate measure of an off day data when calculating who is the best pitcher in the MLB. 
+
 3. Generally, what types of questions are answered using *inference* and what types are answered using *prediction*? Is it possible to use the same model for both inference and prediction?
 4. Generally, what types of prediction questions are answered using *regression* methods and what types are answered using *classification* methods?
 5. What are the major advantages of using a *nonparametric* method over a *parametric* method? What are the disadvantages?
+-> The advantage of using a non-parametric method is there are less assumptions that must be met so it is easier to use the same model to estimate different sets of data. The disadvantage of a non-parametric method is space, when using a parametric method, the only thing that must be shared and stored is typically an equation while a non-parametric method must be stored since it uses the original data to model but some data sets are extremely large and costly to store.
+
 6. In prediction, we typically aim to minimize a *loss function* that more-or-less represents the total error in our predictions. Give one example each for regression and classification problems of a measure of model (in)accuracy.
 7. Why do we only fit the model on a *training set*? What do we do with the rest of the data?
 8. Generally, as a model becomes more complex, what happens to the *bias* of the model and why? What happens to the *variance* of the model and why?
+-> As the model becomes more complex and less flexible, the bias of the model increases and  the variance of the model decreases because there is more data to use for the training data so there will be a different f to use to fit the statistical learning method.  
+
 9. What is meant by the term *overfitting*? Explain this in terms of the bias-variance trade-off.
 10. Briefly explain how a *Bayes classifier* works.
+-> A Bayes classifier takes each observation and assigned them to the most likely class, given its predictor values. The classifier will always choose the class which Pr(Y = j| X = x0) is largest. In a two-class problem where there are two possible response values, the Bayes classifier corresponds to predicting class one if Pr(Y =1|X = x0) > 0.5 and class two otherwise. The Bayes classifier's prediction is determined by the Bayes decision boundary. This produces the lowest possible test error rate, called the Bayes error rate. 
+
 
 # Conceptual Problems
 ## Phuong
@@ -56,9 +64,134 @@ Textbook Exercise 13.7.2
 
 From the Parametric vs. Nonparametric Tests: Two-Sample Tests activity, copy to this homework your simulation code/results from the *Assumptions Violated, Ha True* section of each test as well as the results tables for all simulations (in the Class Results section). 
 
+```{r code from 'assumptions violated ha true}
+#t.test
+#{r assumptions violated ha true}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+d = 0.5
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- rnorm(nG) # finish this line
+  y <- c(rnorm(22,mean=d,sd = sqrt(0.19)),rnorm(3, mean = 3+d, sd = sqrt(0.19))) # finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- t.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+
+
+
+```
+
+```{r code from 'assumptions violated ha true'}
+#Mann-Whitney
+#{r assumptions violated ha true}
+pvalues <- numeric(length = 10000)
+
+nG <- 25# fill in your value of nG
+d = 0.5
+for (i in 1:length(pvalues)){
+  set.seed(i)  # notice that the seed changes every time inside the for loop
+  # you could also set a single seed outside the for loop
+  
+  # Create the vectors x and y
+  x <- rnorm(nG) # finish this line
+  y <- c(rnorm(22,mean=d,sd = sqrt(0.19)),rnorm(3, mean = 3+d, sd = sqrt(0.19))) # finish this line
+
+  # Perform the t-test and get the p-value
+  pvalues[i] <- wilcox.test(x = x, y = y, alternative= "two.sided")$p.value # finish this line
+    
+}
+
+# histogram of the p-values under H0
+hist(pvalues)
+
+plot(ecdf(pvalues),
+     xlab = "p-value",
+     ylab = "F(p-value)",
+     main = "Empirical CDF of the P-Value Under H0")
+
+mean(pvalues <= 0.05)
+```
+
+Class Results
+
+Our simulations estimated the following.
+
+For the two sample t-test using $\alpha = 0.05$:
+
+$$
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+$n_G$ & t-Test Assumptions & Type I Error Rate & Power at $d = 0.2$ & Power at $d = 0.5$ & Power at $d = 0.8$\\
+\hline
+10 & Met & 0.05 & 6.95% & 18.18% & 38.3% \\
+\hline
+25 & Met & 0.05 & 10.32% & 40% & 79% \\
+\hline
+50 & Met & 0.05 & 15.92% & 68.12% & 98% \\
+\hline
+10 & Violated & 0 & 0.02% & 16.34% & 20.4% \\
+\hline
+25 & Violated & 0 & 0.06% & 89% & 93% \\
+\hline
+50 & Violated & 0 & 1.23% & 86.55% & 100% \\
+\hline
+\end{tabular}
+$$
+
+For the Mann-Whitney test using $\alpha = 0.05$:
+
+$$
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+$n_G$ & t-Test Assumptions & Type I Error Rate & Power at $d = 0.2$ & Power at $d = 0.5$ & Power at $d = 0.8$\\
+\hline
+10 & Met & 0.05 & 6.16% & 1.5% & 34.5% \\
+\hline
+25 & Met & 0.05 & 10.19% & 39% & 77% \\
+\hline
+50 & Met & 0.05 & 15.53% & 66.22% & 100% \\
+\hline
+10 & Violated & 0.02 & 6.65% & 42.44% & 86.5% \\
+\hline
+25 & Violated & 0.02 & 17.66% & 78% & 99.97% \\
+\hline
+50 & Violated & 0.02 & 41.39% & 99.86% & 100% \\
+\hline
+\end{tabular}
+$$
+
+
 From the Parametrics vs. Nonparametric Tests: Multi-Sample Tests activity, copy to this homework your simulation code/results from the *Both Assumptions Violated* section of each test as well as the results tables for all simulations (in the Class Results section).
 
+```{r first test 'both assumptions violated', eval=FALSE}
+
+```
+
+```{r second test 'both assumptions violated', eval=FALSE}
+
+```
+
+
 Write a couple of paragraphs explaining the difference between parametric and nonparametric methods and explain why classic nonparametric methods (Mann-Whitney and Kruskal-Wallis) are a better choice than the corresponding parametric methods (two-sample t-test and one-way ANOVA) when the assumptions of the parametric method are clearly violated.
+
+-> 
 
 # Applied Problems
 # Michael
