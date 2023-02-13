@@ -1,0 +1,264 @@
+---
+title: 'Lab Assignment #3'
+author: "Math 437 - Modern Data Analysis"
+date: "Due February 15, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There are two purposes to this lab. First, you will get comfortable with the family-wise error rate and false discovery rate. Then, we will get more practice with coding a nonparametric bootstrap estimate of standard error.
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+```
+
+This lab assignment is worth a total of **15 points**.
+
+# Problem 1: Family-Wise Error Rate
+
+## Part a (Code: 1 pt; Computation and Explanation: 0.5 pts)
+
+Run the code in ISLR Labs 13.6.1 and 13.6.2. Put each chunk from the textbook in its own chunk.
+
+```{r ISLR 6.1 p1}
+set.seed(6)
+x <- matrix(rnorm(10*100), 10, 100)
+x [,1:50] <- x[, 1:50]+0.5
+```
+
+```{r ISLR 6.1 p2}
+t.test(x[,1],mu = 0)
+```
+
+```{r ISLR 6.1 p3}
+p.values <- rep(0,100)
+for (i in 1:100) {
+  p.values[i] <- t.test(x[,i], mu = 0)$p.value
+}
+decision <- rep("do not reject H0", 100)
+decision[p.values <= .05] <- "reject H0"
+```
+
+```{r ISLR 6.1 p4}
+table(decision ,
+  c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
+)
+```
+
+```{r ISLR 6.1 p5}
+x <- matrix (rnorm (10 * 100), 10, 100)
+x[, 1:50] <- x[, 1:50] + 1
+for (i in 1:100) {
+  p.values[i] <- t.test(x[, i], mu = 0)$p.value 
+  }
+decision <- rep ("Do not reject H0", 100)
+decision[p.values <= .05] <- " Reject H0"
+table (decision ,
+c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
+)
+```
+
+
+Using the output of Lab 13.6.1, estimate the power of this test to detect each of the two alternative hypotheses $\mu = 0.5$ and $\mu = 1$.
+
+```{r mu = 0.5}
+#power = # (reject H0 & H0 false)/ # H0 false
+x <- matrix (rnorm (10 * 100), 10, 100)
+x[, 1:50] <- x[, 1:50] + 1
+for (i in 1:100) {
+  p.values[i] <- t.test(x[, i], mu = 0.5)$p.value 
+  }
+decision <- rep ("Do not reject H0", 100)
+decision[p.values <= .05] <- " Reject H0"
+table (decision ,
+c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
+)
+
+pow_5 = 17 / (17+33)
+pow_5
+```
+
+```{r mu = 1}
+#power = # (reject H0 & H0 false)/ # H0 false
+x <- matrix (rnorm (10 * 100), 10, 100)
+x[, 1:50] <- x[, 1:50] + 1
+for (i in 1:100) {
+  p.values[i] <- t.test(x[, i], mu = 1)$p.value 
+  }
+decision <- rep ("Do not reject H0", 100)
+decision[p.values <= .05] <- " Reject H0"
+table (decision ,
+c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
+)
+
+pow_1 = 2 / 50
+pow_1
+```
+
+## Part b (Explanation: 1 pt)
+
+What does the `p.adjust` function do exactly when `method = bonferroni`? What about when `method = holm`? Why does it make more sense for R to adjust the p-values rather than the significance level when controlling the FWER?
+
+## Part c (Explanation: 1 pt)
+
+Consider the second-to-last chunk in ISLR Lab 13.6.2 (the one using `TukeyHSD`). Is it appropriate to do a one-way ANOVA with this data? Explain why or why not. (You may want to produce some graphs and/or numerical summaries to support your answer.)
+
+# Problem 2: False Discovery Rate
+
+## Part a (Code: 0.5 pts)
+
+Run the code in ISLR Lab 13.6.3. Put each chunk from the textbook in its own chunk.
+
+## Part b (Code: 1 pt)
+
+Finish writing the `FDR_plot` function in the code chunk below. This function should take two arguments: `p.values`, a vector of p-values, and `q`, the desired False Discovery Rate, and produce a graph like those in Figure 13.6. (Assume that on the graphs, $q$ and $\alpha$ are set to the same value.)
+
+```{r FDR plot, eval = FALSE}
+FDR_plot <- function(p.values, q){
+  
+  # Copy code from the last two chunks of ISLR Lab 13.6.3, but replace variable names and hard-coded values as necessary
+  
+  invisible(wh.ps) # invisibly return the significant p-values
+}
+```
+
+Test your function. First, attempt to duplicate the left and right panels of Figure 13.6. 
+
+```{r ISLR 13.6 Left}
+```
+
+```{r ISLR 13.6 Right}
+```
+
+Then, test your function on the simulated dataset in the chunk below, using $q = 0.1$.
+
+```{r sim p-values}
+set.seed(12)
+sim_pvalues <- runif(1000, min = 1e-5, max = 0.05001)
+# Now put a line of code running your function on this set of "significant" p-values
+```
+
+# Problem 3: Simulation Study of FWER and FDR
+
+This problem is adapted from ISLR Chapter 13, Exercise 8.
+
+## Part a (Code: 1 pt)
+
+Using the code in Exercise 13.7.8, create a 20 x 100 matrix where each column represents 20 random numbers from $N(0, 1)$. 
+
+```{r Code 13.7.8}
+
+```
+
+Then, run a t-test on each column of the matrix testing $H_0: \mu = 0$ against $H_a: \mu \neq 0$. We are going to use the `apply` function to do this rather than adapt the `for` loop from the ISLR Labs. (Recall from the class activities that the `apply` function applies a single function to each row (`MARGIN = 1`) or column (`MARGIN = 2`) of a matrix.)
+
+Don't forget to delete the `eval = FALSE` after you've fixed this code chunk to run properly!
+
+```{r t-test-apply, eval = FALSE}
+t_test_0 <- function(x){
+  # x: a vector of data
+  
+  p_value <- # write a line of code that extracts the p-value from the t-test we want to do
+    
+  return(p_value)
+
+}
+
+p_values <- apply(X, 2, t_test_0)
+```
+
+Plot a histogram of the p-values obtained.
+
+```{r 13.7.8a histogram}
+
+```
+
+## Part b (Code: 1 pt, Explanation: 0.5 pts)
+
+Without any adjustment for multiple hypothesis tests, how many null hypotheses would be rejected at $\alpha = 0.05$? We can take advantage of the fact that R implicitly converts *logical* (TRUE/FALSE) variables to *numerical* variables.
+
+```{r 13.7.8b, eval = FALSE}
+alpha <- 0.05
+sum(p_values <= alpha)
+```
+
+Obtain the adjusted p-values using the Holm step-down procedure. How many null hypotheses would be rejected if we control the FWER at 0.05?
+
+```{r 13.7.8c holm}
+
+```
+
+Obtain the adjusted p-values using the Benjamini-Hochberg procedure. How many null hypotheses would be rejected if we control the FDR at 0.05?
+
+```{r 13.7.8d bh}
+
+```
+
+## Part c (Code: 1 pt)
+
+Create a new matrix, `X2`, that is exactly the same as X, except that the first 25 fund managers do actually have a slight long-term return of $+1\%$ (i.e., in rows 1-25 $\mu = 1$ not 0.01). Conduct your 100 t-tests and plot a histogram of the new p-values.
+
+```{r create X2}
+
+```
+
+```{r t-test-apply redux}
+# don't rewrite the function, just apply it to the new dataset!
+```
+
+```{r 13.7.8 histogram redux}
+
+```
+
+## Part d (Code: 1 pt, Explanation: 1 pt)
+
+Without any adjustment for multiple hypothesis tests, how many of the 75 true null hypotheses would be rejected at $\alpha = 0.05$? How many of the 25 false null hypotheses would be rejected?
+
+```{r 13.7.8b redux, eval = FALSE}
+reject.falseH0 <- sum(p_values[1:25] <= alpha)
+reject.trueH0 <- sum(p_values[26:100] <= alpha)
+c(true = reject.trueH0, false = reject.falseH0)
+```
+
+Obtain the adjusted p-values using the Holm step-down procedure. How many null hypotheses of each type would be rejected if we control the FWER at 0.05?
+
+```{r 13.7.8c holm redux}
+
+```
+
+Obtain the adjusted p-values using the Benjamini-Hochberg procedure. How many null hypotheses of each type would be rejected if we control the FDR at 0.05?
+
+```{r 13.7.8d bh redux}
+
+```
+
+Compare your results from the three procedures. Why is it important to consider the situation where *some* null hypotheses are true, when evaluating the performance of the different procedures?
+
+# Problem 4: Bootstrap Estimation of Standard Error
+
+## Part a (Code: 0.5 pts)
+
+Run the code in the first half of ISLR Lab 5.3.4, "Estimating the Accuracy of a Statistic of Interest." Put each chunk from the textbook in its own chunk.
+
+If you are in the actuarial science concentration, you should be familiar with (or will at some point see) this formula! For the rest of us, note that $X$ and $Y$ are assumed to be the yearly return of two different financial assets, and $\alpha$, the quantity to be estimated, is the fraction of money to be invested in $X$ such that the variance (risk) of the total investment $\alpha X + (1 - \alpha) Y$ is minimized. In this problem $\alpha$ is not the significance level!
+
+## Part b (Code: 2 pts)
+
+According to the instructions for Lab 5.3.4, "We can implement a bootstrap analysis by performing this command [alpha.fn on a bootstrap sample] many times, recording all of the corresponding estimates for $\alpha$, and computing the resulting standard deviation."
+
+Write a code chunk that performs all of those steps and prints out the standard deviation. Use 1000 bootstrap samples. 
+
+## Part c (Code: 1 pt)
+
+Replicate the center panel of textbook Figure 5.10: a histogram of  the bootstrap estimates of $\alpha$ (from Part b) with a solid pink (or red) line at the true value of $\alpha = 0.6$. You may use either base R plotting commands (which uses `abline` to add the vertical line) or the `ggplot2` package (which adds a `geom_vline` to the plot). 
+
+## Part d (Explanation: 1 pt)
+
+Note that the distribution you graphed in Part c is a sampling distribution of $\hat{\alpha}$. Explain why it would be appropriate to use this sampling distribution to construct a confidence interval for $\alpha$, but not to obtain a p-value for a hypothesis test of $H_0: \alpha = 0.6$ against $H_a: \alpha \neq 0.6$.
