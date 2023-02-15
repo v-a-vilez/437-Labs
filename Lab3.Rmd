@@ -27,7 +27,80 @@ This lab assignment is worth a total of **15 points**.
 
 Run the code in ISLR Labs 13.6.1 and 13.6.2. Put each chunk from the textbook in its own chunk.
 
+```{r ISLR 6.1 p1}
+set.seed(6)
+x <- matrix(rnorm(10*100), 10, 100)
+x [,1:50] <- x[, 1:50]+0.5
+```
+
+```{r ISLR 6.1 p2}
+t.test(x[,1],mu = 0)
+```
+
+```{r ISLR 6.1 p3}
+p.values <- rep(0,100)
+for (i in 1:100) {
+  p.values[i] <- t.test(x[,i], mu = 0)$p.value
+}
+decision <- rep("do not reject H0", 100)
+decision[p.values <= .05] <- "reject H0"
+```
+
+```{r ISLR 6.1 p4}
+table(decision ,
+  c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
+)
+```
+
+```{r ISLR 6.1 p5}
+x <- matrix (rnorm (10 * 100), 10, 100)
+x[, 1:50] <- x[, 1:50] + 1
+for (i in 1:100) {
+  p.values[i] <- t.test(x[, i], mu = 0)$p.value 
+  }
+decision <- rep ("Do not reject H0", 100)
+decision[p.values <= .05] <- " Reject H0"
+table (decision ,
+c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
+)
+```
+
+
 Using the output of Lab 13.6.1, estimate the power of this test to detect each of the two alternative hypotheses $\mu = 0.5$ and $\mu = 1$.
+
+```{r mu = 0.5}
+#power = # (reject H0 & H0 false)/ # H0 false
+x <- matrix (rnorm (10 * 100), 10, 100)
+x[, 1:50] <- x[, 1:50] + 1
+for (i in 1:100) {
+  p.values[i] <- t.test(x[, i], mu = 0.5)$p.value 
+  }
+decision <- rep ("Do not reject H0", 100)
+decision[p.values <= .05] <- " Reject H0"
+table (decision ,
+c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
+)
+
+pow_5 = 17 / (17+33)
+pow_5
+```
+
+```{r mu = 1}
+#power = # (reject H0 & H0 false)/ # H0 false
+x <- matrix (rnorm (10 * 100), 10, 100)
+x[, 1:50] <- x[, 1:50] + 1
+for (i in 1:100) {
+  p.values[i] <- t.test(x[, i], mu = 1)$p.value 
+  }
+decision <- rep ("Do not reject H0", 100)
+decision[p.values <= .05] <- " Reject H0"
+table (decision ,
+c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
+)
+
+pow_1 = 2 / 50
+pow_1
+```
 
 ## Part b (Explanation: 1 pt)
 
@@ -94,9 +167,27 @@ This problem is adapted from ISLR Chapter 13, Exercise 8.
 
 ## Part a (Code: 1 pt)
 
-Using the code in Exercise 13.7.8, create a 20 x 100 matrix where each column represents 20 random numbers from $N(0, 1)$. 
 
-```{r Code 13.7.8}
+```{r ISLR 6.3 p1}
+fund.pvalues <- rep(0,2000)
+for (i in 1:2000) {
+  fund.pvalues[i] <- t.test (Fund[, i], mu = 0)$p.value
+}
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
 
 ```
 
