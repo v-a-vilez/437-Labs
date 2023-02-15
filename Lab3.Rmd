@@ -125,24 +125,40 @@ for (i in 1:2000) {
 }
 ```
 
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
+```{r ISLR 6.3 p2}
+q.values.BH <- p.adjust(fund.pvalues, method = "BH")
+q.values.BH[1:10]
 ```
 
 
+```{r ISLR 6.3 P3}
+sum(q.values.BH <= .1)
+```
 
+```{r ISLR 6.3 P4}
+sum(fund.pvalues <= (0.1 /2000))
+```
+
+```{r ISLR 6.3 P5}
+ps <- sort(fund.pvalues)
+m <- length(fund.pvalues)
+q <- 0.1
+wh.ps <- which(ps < q * (1:m) / m)
+if (length(wh.ps) > 0 ) {
+  wh <- 1:max(wh.ps)
+} else {
+  wh <- numeric(0)
+}
+```
+
+
+```{r ISLR 6.3 P6}
+plot (ps , log = "xy", ylim = c(4e-6, 1), ylab = "P- Value ",
+xlab = " Index ", main = "")
+points (wh, ps[wh], col = 4)
+abline (a = 0, b = (q / m), col = 2, untf = TRUE)
+abline (h = 0.1 / 2000, col = 3)
+```
 
 
 ## Part b (Code: 1 pt)
