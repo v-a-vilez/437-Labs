@@ -213,7 +213,10 @@ This problem is adapted from ISLR Chapter 13, Exercise 8.
 Using the code in Exercise 13.7.8, create a 20 x 100 matrix where each column represents 20 random numbers from $N(0, 1)$. 
 
 ```{r Code 13.7.8}
-
+set.seed(1)
+n <- 20
+m <- 100
+X <- matrix ( rnorm (n * m), ncol = m)
 ```
 
 Then, run a t-test on each column of the matrix testing $H_0: \mu = 0$ against $H_a: \mu \neq 0$. We are going to use the `apply` function to do this rather than adapt the `for` loop from the ISLR Labs. (Recall from the class activities that the `apply` function applies a single function to each row (`MARGIN = 1`) or column (`MARGIN = 2`) of a matrix.)
@@ -224,7 +227,7 @@ Don't forget to delete the `eval = FALSE` after you've fixed this code chunk to 
 t_test_0 <- function(x){
   # x: a vector of data
   
-  p_value <- # write a line of code that extracts the p-value from the t-test we want to do
+  p_value <- t.test(x, mu = 0)$p.value# write a line of code that extracts the p-value from the t-test we want to do
     
   return(p_value)
 
@@ -236,9 +239,8 @@ p_values <- apply(X, 2, t_test_0)
 Plot a histogram of the p-values obtained.
 
 ```{r 13.7.8a histogram}
-
+hist(p_values)
 ```
-
 ## Part b (Code: 1 pt, Explanation: 0.5 pts)
 
 Without any adjustment for multiple hypothesis tests, how many null hypotheses would be rejected at $\alpha = 0.05$? We can take advantage of the fact that R implicitly converts *logical* (TRUE/FALSE) variables to *numerical* variables.
