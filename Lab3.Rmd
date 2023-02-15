@@ -254,13 +254,15 @@ sum(p_values <= alpha)
 Obtain the adjusted p-values using the Holm step-down procedure. How many null hypotheses would be rejected if we control the FWER at 0.05?
 
 ```{r 13.7.8c holm}
-
+p.values.H <- p.adjust(p_values, method = "holm")
+p.values.H
 ```
 
 Obtain the adjusted p-values using the Benjamini-Hochberg procedure. How many null hypotheses would be rejected if we control the FDR at 0.05?
 
 ```{r 13.7.8d bh}
-
+p.values.BH <- p.adjust(p_values, method = "BH")
+p.values.BH
 ```
 
 ## Part c (Code: 1 pt)
