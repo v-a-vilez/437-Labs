@@ -190,11 +190,12 @@ xlab = " Index ", main = "")
 
 Test your function. First, attempt to duplicate the left and right panels of Figure 13.6. 
 
-```{r ISLR 13.6 Left}
+```{r ISLR 13.6 Left and Right}
+par(mfrow = c(1,2))
+FDR_plot(fund.pvalues,0.05)
+FDR_plot(fund.pvalues,0.3)
 ```
 
-```{r ISLR 13.6 Right}
-```
 
 Then, test your function on the simulated dataset in the chunk below, using $q = 0.1$.
 
@@ -267,15 +268,18 @@ Obtain the adjusted p-values using the Benjamini-Hochberg procedure. How many nu
 Create a new matrix, `X2`, that is exactly the same as X, except that the first 25 fund managers do actually have a slight long-term return of $+1\%$ (i.e., in rows 1-25 $\mu = 1$ not 0.01). Conduct your 100 t-tests and plot a histogram of the new p-values.
 
 ```{r create X2}
-
+X2 <- matrix(c(rnorm(25*20,mean = 1),rnorm(75*20, mean = 0)),ncol = 100)
 ```
 
 ```{r t-test-apply redux}
 # don't rewrite the function, just apply it to the new dataset!
+t_test_0(X2)
+p_values2 <- apply(X2, 2, t_test_0)
+
 ```
 
 ```{r 13.7.8 histogram redux}
-
+hist(p_values2)
 ```
 
 ## Part d (Code: 1 pt, Explanation: 1 pt)
