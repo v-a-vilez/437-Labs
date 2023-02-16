@@ -1,6 +1,6 @@
 ---
 title: 'Lab Assignment #3'
-author: "Math 437 - Modern Data Analysis"
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due February 15, 2023"
 output: pdf_document
 ---
@@ -101,6 +101,63 @@ c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
 pow_1 = 2 / 50
 pow_1
 ```
+Start of 13.6.2
+
+```{r 13.6.2 p1}
+m <- 1:500
+fwe1 <- 1 - (1 - 0.05)^m
+fwe2 <- 1 - (1 - 0.01)^m
+fwe3 <- 1 - (1 - 0.001)^m
+```
+
+```{r 13.6.2 p2}
+par(mfrow = c(1, 1))
+plot(m, fwe1, type = "l", log = "x", ylim = c(0, 1), col = 2, 
+     ylab = "Family - Wise Error Rate",
+     xlab = "Number of Hypotheses")
+lines(m, fwe2, col = 4)
+lines(m, fwe3, col = 3)
+abline(h = 0.05, lty = 2)
+```
+
+```{r 13.6.2 p3}
+library(ISLR2)
+fund.mini <- Fund[, 1:5]
+t.test(fund.mini[, 1], mu = 0)
+fund.pvalue <- rep(0, 5)
+for (i in 1:5){
+  fund.pvalue[i] <- t.test(fund.mini[, i], mu = 0)$p.value
+}
+fund.pvalue
+```
+
+```{r 13.6.2 p4}
+p.adjust(fund.pvalue, method = "bonferroni")
+pmin(fund.pvalue * 5, 1)
+```
+
+```{r 13.6.2 p5}
+p.adjust(fund.pvalue, method = "holm")
+```
+
+```{r 13.6.2 p6}
+apply(fund.mini, 2, mean)
+```
+
+```{r 13.6.2 p7}
+t.test(fund.mini[, 1], fund.mini[, 2], paired = T)
+```
+
+```{r 13.6.2 p8}
+returns <- as.vector(as.matrix(fund.mini))
+manager <- rep(c("1", "2", "3", "4", "5"), rep(50, 5))
+a1 <- aov(returns ~ manager)
+TukeyHSD(x = a1)
+```
+
+```{r 13.6.2 p9}
+plot(TukeyHSD(x = a1))
+```
 
 ## Part b (Explanation: 1 pt)
 
@@ -111,6 +168,8 @@ Under Bonferroni, the p-values are multiplied by the number of comparisons, whil
 ## Part c (Explanation: 1 pt)
 
 Consider the second-to-last chunk in ISLR Lab 13.6.2 (the one using `TukeyHSD`). Is it appropriate to do a one-way ANOVA with this data? Explain why or why not. (You may want to produce some graphs and/or numerical summaries to support your answer.)
+
+-> It is not appropriate to do a one-way ANOVA with this data because the data is not independent based on the numerical summaries of their performance/behavior.
 
 # Problem 2: False Discovery Rate
 
@@ -320,28 +379,3 @@ hist(p.values2.BH)
 
 Compare your results from the three procedures. Why is it important to consider the situation where *some* null hypotheses are true, when evaluating the performance of the different procedures?
 
-
-
-
-
-# Problem 4: Bootstrap Estimation of Standard Error
-
-## Part a (Code: 0.5 pts)
-
-Run the code in the first half of ISLR Lab 5.3.4, "Estimating the Accuracy of a Statistic of Interest." Put each chunk from the textbook in its own chunk.
-
-If you are in the actuarial science concentration, you should be familiar with (or will at some point see) this formula! For the rest of us, note that $X$ and $Y$ are assumed to be the yearly return of two different financial assets, and $\alpha$, the quantity to be estimated, is the fraction of money to be invested in $X$ such that the variance (risk) of the total investment $\alpha X + (1 - \alpha) Y$ is minimized. In this problem $\alpha$ is not the significance level!
-
-## Part b (Code: 2 pts)
-
-According to the instructions for Lab 5.3.4, "We can implement a bootstrap analysis by performing this command [alpha.fn on a bootstrap sample] many times, recording all of the corresponding estimates for $\alpha$, and computing the resulting standard deviation."
-
-Write a code chunk that performs all of those steps and prints out the standard deviation. Use 1000 bootstrap samples. 
-
-## Part c (Code: 1 pt)
-
-Replicate the center panel of textbook Figure 5.10: a histogram of  the bootstrap estimates of $\alpha$ (from Part b) with a solid pink (or red) line at the true value of $\alpha = 0.6$. You may use either base R plotting commands (which uses `abline` to add the vertical line) or the `ggplot2` package (which adds a `geom_vline` to the plot). 
-
-## Part d (Explanation: 1 pt)
-
-Note that the distribution you graphed in Part c is a sampling distribution of $\hat{\alpha}$. Explain why it would be appropriate to use this sampling distribution to construct a confidence interval for $\alpha$, but not to obtain a p-value for a hypothesis test of $H_0: \alpha = 0.6$ against $H_a: \alpha \neq 0.6$.
