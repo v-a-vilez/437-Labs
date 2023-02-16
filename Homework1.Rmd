@@ -24,16 +24,24 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 # Michael 3,6,9
 
 1. What is the difference between an *input variable* and an *output variable* in a model? Provide synonyms for each term.
+-> Input variable goes into the function, while output varible is what comes out of the function. Synonyms for input variable are predictor and independent variable. Synonyms for output variable are response and dependent variable.
+
 2. What is the difference between *reducible error* and *irreducible error*? Give an example (other than those given in the book) of a situation in which the irreducible error is greater than zero.
 -> A reducible error can be improved to estimate the response variable using statistical techniques where as a irreducible cannot be improved or change but is always greater than zero. An example of an irreducible error is the risk of an inaccurate measure of an off day data when calculating who is the best pitcher in the MLB. 
 
 3. Generally, what types of questions are answered using *inference* and what types are answered using *prediction*? Is it possible to use the same model for both inference and prediction?
+
 4. Generally, what types of prediction questions are answered using *regression* methods and what types are answered using *classification* methods?
+-> Logistic regression and linear discriminant analysis are used for classification methods. Regression analysis and regression models are used for regression methods.
+
 5. What are the major advantages of using a *nonparametric* method over a *parametric* method? What are the disadvantages?
 -> The advantage of using a non-parametric method is there are less assumptions that must be met so it is easier to use the same model to estimate different sets of data. The disadvantage of a non-parametric method is space, when using a parametric method, the only thing that must be shared and stored is typically an equation while a non-parametric method must be stored since it uses the original data to model but some data sets are extremely large and costly to store.
 
 6. In prediction, we typically aim to minimize a *loss function* that more-or-less represents the total error in our predictions. Give one example each for regression and classification problems of a measure of model (in)accuracy.
+
 7. Why do we only fit the model on a *training set*? What do we do with the rest of the data?
+-> We only fit the model on a training set because we want to select the smallest training MSE. We can compute and minimize the rest of the data to find the small MSE, even though we are not really interested.
+
 8. Generally, as a model becomes more complex, what happens to the *bias* of the model and why? What happens to the *variance* of the model and why?
 -> As the model becomes more complex and less flexible, the bias of the model increases and  the variance of the model decreases because there is more data to use for the training data so there will be a different f to use to fit the statistical learning method.  
 
@@ -53,9 +61,21 @@ Write me a brief (2-3 paragraphs) summary of what you learned in the P-Values an
 
 Textbook Exercise 2.4.4
 
+a) Classification is useful for qualitative responses such as a person's marital status (predictors: married or not), spam filtering (predictors: spam or non-spam), and customer behavior (predictors: likely to purchase more items or not). The goals of a person's marital status and spam filtering are inferences because we can determine the results based on the predictors. However, the goal of customer behavior is prediction because there is a likelihood that customers are about to make more purchases.
+
+b) Regression is useful for quantitative problems such as business companies (advertising spending as predictor and revenue as response), medical researchers (drug dosage as predictor and blood pressure as response), and agricultural scientists (fertilizer and water as predictors and crop yield as response). The goals of business companies, medical researchers, and agricultural scientists are prediction because the results depend on the amount of the predictors over time.
+
+c) Cluster is useful for health insurance (cluster of household size, number of doctor visits per year, and average age of household members), retail marketing (cluster of family size and spending level), and streaming services (cluster to identify the amount of usage users).
+
 ## Conceptual Problem 3 (3 pts) 
 
 Textbook Exercise 13.7.2
+
+a) If P($H_j$ rejected) = alpha, then $A_j$ ~ BER($\alpha$).
+
+b) If B = $\sum_{j=1} ^ {m} A_j$, which are independent and identically distributed, then the distribution is B ~ BINOM(m,$\alpha$).
+
+c) The standard deviation is $\sqrt{m * \alpha *(1-\alpha)}$.
 
 # Simulation Problems
 # Vanessa 
