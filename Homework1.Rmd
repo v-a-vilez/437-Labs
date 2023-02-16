@@ -57,6 +57,66 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 
 Write me a brief (2-3 paragraphs) summary of what you learned in the P-Values and Power in-class activity about how the distribution of p-values (over very many tests) is affected by the validity/violation of test assumptions and the power of the test. Did anything surprise you or clarify a concept for you? Support your writing with a few graphs you produced in class (it is easiest to copy and re-run the relevant code chunks).
 
+ -> In Problem 1, we used the poisson distribution to complete the simulation. In Problem 2, the histograms look similar but have different z-score ranges in different directions. The histogram of the normal distribution has more z-scores in the negatives while the histogram of the poisson distribution has more z-scores in the positives. The histograms of the two-sided p-value have obvious differences. The normal distribution is more uniform across the p-values, while the poisson distribution has more variation with the frequency of each p-value. The empirical cdf's of both distributions have a similar shape, but the normal distribution is continuous while the poisson distribution is discrete. We would trust the p-value from a one-sample z-test, but not fully because while both histograms are uniform, they are still varied. In Problem 3, we saw how changing power affected the p-value when we rejected the null. In Problem 4, we saw how changing the power and significance level affected the p-value. 
+  This simulation did clarify for us what a power does and how changing the power and significance level affect the p-value. In Problem 5, when alpha is low, the cdf the probabilities of getting a smaller p-value has a higher range. When alpha is high, there is less of a possibility of getting a smaller p-value. When alpha is very low, the probability of getting a smaller p-value increases. When alpha is very high, there is less of a a chance of getting a small p-value. In Problem 6, under adequately powered studies, the probability of 82% of the p-values to being smaller is generally higher under Ha compared to Ho. In underpowered studies, the probability under Ha gets generally lower. In severely underpowered studies, Ha and Ho have almost the same probabilities, even being lower than Ho with sufficiently low powers. In all cases, the probability under Ho is always the same.
+
+```{r p-value cdf function}
+pvalue_cdf <- function(alpha = 0.05, power = 0.80){
+  
+  z_alpha <- qnorm(alpha/2, mean = 0, sd = 1, lower.tail = TRUE)
+  z_beta <- qnorm(power, mean = 0, sd = 1, lower.tail = FALSE) 
+  # z_beta is an overestimate but difference is negligible at high power 
+  delta_z <- abs(z_alpha + z_beta)
+  
+  graph_title <- paste0("CDF of the P-Value with ", 
+                        round(alpha*100, floor(-log10(alpha) + 2)), 
+                        "% Sig. Level and ", 
+                        round(power*100, floor(-log10(power) + 2)), 
+                        "% Power" )
+  
+  z <- seq(0.1, 5, by = 0.01)
+  pvalue <- pnorm(z, 0, 1, lower.tail = FALSE)*2
+  pz <- pnorm(z, delta_z, 1, lower.tail = FALSE)
+  plot(pvalue, pz, type = "l", col = "blue", log = "x",
+       xlab = "P-Value",
+       ylab = "Probability of Getting a Smaller P-Value",
+       ylim = c(0,1),
+       main = graph_title)
+  
+  lines(pvalue, pvalue, lty = "dashed")
+  legend("topleft",
+         legend = c("Under H0", "Under Ha"),
+         col = c("black", "blue"),
+         lty = c("dashed", "solid"))
+  
+  pvalue_df <- data.frame(pvalue = pvalue,
+                          psmaller = pz)
+  
+  invisible(pvalue_df)
+}
+```
+
+
+In the chunk below, write a single line of R code to call this function with `alpha = 0.01` and `power = 0.90`. Briefly explain what the function does.
+
+```{r first pvalue_cdf call}
+pvalue_cdf(alpha = 0.01, power= 0.90)
+```
+```{r calling function with different alphas}
+pvalue_cdf(alpha = 0.0001)
+pvalue_cdf(alpha = 0.085)
+pvalue_cdf(alpha = 0.03)
+pvalue_cdf(alpha = 0.1)
+pvalue_cdf(alpha = 0.69)
+```
+```{r calling function with different powers}
+pvalue_cdf(power = .1)
+pvalue_cdf(power = .5)
+pvalue_cdf(power = .69)
+pvalue_cdf(power = .82)
+pvalue_cdf(power = .9999999999)
+```
+
 ## Conceptual Problem 2 (3 pts) 
 
 Textbook Exercise 2.4.4
@@ -113,8 +173,6 @@ plot(ecdf(pvalues),
      main = "Empirical CDF of the P-Value Under H0")
 
 mean(pvalues <= 0.05)
-
-
 
 ```
 
@@ -196,8 +254,6 @@ $n_G$ & t-Test Assumptions & Type I Error Rate & Power at $d = 0.2$ & Power at $
 \hline
 \end{tabular}
 $$
-
-
 
 Write a couple of paragraphs explaining the difference between parametric and nonparametric methods and describing under what conditions we might prefer to use a classic nonparametric method (Mann-Whitney) Instead of the corresponding parametric method (two-sample t-test).
 
