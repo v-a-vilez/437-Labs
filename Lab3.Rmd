@@ -68,7 +68,7 @@ c( rep ("H0 is False ", 50), rep ("H0 is True ", 50))
 
 Using the output of Lab 13.6.1, estimate the power of this test to detect each of the two alternative hypotheses $\mu = 0.5$ and $\mu = 1$.
 
-```{r mu = 0.5}
+```{r 6.1 mu = 0.5}
 #power = # (reject H0 & H0 false)/ # H0 false
 x <- matrix (rnorm (10 * 100), 10, 100)
 x[, 1:50] <- x[, 1:50] + 1
@@ -85,7 +85,7 @@ pow_5 = 17 / (17+33)
 pow_5
 ```
 
-```{r mu = 1}
+```{r 6.1 mu = 1}
 #power = # (reject H0 & H0 false)/ # H0 false
 x <- matrix (rnorm (10 * 100), 10, 100)
 x[, 1:50] <- x[, 1:50] + 1
@@ -130,7 +130,6 @@ q.values.BH <- p.adjust(fund.pvalues, method = "BH")
 q.values.BH[1:10]
 ```
 
-
 ```{r ISLR 6.3 P3}
 sum(q.values.BH <= .1)
 ```
@@ -161,6 +160,7 @@ abline (h = 0.1 / 2000, col = 3)
 ```
 
 
+
 ## Part b (Code: 1 pt)
 
 Finish writing the `FDR_plot` function in the code chunk below. This function should take two arguments: `p.values`, a vector of p-values, and `q`, the desired False Discovery Rate, and produce a graph like those in Figure 13.6. (Assume that on the graphs, $q$ and $\alpha$ are set to the same value.)
@@ -170,8 +170,8 @@ FDR_plot <- function(p.values, q){
   
   # Copy code from the last two chunks of ISLR Lab 13.6.3, but replace variable names and hard-coded values as necessary
   
-  ps <- sort (pvalues)
-  m <- length (pvalues)
+  ps <- sort (p.values)
+  m <- length (p.values)
   wh.ps <- which (ps < q * (1:m) / m)
   if ( length (wh.ps) >0) {
   wh <- 1: max (wh.ps)
@@ -196,12 +196,12 @@ FDR_plot(fund.pvalues,0.05)
 FDR_plot(fund.pvalues,0.3)
 ```
 
-
 Then, test your function on the simulated dataset in the chunk below, using $q = 0.1$.
 
 ```{r sim p-values}
 set.seed(12)
 sim_pvalues <- runif(1000, min = 1e-5, max = 0.05001)
+FDR_plot(sim_pvalues,.1)
 # Now put a line of code running your function on this set of "significant" p-values
 ```
 
@@ -218,6 +218,7 @@ set.seed(1)
 n <- 20
 m <- 100
 X <- matrix ( rnorm (n * m), ncol = m)
+
 ```
 
 Then, run a t-test on each column of the matrix testing $H_0: \mu = 0$ against $H_a: \mu \neq 0$. We are going to use the `apply` function to do this rather than adapt the `for` loop from the ISLR Labs. (Recall from the class activities that the `apply` function applies a single function to each row (`MARGIN = 1`) or column (`MARGIN = 2`) of a matrix.)
@@ -242,6 +243,7 @@ Plot a histogram of the p-values obtained.
 ```{r 13.7.8a histogram}
 hist(p_values)
 ```
+
 ## Part b (Code: 1 pt, Explanation: 0.5 pts)
 
 Without any adjustment for multiple hypothesis tests, how many null hypotheses would be rejected at $\alpha = 0.05$? We can take advantage of the fact that R implicitly converts *logical* (TRUE/FALSE) variables to *numerical* variables.
@@ -256,17 +258,21 @@ Obtain the adjusted p-values using the Holm step-down procedure. How many null h
 ```{r 13.7.8c holm}
 p.values.H <- p.adjust(p_values, method = "holm")
 p.values.H
+hist(p.values.H)
 ```
+
+None of the null hypothesis can reject the null at 0.05 for Holm.
 
 Obtain the adjusted p-values using the Benjamini-Hochberg procedure. How many null hypotheses would be rejected if we control the FDR at 0.05?
 
 ```{r 13.7.8d bh}
 p.values.BH <- p.adjust(p_values, method = "BH")
 p.values.BH
+hist(p.values.BH)
 ```
+None of the null hypothesis can reject the null at 0.05 for Benjamini-Hochberg
 
 ## Part c (Code: 1 pt)
-
 Create a new matrix, `X2`, that is exactly the same as X, except that the first 25 fund managers do actually have a slight long-term return of $+1\%$ (i.e., in rows 1-25 $\mu = 1$ not 0.01). Conduct your 100 t-tests and plot a histogram of the new p-values.
 
 ```{r create X2}
@@ -277,7 +283,6 @@ X2 <- matrix(c(rnorm(25*20,mean = 1),rnorm(75*20, mean = 0)),ncol = 100)
 # don't rewrite the function, just apply it to the new dataset!
 t_test_0(X2)
 p_values2 <- apply(X2, 2, t_test_0)
-
 ```
 
 ```{r 13.7.8 histogram redux}
@@ -288,25 +293,36 @@ hist(p_values2)
 
 Without any adjustment for multiple hypothesis tests, how many of the 75 true null hypotheses would be rejected at $\alpha = 0.05$? How many of the 25 false null hypotheses would be rejected?
 
+All the 75 true null would not be rejected and all the 25 null hypotheses would be rejected.
+
 ```{r 13.7.8b redux, eval = FALSE}
-reject.falseH0 <- sum(p_values[1:25] <= alpha)
-reject.trueH0 <- sum(p_values[26:100] <= alpha)
+reject.falseH0 <- sum(p_values2[1:25] <= alpha)
+reject.trueH0 <- sum(p_values2[26:100] <= alpha)
 c(true = reject.trueH0, false = reject.falseH0)
 ```
 
 Obtain the adjusted p-values using the Holm step-down procedure. How many null hypotheses of each type would be rejected if we control the FWER at 0.05?
 
 ```{r 13.7.8c holm redux}
-
+p.values2.H <- p.adjust(p_values2, method = "holm")
+p.values2.H
+hist(p.values2.H)
 ```
 
 Obtain the adjusted p-values using the Benjamini-Hochberg procedure. How many null hypotheses of each type would be rejected if we control the FDR at 0.05?
 
 ```{r 13.7.8d bh redux}
+p.values2.BH <- p.adjust(p_values2, method = "BH")
+p.values2.BH
+hist(p.values2.BH)
 
 ```
 
 Compare your results from the three procedures. Why is it important to consider the situation where *some* null hypotheses are true, when evaluating the performance of the different procedures?
+
+
+
+
 
 # Problem 4: Bootstrap Estimation of Standard Error
 
