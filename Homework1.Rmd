@@ -198,20 +198,10 @@ $n_G$ & t-Test Assumptions & Type I Error Rate & Power at $d = 0.2$ & Power at $
 $$
 
 
-From the Parametrics vs. Nonparametric Tests: Multi-Sample Tests activity, copy to this homework your simulation code/results from the *Both Assumptions Violated* section of each test as well as the results tables for all simulations (in the Class Results section).
 
-```{r first test 'both assumptions violated', eval=FALSE}
+Write a couple of paragraphs explaining the difference between parametric and nonparametric methods and describing under what conditions we might prefer to use a classic nonparametric method (Mann-Whitney) Instead of the corresponding parametric method (two-sample t-test).
 
-```
-
-```{r second test 'both assumptions violated', eval=FALSE}
-
-```
-
-
-Write a couple of paragraphs explaining the difference between parametric and nonparametric methods and explain why classic nonparametric methods (Mann-Whitney and Kruskal-Wallis) are a better choice than the corresponding parametric methods (two-sample t-test and one-way ANOVA) when the assumptions of the parametric method are clearly violated.
-
--> 
+-> A parametric method uses an equation or distribution to model data. Parametric methods are easier to share. Parametric methods usually have more assumptions then non-parametric methods. non-parametric methods use the data to create a model. there is no equation used. It takes up more space since the original data set must be included to run the model. We would use a non-parametric method when assumptions are violated for a parametric methods or when there is a small data set. 
 
 # Applied Problems
 # Michael
