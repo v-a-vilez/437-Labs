@@ -24,6 +24,8 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 # Michael 3,6,9
 
 1. What is the difference between an *input variable* and an *output variable* in a model? Provide synonyms for each term.
+-> Input variable goes into the function, while output varible is what comes out of the function. Synonyms for input variable are predictor and independent variable. Synonyms for output variable are response and dependent variable.
+
 2. What is the difference between *reducible error* and *irreducible error*? Give an example (other than those given in the book) of a situation in which the irreducible error is greater than zero.
 -> A reducible error can be improved to estimate the response variable using statistical techniques where as a irreducible cannot be improved or change but is always greater than zero. An example of an irreducible error is the risk of an inaccurate measure of an off day data when calculating who is the best pitcher in the MLB. 
 
@@ -31,6 +33,8 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 -> Prediction is generally used when the question calls for finding new data based on previous data. Inference is used when a question calls for the relationship between the variables and the response. It is possible for the same model to be used in both inference and prediction. For example, linear regression is poor at predicting, but it can be used for it while also being useful for performing inference on the variables.
 
 4. Generally, what types of prediction questions are answered using *regression* methods and what types are answered using *classification* methods?
+-> Logistic regression and linear discriminant analysis are used for classification methods. Regression analysis and regression models are used for regression methods.
+
 5. What are the major advantages of using a *nonparametric* method over a *parametric* method? What are the disadvantages?
 -> The advantage of using a non-parametric method is there are less assumptions that must be met so it is easier to use the same model to estimate different sets of data. The disadvantage of a non-parametric method is space, when using a parametric method, the only thing that must be shared and stored is typically an equation while a non-parametric method must be stored since it uses the original data to model but some data sets are extremely large and costly to store.
 
@@ -38,6 +42,8 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 -> One example of a regression measure of model accuracy is linear regression. One example of a classification measure of model accuracy is AOC.
 
 7. Why do we only fit the model on a *training set*? What do we do with the rest of the data?
+-> We only fit the model on a training set because we want to select the smallest training MSE. We can compute and minimize the rest of the data to find the small MSE, even though we are not really interested.
+
 8. Generally, as a model becomes more complex, what happens to the *bias* of the model and why? What happens to the *variance* of the model and why?
 -> As the model becomes more complex and less flexible, the bias of the model increases and  the variance of the model decreases because there is more data to use for the training data so there will be a different f to use to fit the statistical learning method.  
 
@@ -54,14 +60,87 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 ## Conceptual Problem 1 (4 pts)
 
 Write me a brief (2-3 paragraphs) summary of what you learned in the P-Values and Power in-class activity about how the distribution of p-values (over very many tests) is affected by the validity/violation of test assumptions and the power of the test. Did anything surprise you or clarify a concept for you? Support your writing with a few graphs you produced in class (it is easiest to copy and re-run the relevant code chunks).
+-> In Problem 1, we used the poisson distribution to complete the simulation. In Problem 2, the histograms look similar but have different z-score ranges in different directions. The histogram of the normal distribution has more z-scores in the negatives while the histogram of the poisson distribution has more z-scores in the positives. The histograms of the two-sided p-value have obvious differences. The normal distribution is more uniform across the p-values, while the poisson distribution has more variation with the frequency of each p-value. The empirical cdf's of both distributions have a similar shape, but the normal distribution is continuous while the poisson distribution is discrete. We would trust the p-value from a one-sample z-test, but not fully because while both histograms are uniform, they are still varied. In Problem 3, we saw how changing power affected the p-value when we rejected the null. In Problem 4, we saw how changing the power and significance level affected the p-value. 
+  This simulation did clarify for us what a power does and how changing the power and significance level affect the p-value. In Problem 5, when alpha is low, the cdf the probabilities of getting a smaller p-value has a higher range. When alpha is high, there is less of a possibility of getting a smaller p-value. When alpha is very low, the probability of getting a smaller p-value increases. When alpha is very high, there is less of a a chance of getting a small p-value. In Problem 6, under adequately powered studies, the probability of 82% of the p-values to being smaller is generally higher under Ha compared to Ho. In underpowered studies, the probability under Ha gets generally lower. In severely underpowered studies, Ha and Ho have almost the same probabilities, even being lower than Ho with sufficiently low powers. In all cases, the probability under Ho is always the same.
+
+```{r p-value cdf function}
+pvalue_cdf <- function(alpha = 0.05, power = 0.80){
+  
+  z_alpha <- qnorm(alpha/2, mean = 0, sd = 1, lower.tail = TRUE)
+  z_beta <- qnorm(power, mean = 0, sd = 1, lower.tail = FALSE) 
+  # z_beta is an overestimate but difference is negligible at high power 
+  delta_z <- abs(z_alpha + z_beta)
+  
+  graph_title <- paste0("CDF of the P-Value with ", 
+                        round(alpha*100, floor(-log10(alpha) + 2)), 
+                        "% Sig. Level and ", 
+                        round(power*100, floor(-log10(power) + 2)), 
+                        "% Power" )
+  
+  z <- seq(0.1, 5, by = 0.01)
+  pvalue <- pnorm(z, 0, 1, lower.tail = FALSE)*2
+  pz <- pnorm(z, delta_z, 1, lower.tail = FALSE)
+  plot(pvalue, pz, type = "l", col = "blue", log = "x",
+       xlab = "P-Value",
+       ylab = "Probability of Getting a Smaller P-Value",
+       ylim = c(0,1),
+       main = graph_title)
+  
+  lines(pvalue, pvalue, lty = "dashed")
+  legend("topleft",
+         legend = c("Under H0", "Under Ha"),
+         col = c("black", "blue"),
+         lty = c("dashed", "solid"))
+  
+  pvalue_df <- data.frame(pvalue = pvalue,
+                          psmaller = pz)
+  
+  invisible(pvalue_df)
+}
+```
+
+
+In the chunk below, write a single line of R code to call this function with `alpha = 0.01` and `power = 0.90`. Briefly explain what the function does.
+
+```{r first pvalue_cdf call}
+pvalue_cdf(alpha = 0.01, power= 0.90)
+```
+```{r calling function with different alphas}
+pvalue_cdf(alpha = 0.0001)
+pvalue_cdf(alpha = 0.085)
+pvalue_cdf(alpha = 0.03)
+pvalue_cdf(alpha = 0.1)
+pvalue_cdf(alpha = 0.69)
+```
+```{r calling function with different powers}
+pvalue_cdf(power = .1)
+pvalue_cdf(power = .5)
+pvalue_cdf(power = .69)
+pvalue_cdf(power = .82)
+pvalue_cdf(power = .9999999999)
+```
 
 ## Conceptual Problem 2 (3 pts) 
 
 Textbook Exercise 2.4.4
 
+a) Classification is useful for qualitative responses such as a person's marital status (predictors: married or not), spam filtering (predictors: spam or non-spam), and customer behavior (predictors: likely to purchase more items or not). The goals of a person's marital status and spam filtering are inferences because we can determine the results based on the predictors. However, the goal of customer behavior is prediction because there is a likelihood that customers are about to make more purchases.
+
+b) Regression is useful for quantitative problems such as business companies (advertising spending as predictor and revenue as response), medical researchers (drug dosage as predictor and blood pressure as response), and agricultural scientists (fertilizer and water as predictors and crop yield as response). The goals of business companies, medical researchers, and agricultural scientists are prediction because the results depend on the amount of the predictors over time.
+
+c) Cluster is useful for health insurance (cluster of household size, number of doctor visits per year, and average age of household members), retail marketing (cluster of family size and spending level), and streaming services (cluster to identify the amount of usage users).
+
+
 ## Conceptual Problem 3 (3 pts) 
 
 Textbook Exercise 13.7.2
+
+a) If P($H_j$ rejected) = alpha, then $A_j$ ~ BER($\alpha$).
+
+b) If B = $\sum_{j=1} ^ {m} A_j$, which are independent and identically distributed, then the distribution is B ~ BINOM(m,$\alpha$).
+
+c) The standard deviation is $\sqrt{m * \alpha *(1-\alpha)}$.
+
 
 # Simulation Problems
 # Vanessa 
@@ -184,20 +263,10 @@ $n_G$ & t-Test Assumptions & Type I Error Rate & Power at $d = 0.2$ & Power at $
 $$
 
 
-From the Parametrics vs. Nonparametric Tests: Multi-Sample Tests activity, copy to this homework your simulation code/results from the *Both Assumptions Violated* section of each test as well as the results tables for all simulations (in the Class Results section).
-
-```{r first test 'both assumptions violated', eval=FALSE}
-
-```
-
-```{r second test 'both assumptions violated', eval=FALSE}
-
-```
-
-
 Write a couple of paragraphs explaining the difference between parametric and nonparametric methods and explain why classic nonparametric methods (Mann-Whitney and Kruskal-Wallis) are a better choice than the corresponding parametric methods (two-sample t-test and one-way ANOVA) when the assumptions of the parametric method are clearly violated.
 
--> 
+-> A parametric method uses an equation or distribution to model data. Parametric methods are easier to share. Parametric methods usually have more assumptions then non-parametric methods. non-parametric methods use the data to create a model. there is no equation used. It takes up more space since the original data set must be included to run the model. We would use a non-parametric method when assumptions are violated for a parametric methods or when there is a small data set. 
+ 
 
 # Applied Problems
 # Michael
