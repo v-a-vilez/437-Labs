@@ -2,7 +2,9 @@
 title: 'Homework Assignment #1'
 author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due February 10, 2023"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 # Instructions
@@ -14,6 +16,12 @@ You should submit either two or three files:
 3. Solutions to the Key Terms and Conceptual Problems can be submitted in a separate Word or pdf file or included in the same files as your solutions to the Simulation and Applied Problems.
 
 This homework assignment is worth a total of **40 points**.
+
+```{r libraries}
+library(ISLR2)
+library(dplyr)
+```
+
 
 # Key Terms (5 pts)
 
@@ -149,7 +157,7 @@ c) The standard deviation is $\sqrt{m * \alpha *(1-\alpha)}$.
 
 From the Parametric vs. Nonparametric Tests: Two-Sample Tests activity, copy to this homework your simulation code/results from the *Assumptions Violated, Ha True* section of each test as well as the results tables for all simulations (in the Class Results section). 
 
-```{r code from 'assumptions violated ha true}
+```{r code from assumptions violated ha true}
 #t.test
 #{r assumptions violated ha true}
 pvalues <- numeric(length = 10000)
@@ -183,7 +191,7 @@ mean(pvalues <= 0.05)
 
 ```
 
-```{r code from 'assumptions violated ha true'}
+```{r code from assumptions violated ha true M-W}
 #Mann-Whitney
 #{r assumptions violated ha true}
 pvalues <- numeric(length = 10000)
@@ -279,10 +287,10 @@ Textbook Exercise 2.4.8 with the following changes:
 * Replace the four lines of code in part (c.iv) with a single line that accomplishes the same thing, using the `mutate` and either `if_else` or `case_when` functions from the `dplyr` package.
 ```{r Applied 1}
 # c
+
 summary(College)
 pairs(College[,1:10])
 
-# Iffy on boxplot
 plot (Outstate ~ Private, data = College)
 
 
@@ -319,8 +327,9 @@ Molitor (1989) hypothesized that children who watched violent film and televisio
 
 The file \emph{violence.csv} contains the time (in seconds) that each child stayed in the room. Longer stays are assumed to indicate more tolerance of violent behavior. Produce an appropriate graph showing the sample data and, based on your graph, explain why a two-sample t-test might not be the best idea.
 
-violence <- read.csv("violence.csv")
+
 ```{r Applied 2}
+violence <- read.csv("violence.csv")
 par(mfrow=c(1,2))
 plot(Time ~ as.factor(Video), data = violence)
 ```
@@ -331,6 +340,71 @@ One of the two-sample t-test assumptions includes normality, and for a box plot,
 ## Applied Problem 3 (Code: 1 pt; Explanation: 2 pts)
 
 Use the permutation test function you wrote in Lab 2 to determine whether the research hypothesis in the previous question was supported. Be sure to follow all steps of hypothesis testing, up to and including writing a conclusion that answers the research question in context.
+```{r script to function}
+permutation_t_test <- function(formula, data, alternative = "t",n_sim = 99){
+  # remember to include any other arguments you initialized in Step 0
+  # I recommend giving those arguments default values = what you set in Step 0
+  set.seed(9034)
+#data <- data.frame(group = rep(c("Group 1", "Group 2"), 50), y = rnorm(100)) # simulated data
+#formula <- y ~ group
+#alternative <- "t"
+# Initialize and assign values to any other arguments you identified in Part a
+#n_sim <- 10^2 -1
+  # Copy your complete script of Steps 1-6 in Part d
+  # Step 1: Run the t-test on the original dataset and obtain the observed t-statistic value
+
+# Creating this permutation_df will allow us to ignore other variables in the data frame.
+# This will make Step 4 much easier - see comments in Step 4a.
+  permutation_df <- model.frame(formula = formula, data = data)
+
+# We only care about the t-statistic, but we need to store it in a variable
+  t_obs <- t.test(formula = formula, data = permutation_df, 
+                  alternative = alternative, var.equal = TRUE)$stat
+
+# Step 2: Create a vector to store the simulated t-statistics in
+  t_perm <- numeric(n_sim)
+  
+# Step 3: Set a seed for reproducibility of the resampling
+  set.seed(15)
+  
+# Step 4: For i in 1 to number of permutation resamples:
+for (i in 1:n_sim){ # Complete the syntax
+  
+  # Step 4a re-randomize the response variable
+  permutation_df[[1]] <- sample(permutation_df[[1]], size = length(permutation_df[[1]]), replace = FALSE)
+  # Use the course notes as a template for doing this step
+  # Note: Once we get to Part e and put this script inside a function environment,
+  # using the actual name of the response variable requires much more advanced R.
+  # Remember from Lab 1 that this is an alternative way to do the column indexing
+  # and we set up permutation_df so that the first column is the response variable.
+    
+  # Step 4b Obtain the value of the test statistic
+  t_perm[i] <- t.test(formula = formula, data = permutation_df, 
+                  alternative = alternative, var.equal = TRUE)$stat
+}
+
+# Step 5 Obtain the p-value    
+  # Use the course notes as a template for getting p_left and p_right
+  t_all <- c(t_obs, t_perm)
+  p_left <- sum(t_all <= t_obs)/(100)
+  p_right <- sum(t_all >= t_obs)/(100)
+  
+  # Use the switch function to compute the correct p-value
+  p_value <- dplyr::case_when(alternative == "g" ~ p_right,
+                              alternative == "l" ~ p_left,
+                              alternative == "t" ~ 2*min(p_left, p_right),
+                              TRUE ~ NaN # output NaN if alternative is anything else
+  )
+  
+# Step 6: Create a list containing all the components of the output and then output it
+# I've started the list, but you may need to finish it
+  results <- list(obs = t_obs,
+                  sim = t_perm,
+                  p_v = p_value)
+  
+  return(results) # Last line of the function returns our output
+}
+```
 
 ```{r Applied 3}
 permutation_t_test(formula = Time ~ Video,data = violence, alternative = "g")
