@@ -212,13 +212,37 @@ Textbook Exercise 2.4.8 with the following changes:
 # c
 summary(College)
 pairs(College[,1:10])
-par(mfrow=c(1,2))
-boxplot(College$Outstate)
-boxplot(College$Private)
+
+# Iffy on boxplot
+plot (Outstate ~ Private, data = College)
+
+
+College <- College %>% mutate(Elite = as.factor(if_else(College$Top10perc > 50, "Yes","No")) )
+summary(College$Elite)
+plot (Outstate ~ Elite, data = College)
+
+par(mfrow = c(2, 2))
+hist(College$Books)
+hist(College$Personal)
+hist(College$PhD)
+hist(College$S.F.Ratio)
+
+hist(College$Terminal)
+hist(College$Apps)
+hist(College$Accept)
+hist(College$Enroll)
+hist(College$Top10perc)
+hist(College$Top25perc)
+hist(College$Grad.Rate)
+hist(College$perc.alumni) 
+hist(College$F.Undergrad)
+hist(College$P.Undergrad)
+hist(College$Expend)
 ```
 
 
 * As part of your brief summary in part (c.vi), identify at least one data point that cannot possibly have been recorded correctly, and explain why.
+Many colleges have around 500 books, roughly 80 percent faculty with PhD. While not visible in the histogram, one of the college's graduation rate is 118%, which is impossible.
 
 ## Applied Problem 2 (Code: 1 pt; Explanation: 2 pts)
 
@@ -226,6 +250,26 @@ Molitor (1989) hypothesized that children who watched violent film and televisio
 
 The file \emph{violence.csv} contains the time (in seconds) that each child stayed in the room. Longer stays are assumed to indicate more tolerance of violent behavior. Produce an appropriate graph showing the sample data and, based on your graph, explain why a two-sample t-test might not be the best idea.
 
+violence <- read.csv("violence.csv")
+```{r Applied 2}
+par(mfrow=c(1,2))
+plot(Time ~ as.factor(Video), data = violence)
+```
+
+One of the two-sample t-test assumptions includes normality, and for a box plot, if normality is present, the graph should be symmetric, which it is not.
+
+
 ## Applied Problem 3 (Code: 1 pt; Explanation: 2 pts)
 
 Use the permutation test function you wrote in Lab 2 to determine whether the research hypothesis in the previous question was supported. Be sure to follow all steps of hypothesis testing, up to and including writing a conclusion that answers the research question in context.
+
+```{r Applied 3}
+permutation_t_test(formula = Time ~ Video,data = violence, alternative = "g")
+```
+
+With a p-value of 0.09 > 0.05 alpha significance level, we fail to reject the null hypothesis that kids who watch violent media are more tolerant of real life violence.
+
+
+
+
+
