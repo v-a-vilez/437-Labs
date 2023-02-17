@@ -28,16 +28,22 @@ Read Chapter 2 of Introduction to Statistical Learning, Second Edition. Based on
 -> A reducible error can be improved to estimate the response variable using statistical techniques where as a irreducible cannot be improved or change but is always greater than zero. An example of an irreducible error is the risk of an inaccurate measure of an off day data when calculating who is the best pitcher in the MLB. 
 
 3. Generally, what types of questions are answered using *inference* and what types are answered using *prediction*? Is it possible to use the same model for both inference and prediction?
+-> Prediction is generally used when the question calls for finding new data based on previous data. Inference is used when a question calls for the relationship between the variables and the response. It is possible for the same model to be used in both inference and prediction. For example, linear regression is poor at predicting, but it can be used for it while also being useful for performing inference on the variables.
+
 4. Generally, what types of prediction questions are answered using *regression* methods and what types are answered using *classification* methods?
 5. What are the major advantages of using a *nonparametric* method over a *parametric* method? What are the disadvantages?
 -> The advantage of using a non-parametric method is there are less assumptions that must be met so it is easier to use the same model to estimate different sets of data. The disadvantage of a non-parametric method is space, when using a parametric method, the only thing that must be shared and stored is typically an equation while a non-parametric method must be stored since it uses the original data to model but some data sets are extremely large and costly to store.
 
 6. In prediction, we typically aim to minimize a *loss function* that more-or-less represents the total error in our predictions. Give one example each for regression and classification problems of a measure of model (in)accuracy.
+-> One example of a regression measure of model accuracy is linear regression. One example of a classification measure of model accuracy is AOC.
+
 7. Why do we only fit the model on a *training set*? What do we do with the rest of the data?
 8. Generally, as a model becomes more complex, what happens to the *bias* of the model and why? What happens to the *variance* of the model and why?
 -> As the model becomes more complex and less flexible, the bias of the model increases and  the variance of the model decreases because there is more data to use for the training data so there will be a different f to use to fit the statistical learning method.  
 
 9. What is meant by the term *overfitting*? Explain this in terms of the bias-variance trade-off.
+-> A model that is more complex and less flexible means that the bias of the model increases. This makes the model great at predicting the training data, but should new data be predicted, the error will be extremely large. This is overfitting.
+
 10. Briefly explain how a *Bayes classifier* works.
 -> A Bayes classifier takes each observation and assigned them to the most likely class, given its predictor values. The classifier will always choose the class which Pr(Y = j| X = x0) is largest. In a two-class problem where there are two possible response values, the Bayes classifier corresponds to predicting class one if Pr(Y =1|X = x0) > 0.5 and class two otherwise. The Bayes classifier's prediction is determined by the Bayes decision boundary. This produces the lowest possible test error rate, called the Bayes error rate. 
 
@@ -202,6 +208,16 @@ Textbook Exercise 2.4.8 with the following changes:
 
 * Use the `College` dataset already in the `ISLR2` package instead of doing parts (a) and (b).
 * Replace the four lines of code in part (c.iv) with a single line that accomplishes the same thing, using the `mutate` and either `if_else` or `case_when` functions from the `dplyr` package.
+```{r Applied 1}
+# c
+summary(College)
+pairs(College[,1:10])
+par(mfrow=c(1,2))
+boxplot(College$Outstate)
+boxplot(College$Private)
+```
+
+
 * As part of your brief summary in part (c.vi), identify at least one data point that cannot possibly have been recorded correctly, and explain why.
 
 ## Applied Problem 2 (Code: 1 pt; Explanation: 2 pts)
