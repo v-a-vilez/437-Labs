@@ -366,4 +366,4 @@ Obtain the adjusted p-values using the Benjamini-Hochberg procedure. How many nu
 
 Compare your results from the three procedures. Why is it important to consider the situation where *some* null hypotheses are true, when evaluating the performance of the different procedures?
 
-
+It is important to consider the situations where some null hypothesis are true because it affects the Type 1 and Type 2 error rates that occur when we adjust the p-values to control the FWER and the FDR. 
