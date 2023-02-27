@@ -65,19 +65,22 @@ pseudocode
 3. repeat steps 1 & 2 many times (for loop)
 4. get sd of the alpha estimates (use sd)
 
+```{r bootstrap for previous, eval=FALSE}
+
 for (i in 1:1000) {
-  boot_samp[i] <- sample(rnorm(0,1), replace = T)
-  boot_alp[i] <- alpha.fn(boot_samp[i])
+  boot_samp <- sample(100, 100, replace = T)
+  boot_alp[i] <- alpha.fn(Portfolio, boot_samp)
 }
 
 sd (boot_alp)
+```
 
 ## Part c (Code: 1 pt)
 
 Replicate the center panel of textbook Figure 5.10: a histogram of  the bootstrap estimates of $\alpha$ (from Part b) with a solid pink (or red) line at the true value of $\alpha = 0.6$. You may use either base R plotting commands (which uses `abline` to add the vertical line) or the `ggplot2` package (which adds a `geom_vline` to the plot). 
 
 ```{r}
-hist(X, col = "skyblue")
+hist(boot_alp, col = "skyblue")
 abline(v = 0.6, col = "red")
 ```
 
