@@ -203,7 +203,7 @@ lm.fit1 <- update(lm.fit , ~ . - age)
 
 Briefly explain what the `vif()` and `update()` functions do when applied to a linear model.
 
--> 
+-> `vif()` computes the correlation between the given predictors and the other predictors of a model. `update()` refits a model by extracting the call and updating that call.
 
 ## Part b (Code: 0.5 pts; Explanation: 1 pt)
 
