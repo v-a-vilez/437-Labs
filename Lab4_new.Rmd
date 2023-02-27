@@ -177,7 +177,33 @@ Refer to the diagnostic plots you created in Part (a) to answer the following qu
 
 Run the code in ISLR Lab 3.6.3. Put each chunk from the textbook in its own chunk. (Note that you will have to install the `car` package.)
 
+```{r 3.6.3 p1}
+lm.fit <- lm(medv ~ lstat + age , data = Boston)
+summary(lm.fit)
+```
+
+```{r 3.6.3 p2}
+lm.fit <- lm(medv ~ ., data = Boston)
+summary(lm.fit)
+```
+
+```{r 3.6.3 p3}
+library(car)
+vif(lm.fit)
+```
+
+```{r 3.6.3 p4}
+lm.fit1 <- lm(medv ~ . - age, data = Boston)
+summary(lm.fit1)
+```
+
+```{r 3.6.3 p5}
+lm.fit1 <- update(lm.fit , ~ . - age)
+```
+
 Briefly explain what the `vif()` and `update()` functions do when applied to a linear model.
+
+-> 
 
 ## Part b (Code: 0.5 pts; Explanation: 1 pt)
 
