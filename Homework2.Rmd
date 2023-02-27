@@ -1,0 +1,101 @@
+---
+title: 'Homework Assignment #2'
+author: "Math 437 - Modern Data Analysis"
+date: "Due February 24, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+You should submit either two or three files:
+
+1. You should write your solutions to the Simulation and Applied Problems in this R Markdown file and submit the (.Rmd) file.
+2. You should knit the final solution file to pdf and submit the pdf. If you are having trouble getting code chunks to run, add `eval = FALSE` to the chunks that do not run. If you are having trouble getting R Studio to play nice with your LaTeX distribution, I will begrudgingly accept an HTML file instead. 
+3. Solutions to the Key Terms and Conceptual Problems can be submitted in a separate Word or pdf file or included in the same files as your solutions to the Simulation and Applied Problems.
+
+This homework assignment is worth a total of **40 points**.
+
+# Key Terms (5 pts)
+# 1,2,3,4 Phuong
+# 5,6,7 Vanessa
+# 8,9,10 Michael
+
+Read Chapter 13 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
+
+1. What is a *p-value*? What is the difference between a one-sided and a two-sided p-value?
+2. In traditional NHST-style significance testing, what are the two possible decisions? When do we make each decision?
+3. What is the difference between a *Type I Error* and a *Type II Error*?
+4. Briefly explain why it is necessary to adjust the significance level (or equivalently, the p-values) when testing a large number of null hypotheses.
+5. Compare and contrast the *Family-Wise Error Rate* (FWER) and the *False Discovery Rate* (FDR).
+6. Compare and contrast the *Bonferroni Method* and *Holm's Step-Down Method* for controlling the FWER.
+7. Why do we prefer to use *Tukey's Method* or *Scheffe's Method* to control the FWER? In what conditions is it appropriate to use those methods instead of the Bonferroni or Holm methods?
+8. Briefly describe the *Benjamini-Hochberg* procedure for controlling the FDR.
+9. What is/are the major assumption(s) of a *permutation test*? What is the general procedure for obtaining the null distribution of a test statistic using a permutation test?
+10. When is it useful/recommended to use a permutation testing approach as opposed to a traditional theory-based approach?
+
+# Conceptual Problems
+# Michael
+
+## Conceptual Problem 1 (5 pts) 
+
+Textbook Exercise 13.7.6
+
+## Conceptual Problem 2 (2 pts)
+
+Suppose that we test $m = 1000$ independent null hypotheses, of which 10% are true, at significance level $\alpha = 0.05$ and achieve a false discovery rate of $q = 0.20$. Construct a table following Table 13.2 in the textbook, identifying the appropriate values of $V$, $S$, $U$, $W$, and $R$ in this situation.
+
+## Conceptual Problem 3 (3 pts)
+
+Suppose that we test $m = 1000$ independent null hypotheses, of which an unknown number $m_0$ are true, at significance level $\alpha = 0.05$. Suppose that each test also has a power of 0.80. Find and plot the false discovery rate as a function of $m_0$.
+
+## Conceptual Problem 4 (2.5 pts)
+
+Textbook Exercise 5.4.2 parts (a), (b), and (c).
+
+# Simulation Problems 
+# Phuong
+
+## Simulation Problem 1 (Code: 1 pt; Explanation: 0.5 pts)
+
+Textbook Exercise 5.4.2 parts (e), (g), and (h). For part (g), you should create a line plot (using either `plot` with argument `type = "l"` or `geom_line`). Then, to make clearer what you should be commenting on, find the limit as $n \rightarrow \infty$ of the probability that the $j^{th}$ observation is in your bootstrap sample and add a horizontal red line (using `abline` or `geom_hline`) at that value. (Hint: the limit as $n \rightarrow \infty$ of the expression in part (c) is well-known and easily found on the Internet.)
+
+## Simulation Problem 2 (Code: 1.5 pts; Explanation: 3.5 pts)
+
+Copy the *functions* you created in the Bootstrap Confidence Intervals class activity as well as Simulation Parts 3, 4, and 5.
+
+Write a brief summary of what you learned from the activity. Make sure to address the following questions:
+
+- Are theory-based methods *guaranteed* to achieve the appropriate coverage? What about bootstrap-based methods?
+- Which of the four methods appear to be range-preserving even in a "worst-case scenario"? 
+- When and why would a bootstrap method be useful to obtain a confidence interval even if it doesn't achieve the appropriate coverage?
+
+# Applied Problems
+# Vanessa
+
+## Applied Problem 1 (Code: 4 pts; Explanation: 2 pts)
+
+Using the `dplyr` package, subset the `mpg` dataset from the `ggplot2` package to include only the cars from 2008 that are minivans, pickups, or SUVs (`%in%` is a useful replacement for `==` when trying to match to more than one possibility). Using this new dataset, determine which of the following statements is/are true, using an $\alpha = 0.10$ significance level/family-wise error rate or a $q = 0.10$ false discovery rate:
+
+1. There is a significant difference in highway gas mileage between minivans and SUVs.
+2. There is a significant difference in highway gas mileage between pickups and SUVs.
+3. There is a significant difference in highway gas mileage between minivans and pickups.
+
+Use the following methods.
+
+(a) Three two-sample t-tests with no adjustments for multiple testing. Store all three p-values in a single vector so that you can use the `p.adjust` function in later parts.
+(b) Three two-sample t-tests followed by Bonferroni's method. 
+(c) Three two-sample t-tests followed by Holm's step-down method.
+(d) A one-way ANOVA followed by Tukey's method.
+(e) Three two-sample t-tests followed by the Benjamini-Hochberg (BH) method.
+
+Compare and contrast your results.
+
+## Applied Problem 2 (Code: 1 pt; Explanation: 1 pt)
+
+Use a one-way ANOVA followed by Scheffe's method (`ScheffeTest` in the DescTools package) to determine whether the following statement is true at the $\alpha = 0.10$ significance level:
+
+There is a significant difference in highway gas mileage between pickups and non-pickups (SUVs and minivans).
+
+## Applied Problem 3 (Code: 5 pts; Explanation: 3 pts)
+
+Textbook Exercise 5.4.9.
