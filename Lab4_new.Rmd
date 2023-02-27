@@ -1,6 +1,6 @@
 ---
 title: 'Lab Assignment #4'
-author: "Math 437 - Modern Data Analysis"
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due February 27, 2023"
 output: html_document
 ---
@@ -32,6 +32,27 @@ Run the code in the first half of ISLR Lab 5.3.4, "Estimating the Accuracy of a 
 
 If you are in the actuarial science concentration, you should be familiar with (or will at some point see) this formula! For the rest of us, note that $X$ and $Y$ are assumed to be the yearly return of two different financial assets, and $\alpha$, the quantity to be estimated, is the fraction of money to be invested in $X$ such that the variance (risk) of the total investment $\alpha X + (1 - \alpha) Y$ is minimized. In this problem $\alpha$ is not the significance level!
 
+```{r 5.3.4 p1}
+alpha.fn <- function(data, index) {
+  X <- data$X[index]
+  Y <- data$Y[index]
+  (var(Y) - cov(X, Y)) / (var(X) + var(Y) - 2 * cov(X, Y))
+}
+```
+
+```{r 5.3.4 p2}
+alpha.fn(Portfolio, 1:100)
+```
+
+```{r 5.3.4 p3}
+set.seed(7)
+alpha.fn(Portfolio, sample(100, 100, replace = T))
+```
+
+```{r 5.3.4 p4}
+boot(Portfolio, alpha.fn, R = 1000)
+```
+
 ## Part b (Code: 2 pts)
 
 According to the instructions for Lab 5.3.4, "We can implement a bootstrap analysis by performing this command [alpha.fn on a bootstrap sample] many times, recording all of the corresponding estimates for $\alpha$, and computing the resulting standard deviation."
@@ -55,9 +76,16 @@ sd (boot_alp)
 
 Replicate the center panel of textbook Figure 5.10: a histogram of  the bootstrap estimates of $\alpha$ (from Part b) with a solid pink (or red) line at the true value of $\alpha = 0.6$. You may use either base R plotting commands (which uses `abline` to add the vertical line) or the `ggplot2` package (which adds a `geom_vline` to the plot). 
 
+```{r}
+hist(X, col = "skyblue")
+abline(v = 0.6, col = "red")
+```
+
 ## Part d (Explanation: 1 pt)
 
 Note that the distribution you graphed in Part c is a sampling distribution of $\hat{\alpha}$. Explain why it would be appropriate to use this sampling distribution to construct a confidence interval for $\alpha$, but not to obtain a p-value for a hypothesis test of $H_0: \alpha = 0.6$ against $H_a: \alpha \neq 0.6$.
+
+It would be appropriate to use this sampling distribution to construct a confidence interval for $\alpha$, but not to obtain a p-value for a hypothesis test of $H_0: \alpha = 0.6$ against $H_a: \alpha \neq 0.6$ because...
 
 # Problem 2: Domain Knowledge and Exploratory Data Analysis
 
