@@ -128,11 +128,11 @@ ggplot(data = Boston, aes(medv)) +
 
 What looks a bit off about this histogram? Try filling in the `filter` function in the chunk below to confirm your suspicions.
 
-The last bar at the end of the histogram does not fit the pattern of the right skewness that the graph is showing.
+The last bar at the end of the histogram does not fit the pattern of the right skewness that the graph is showing. The filter showed that there are about 19 homes that do not fit the skewness of the graph. 
 
-```{r filter Boston medv, eval = FALSE}
+```{r filter Boston medv}
 Boston %>% 
-  filter(medv > 46) %>%
+  filter(medv > 48) %>%
   count() # getting sample size without having to summarize
 ```
 
@@ -143,9 +143,26 @@ The full documentation for this dataset is somewhat confusing and raises more qu
 Other variables are sensibly defined, but are counterintuitive to what we would expect. Pick either the variable `age` or `rm`, and answer the following questions:
 
 * What do you expect this variable would represent, if the observational units were houses?
+For 'age', i expect it to be how long ago the house was built.
+
 * What does this variable actually represent?
+'age' represents the proportion of owner-occupied units built prior to 1940.
+
 * What is the distribution of this variable in the dataset? Include at least one graph to support your answer.
+
+The distribution of 'age' is skewed left. 
+```{r graph of age}
+ggplot(data = Boston, aes(age)) + 
+  geom_histogram(binwidth = 4, center = 35)
+
+```
 * Does this variable appear to have a relationship with the response variable `medv`? Include at least one graph to support your answer.
+
+'age' does not appear to have a linear relationship with 'medv'. 
+```{r graph of age and medv}
+lm1 <- lm(medv~age, data = Boston)
+plot(lm1)
+```
 
 # Problem 3: Simple Linear Regression
 
