@@ -1,7 +1,7 @@
 ---
 title: 'Homework Assignment #2'
-author: "Math 437 - Modern Data Analysis"
-date: "Due February 24, 2023"
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due March 2, 2023"
 output: pdf_document
 ---
 
@@ -14,6 +14,12 @@ You should submit either two or three files:
 3. Solutions to the Key Terms and Conceptual Problems can be submitted in a separate Word or pdf file or included in the same files as your solutions to the Simulation and Applied Problems.
 
 This homework assignment is worth a total of **40 points**.
+
+```{r librares for applied}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+```
 
 # Key Terms (5 pts)
 # 1,2,3,4 Phuong
