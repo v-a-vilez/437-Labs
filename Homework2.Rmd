@@ -87,7 +87,7 @@ for (i in 1:10000){
 }
 mean(store)
 ```
--> We can see that the result is approximately equal to 1 - (1 - 1/100)^100, which is close to 1 - exp(-1).
+-> We can see that the result is approximately equal to the result from 5.4.2 part e, which is close to 1 - exp(-1).
 
 ## Simulation Problem 2 (Code: 1.5 pts; Explanation: 3.5 pts)
 
@@ -278,7 +278,7 @@ hist(ci_basic_df4$lower)
 hist(ci_norm_df4$lower)
 ```
 
-summary...
+-> The theory-based and bootstrap-based methods are not guaranteed to achieve the appropriate coverage. The only method that is range-preserving is percentile because the others give p-values less than 0. A bootstrap method is useful to obtain a confidence interval when there is a very large sample because we don't have to rely on invalid assumptions of a dataset.
 
 # Applied Problems
 # Vanessa
