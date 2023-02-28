@@ -2,4 +2,4 @@
 
 This is the shared file space for Math 437 so we can all work on the labs together. 
 
-thru git, first commit a comment then click the green button to push.
+thru git, first commit a comment then click the green button to push.A line i wrote on my local computer 
