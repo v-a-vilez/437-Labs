@@ -161,6 +161,63 @@ TukeyHSD(x = a1)
 plot(TukeyHSD(x = a1))
 ```
 
+Starting 13.6.2
+
+```{r 13.6.2 p1}
+m <- 1:500
+fwe1 <- 1 - (1 - 0.05)^m
+fwe2 <- 1 - (1 - 0.01)^m
+fwe3 <- 1 - (1 - 0.001)^m
+```
+
+```{r 13.6.2 p2}
+par(mfrow = c(1, 1))
+plot(m, fwe1, type = "l", log = "x", ylim = c(0, 1), col = 2, 
+     ylab = "Family - Wise Error Rate",
+     xlab = "Number of Hypotheses")
+lines(m, fwe2, col = 4)
+lines(m, fwe3, col = 3)
+abline(h = 0.05, lty = 2)
+```
+
+```{r 13.6.2 p3}
+library(ISLR2)
+fund.mini <- Fund[, 1:5]
+t.test(fund.mini[, 1], mu = 0)
+fund.pvalue <- rep(0, 5)
+for (i in 1:5){
+  fund.pvalue[i] <- t.test(fund.mini[, i], mu = 0)$p.value
+}
+fund.pvalue
+```
+
+```{r 13.6.2 p4}
+p.adjust(fund.pvalue, method = "bonferroni")
+pmin(fund.pvalue * 5, 1)
+```
+
+```{r 13.6.2 p5}
+p.adjust(fund.pvalue, method = "holm")
+```
+
+```{r 13.6.2 p6}
+apply(fund.mini, 2, mean)
+```
+```{r 13.6.2 p7}
+t.test(fund.mini[, 1], fund.mini[, 2], paired = T)
+```
+
+```{r 13.6.2 p8}
+returns <- as.vector(as.matrix(fund.mini))
+manager <- rep(c("1", "2", "3", "4", "5"), rep(50, 5))
+a1 <- aov(returns ~ manager)
+TukeyHSD(x = a1)
+```
+
+```{r 13.6.2 p9}
+plot(TukeyHSD(x = a1))
+```
+
 ## Part b (Explanation: 1 pt)
 
 What does the `p.adjust` function do exactly when `method = bonferroni`? What about when `method = holm`? Why does it make more sense for R to adjust the p-values rather than the significance level when controlling the FWER?
@@ -170,6 +227,7 @@ Under Bonferroni, the p-values are multiplied by the number of comparisons, whil
 ## Part c (Explanation: 1 pt)
 
 Consider the second-to-last chunk in ISLR Lab 13.6.2 (the one using `TukeyHSD`). Is it appropriate to do a one-way ANOVA with this data? Explain why or why not. (You may want to produce some graphs and/or numerical summaries to support your answer.)
+-> It is not appropriate to do a one-way ANOVA with this data because the data is not independent based on the numerical summaries of their performance/behavior.
 
 -> It is not appropriate to do a one-way ANOVA with this data because the data is not independent based on the numerical summaries of their performance/behavior.
 
@@ -381,4 +439,8 @@ hist(p.values2.BH)
 
 Compare your results from the three procedures. Why is it important to consider the situation where *some* null hypotheses are true, when evaluating the performance of the different procedures?
 
+<<<<<<< HEAD
 -> It is important to consider the situations where some null hypothesis are true because it affects the Type 1 and Type 2 error rates that occur when we adjust the p-values to control the FWER and the FDR. 
+=======
+It is important to consider the situations where some null hypothesis are true because it affects the Type 1 and Type 2 error rates that occur when we adjust the p-values to control the FWER and the FDR. 
+>>>>>>> 30697f461d8e92bd19fbf8ac52a57f5e2e1631a5
