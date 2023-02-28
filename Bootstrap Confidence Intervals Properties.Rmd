@@ -334,3 +334,4 @@ hist(ci_norm_df4$lower)
 The only method that is range preserving is percentile because the others give p values less than 0.
 
 
+
