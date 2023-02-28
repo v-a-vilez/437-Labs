@@ -3,6 +3,7 @@ title: 'Homework Assignment #1'
 author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due February 10, 2023"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
@@ -20,6 +21,7 @@ This homework assignment is worth a total of **40 points**.
 ```{r libraries}
 library(ISLR2)
 library(dplyr)
+
 ```
 
 
