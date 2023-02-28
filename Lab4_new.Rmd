@@ -1,0 +1,229 @@
+---
+title: 'Lab Assignment #4'
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due February 27, 2023"
+output: html_document
+---
+
+# Instructions
+
+The purpose of this lab is to review simple linear regression and multiple linear regression strategies from Math 338/439.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this lab, we will be working with the Boston housing dataset (`Boston` in the `ISLR2` library). This dataset has 506 rows and 13 variables.
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+library(car) # For problem 3
+```
+
+This lab assignment is worth a total of **19.5 points**.
+
+# Problem 1: Bootstrap Estimation of Standard Error
+
+## Part a (Code: 0.5 pts)
+
+Run the code in the first half of ISLR Lab 5.3.4, "Estimating the Accuracy of a Statistic of Interest." Put each chunk from the textbook in its own chunk.
+
+If you are in the actuarial science concentration, you should be familiar with (or will at some point see) this formula! For the rest of us, note that $X$ and $Y$ are assumed to be the yearly return of two different financial assets, and $\alpha$, the quantity to be estimated, is the fraction of money to be invested in $X$ such that the variance (risk) of the total investment $\alpha X + (1 - \alpha) Y$ is minimized. In this problem $\alpha$ is not the significance level!
+
+```{r 5.3.4 p1}
+alpha.fn <- function(data, index) {
+  X <- data$X[index]
+  Y <- data$Y[index]
+  (var(Y) - cov(X, Y)) / (var(X) + var(Y) - 2 * cov(X, Y))
+}
+```
+
+```{r 5.3.4 p2}
+alpha.fn(Portfolio, 1:100)
+```
+
+```{r 5.3.4 p3}
+set.seed(7)
+alpha.fn(Portfolio, sample(100, 100, replace = T))
+```
+
+```{r 5.3.4 p4}
+boot(Portfolio, alpha.fn, R = 1000)
+```
+
+## Part b (Code: 2 pts)
+
+According to the instructions for Lab 5.3.4, "We can implement a bootstrap analysis by performing this command [alpha.fn on a bootstrap sample] many times, recording all of the corresponding estimates for $\alpha$, and computing the resulting standard deviation."
+
+Write a code chunk that performs all of those steps and prints out the standard deviation. Use 1000 bootstrap samples. 
+
+pseudocode
+1. get a bootstrap sample (use sample function with replacement)
+2. call alpha.fn on this sample and store the output somewhere
+3. repeat steps 1 & 2 many times (for loop)
+4. get sd of the alpha estimates (use sd)
+
+```{r bootstrap for previous, eval=FALSE}
+
+for (i in 1:1000) {
+  boot_samp <- sample(100, 100, replace = T)
+  boot_alp[i] <- alpha.fn(Portfolio, boot_samp)
+}
+
+sd (boot_alp)
+```
+
+## Part c (Code: 1 pt)
+
+Replicate the center panel of textbook Figure 5.10: a histogram of  the bootstrap estimates of $\alpha$ (from Part b) with a solid pink (or red) line at the true value of $\alpha = 0.6$. You may use either base R plotting commands (which uses `abline` to add the vertical line) or the `ggplot2` package (which adds a `geom_vline` to the plot). 
+
+```{r}
+hist(boot_alp, col = "skyblue")
+abline(v = 0.6, col = "red")
+```
+
+## Part d (Explanation: 1 pt)
+
+Note that the distribution you graphed in Part c is a sampling distribution of $\hat{\alpha}$. Explain why it would be appropriate to use this sampling distribution to construct a confidence interval for $\alpha$, but not to obtain a p-value for a hypothesis test of $H_0: \alpha = 0.6$ against $H_a: \alpha \neq 0.6$.
+
+-> It would be appropriate to use this sampling distribution to construct a confidence interval for $\alpha$, but not to obtain a p-value for a hypothesis test of $H_0: \alpha = 0.6$ against $H_a: \alpha \neq 0.6$ because we used the predicted values for confidence intervals. We need to add an unknown $\epsilon$ for p-values, which we don't have.
+
+# Problem 2: Domain Knowledge and Exploratory Data Analysis
+
+## Part a (Explanation: 1 pt)
+
+Do an Internet search for "Boston housing dataset" and answer the following questions as best you can.
+
+* Who collected this data? How old is this dataset?
+The US Census Service collected the data. This dataset is 45 years old.
+
+* What does one row in this dataset represent?
+One row in this dataset represents the data collected from a different household in the Boston Mass area.
+
+## Part b (Explanation: 1.5 pts)
+
+In your search, you should eventually come across references to a *fourteenth* variable, `B`, which the textbook authors have removed from the dataset. What does this mysterious variable represent?
+
+This mysterious variable represents the proportion of black people by town.
+
+Suppose you are a data scientist at Zillow or a similar company whose housing price models are often used as a reference when people decide how much to offer to buy or sell a home for. What ethical issues would arise from using the variable `B` in your model?
+
+It is racist and racially profiling a neighborhood where many people in the neighborhood could be people of color. 
+
+## Part c (Code: 1 pt; Explanation: 1 pt)
+
+In the next problem we will be trying to predict `medv` from `lstat`. What does the variable `medv` represent? What are the measurement units?
+'medv' represents the median value of owner-occupied homes in $1000's. The measurement of unit is money by the thousands.
+
+Using the `ggplot2` package, create a histogram of the variable `medv`. Use a `center` of 35 and a `binwidth` of 2.
+
+```{r graphing medv}
+ggplot(data = Boston, aes(medv)) + 
+  geom_histogram(binwidth = 2, center = 35)
+
+```
+
+
+What looks a bit off about this histogram? Try filling in the `filter` function in the chunk below to confirm your suspicions.
+
+The last bar at the end of the histogram does not fit the pattern of the right skewness that the graph is showing. The filter showed that there are about 19 homes that do not fit the skewness of the graph. 
+
+```{r filter Boston medv}
+Boston %>% 
+  filter(medv > 48) %>%
+  count() # getting sample size without having to summarize
+```
+
+## Part d (Code: 1 pt; Explanation: 1 pt)
+
+The full documentation for this dataset is somewhat confusing and raises more questions than answers. For example, `lstat` is defined as "$\frac{1}{2}$ (proportion of adults without some high school education and proportion of male workers classified as laborers)" (whatever that means), and `rad` represents the "index of accessibility to radial highways" as determined by something called the "MIT Boston Project."
+
+Other variables are sensibly defined, but are counterintuitive to what we would expect. Pick either the variable `age` or `rm`, and answer the following questions:
+
+* What do you expect this variable would represent, if the observational units were houses?
+For 'age', i expect it to be how long ago the house was built.
+
+* What does this variable actually represent?
+'age' represents the proportion of owner-occupied units built prior to 1940.
+
+* What is the distribution of this variable in the dataset? Include at least one graph to support your answer.
+
+The distribution of 'age' is skewed left. 
+```{r graph of age}
+ggplot(data = Boston, aes(age)) + 
+  geom_histogram(binwidth = 4, center = 35)
+
+```
+* Does this variable appear to have a relationship with the response variable `medv`? Include at least one graph to support your answer.
+
+'age' does not appear to have a linear relationship with 'medv'. 
+```{r graph of age and medv}
+lm1 <- lm(medv~age, data = Boston)
+plot(lm1)
+```
+
+# Problem 3: Simple Linear Regression
+
+## Part a (Code: 0.5 pts; Explanation: 1 pt)
+
+Run the code in ISLR Lab 3.6.2. Put each chunk from the textbook in its own chunk.
+
+
+
+Briefly explain what the `confint()` and `predict()` functions output when applied to a linear model.
+
+## Part b (Explanation: 2.5 pts)
+
+Write out the equation of the least-squares line relating `lstat` and `medv`. Write two sentences interpreting the parameter estimates (one for slope, one for intercept) in the context of the data. Remember to use the right observational units!
+
+Given the issue raised in Problem 1d with the `lstat` interpretation, let's just say in our interpretations that `lstat` represents the percentage of people in the neighborhood considered lower class.
+
+## Part c (Explanation: 1.5 pts)
+
+Refer to the diagnostic plots you created in Part (a) to answer the following questions:
+
+* Why do the lab instructions claim that "there is some evidence of non-linearity"?
+* Do you believe that the residuals are normally distributed? Why or why not?
+* Do you believe that the response variable is homoskedastic (the residuals have roughly constant variance across the entire predictor range)? Why or why not?
+
+# Problem 4: Multiple Linear Regression
+
+## Part a (Code: 0.5 pts; Explanation: 1 pt)
+
+Run the code in ISLR Lab 3.6.3. Put each chunk from the textbook in its own chunk. (Note that you will have to install the `car` package.)
+
+```{r 3.6.3 p1}
+lm.fit <- lm(medv ~ lstat + age , data = Boston)
+summary(lm.fit)
+```
+
+```{r 3.6.3 p2}
+lm.fit <- lm(medv ~ ., data = Boston)
+summary(lm.fit)
+```
+
+```{r 3.6.3 p3}
+library(car)
+vif(lm.fit)
+```
+
+```{r 3.6.3 p4}
+lm.fit1 <- lm(medv ~ . - age, data = Boston)
+summary(lm.fit1)
+```
+
+```{r 3.6.3 p5}
+lm.fit1 <- update(lm.fit , ~ . - age)
+```
+
+Briefly explain what the `vif()` and `update()` functions do when applied to a linear model.
+
+-> `vif()` computes the correlation between the given predictors and the other predictors of a model. `update()` refits a model by extracting the call and updating that call.
+
+## Part b (Code: 0.5 pts; Explanation: 1 pt)
+
+Jumping straight into modeling without looking at the data is a very bad idea. Create a scatterplot matrix showing only the three variables in the first `lm.fit` object (`medv`, `lstat`, `age`).
+
+Do you see any evidence of nonlinearity? Any evidence of collinearity? Explain your reasoning.
