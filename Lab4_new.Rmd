@@ -287,5 +287,9 @@ Briefly explain what the `vif()` and `update()` functions do when applied to a l
 ## Part b (Code: 0.5 pts; Explanation: 1 pt)
 
 Jumping straight into modeling without looking at the data is a very bad idea. Create a scatterplot matrix showing only the three variables in the first `lm.fit` object (`medv`, `lstat`, `age`).
+```{r sp of lm.fit}
+pairs(medv ~ lstat + age, data = Boston)
+```
 
 Do you see any evidence of nonlinearity? Any evidence of collinearity? Explain your reasoning.
+-> There is evidence of nonlinearity between medv and lstat. The scatterplot for the corresponding variables visibly curves and hence does not have a linear relationship. We have good evidence towards collinearity between lstat and age. Their scatterplot indicates a roughly linear line, suggesting colinearity.
