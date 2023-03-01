@@ -170,13 +170,70 @@ plot(lm1)
 
 Run the code in ISLR Lab 3.6.2. Put each chunk from the textbook in its own chunk.
 
+```{r Data head}
+head(Boston)
+```
+```{r lm.fit error}
+ lm.fit <- lm(medv ~ lstat)
+```
+```{r lm.fit}
+lm.fit <- lm(medv ~ lstat , data = Boston)
+attach (Boston)
+lm.fit <- lm(medv ~ lstat)
+```
 
+```{r lm summary}
+lm.fit
+summary (lm.fit)
+```
+```{r coef}
+names (lm.fit)
+coef (lm.fit)
+```
+```{r conf int}
+confint (lm.fit)
+```
+```{r conf/predict}
+predict (lm.fit , data.frame(lstat = (c(5, 10, 15))),
+interval = "confidence")
+predict (lm.fit , data.frame(lstat = (c(5, 10, 15))),
+interval = "prediction")
+```
+```{r first medv plot}
+plot (lstat , medv)
+abline (lm.fit)
+```
+```{r extra plot}
+plot (lstat , medv)
+abline (lm.fit , lwd = 3)
+abline (lm.fit , lwd = 3, col = " red ")
+plot (lstat , medv , col = " red ")
+plot (lstat , medv , pch = 20)
+plot (lstat , medv , pch = "+")
+plot (1:20, 1:20, pch = 1:20)
+```
+```{r residual diagnostics}
+par (mfrow = c(2, 2))
+plot (lm.fit)
+```
+```{r residuals}
+plot ( predict (lm.fit), residuals (lm.fit))
+plot ( predict (lm.fit), rstudent (lm.fit))
+```
+```{r leverage}
+plot ( hatvalues (lm.fit))
+which.max ( hatvalues (lm.fit))
+```
 
 Briefly explain what the `confint()` and `predict()` functions output when applied to a linear model.
+-> confint() produces a confidence interval for the coefficient estimates of medv. 2.5% is the lower bound and 97.5% is the upperbound. predict() produces a confidence or prediction interval for the given linear model based on given data. The output includes the upper and lower bounds as well as the centered estimate.
 
 ## Part b (Explanation: 2.5 pts)
 
 Write out the equation of the least-squares line relating `lstat` and `medv`. Write two sentences interpreting the parameter estimates (one for slope, one for intercept) in the context of the data. Remember to use the right observational units!
+
+->  y = 34.55 - 0.95*x 
+34.55 is the estimated median house value in thousands of dollars if 0% of households have low socioeconomic status. Given a one unit increase in percentage of households with low socioeconomic status, we estimate a 0.95 thousand dollar change in median house value.
 
 Given the issue raised in Problem 1d with the `lstat` interpretation, let's just say in our interpretations that `lstat` represents the percentage of people in the neighborhood considered lower class.
 
@@ -185,8 +242,13 @@ Given the issue raised in Problem 1d with the `lstat` interpretation, let's just
 Refer to the diagnostic plots you created in Part (a) to answer the following questions:
 
 * Why do the lab instructions claim that "there is some evidence of non-linearity"?
+-> In the residual diagnostics, under the residuals vs fitted graph, linearity is shown if the red line is roughly straight. In our case, it is close but not quite close enough, and thus shows evidence of non-linearity.
+
 * Do you believe that the residuals are normally distributed? Why or why not?
+-> The normal Q-Q Plot is how we check if residuals are normally distributed. If they are normally distributed, all the points should fall on or near the diaganol line. In our case, many points drift towards the end showing mostly normality though not full normality.
+
 * Do you believe that the response variable is homoskedastic (the residuals have roughly constant variance across the entire predictor range)? Why or why not?
+-> The Scale Location Plot displays homoskedasticity. If the response variable is homoskedastic, the red line should be flat. In our case, the points have an estimated curve in their red line making it curved, and thus is not really homoskedastic.
 
 # Problem 4: Multiple Linear Regression
 
