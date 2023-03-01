@@ -53,6 +53,11 @@ a) We have 7 false positives, 0 false negatives, 6 true positives, 17 true negat
 
 b) We have 1 false positive, 0 false negatives, 6 true positives, 23 true negatives, 0 Type I error, and 1 Type II error under Holm.
 
+c) Bonferroni FDR: 7/24
+
+d) Holm FDR: 1/24
+
+e) We would end up getting more false positives since the threshold for rejecting hypotheses would be lowered.
 
 ## Conceptual Problem 2 (2 pts)
 
