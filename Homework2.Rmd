@@ -49,6 +49,10 @@ Read Chapter 13 of Introduction to Statistical Learning, Second Edition. Based o
 ## Conceptual Problem 1 (5 pts) 
 
 Textbook Exercise 13.7.6
+a) We have 7 false positives, 0 false negatives, 6 true positives, 17 true negatives, 0 Type I errors, and 7 Type II errors under Bonferroni.
+
+b) We have 1 false positive, 0 false negatives, 6 true positives, 23 true negatives, 0 Type I error, and 1 Type II error under Holm.
+
 
 ## Conceptual Problem 2 (2 pts)
 
