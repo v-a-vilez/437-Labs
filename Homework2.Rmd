@@ -79,7 +79,7 @@ Textbook Exercise 5.4.2 parts (e), (g), and (h). For part (g), you should create
 
 ```{r 5.4.2 part g}
 n = 1:100000
-plot(n, 1 - (1 - 1/n)^n, typ = "l", log = "x")
+plot(n, 1 - (1 - 1/n)^n, typ = "l")
 abline(h = 1 - exp(-1), col = "red")
 ```
 -> The limit of (1 - 1/n)^n as $n \rightarrow \infty$ is exp(-1). As n gets larger, we see that 1 - (1 - 1/n)^n approaches 1 - exp(-1).
@@ -282,7 +282,7 @@ hist(ci_basic_df4$lower)
 hist(ci_norm_df4$lower)
 ```
 
-summary...
+-> The theory-based and bootstrap-based methods are not guaranteed to achieve the appropriate coverage. The only method that is range-preserving is percentile because the others give p-values less than 0. A bootstrap method is useful to obtain a confidence interval when there is a very large sample because we don't have to rely on invalid assumptions of a dataset.
 
 # Applied Problems
 # Vanessa
