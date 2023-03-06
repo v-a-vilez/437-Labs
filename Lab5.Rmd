@@ -70,14 +70,25 @@ summary(lm1)
 ## Part d (Explanation: 1.5 pts)
 
 Holding difficulty constant, which of the following instructors would be predicted to have the highest overall rating? Which would be predicted to have the lowest overall rating? Explain your reasoning.
+```{r 1d, eval = FALSE}
+overall = -0.5878*d + 0.6364*h + -0.0504*ap + -0.0474*p + 5.301
+```
 
 * Attractive Assistant Professor
+  -> 5.9374
 * Attractive Associate Professor
+  -> 5.887
 * Attractive Professor
+  -> 5.89
 * Less-attractive Assistant Professor
+  -> 5.301
 * Less-attractive Associate Professor
+  -> 5.2506
 * Less-attractive Professor
-
+  -> 5.2536
+  
+We predict that an attractive assistant professor would have the highest overall rating. We also predict that a less-attractive associate professor would have the lowest overall rating. We obtained these results from using the least square regression equation obtained from the summary of lm1.
+  
 # Problem 2: Interaction Terms
 
 ## Part a (Code: 0.5 pts)
