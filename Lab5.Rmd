@@ -59,6 +59,9 @@ Holding difficulty constant, which of the following instructors would be predict
 ## Part a (Code: 0.5 pts)
 
 Run the single line of code in ISLR Lab 3.6.4. 
+```{r islr 3.6.4}
+summary(lm(medv ~ lstat*age, data = Boston))
+```
 
 ## Part b (Explanation: 2 pts)
 
