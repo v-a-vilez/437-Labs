@@ -2,7 +2,9 @@
 title: 'Homework Assignment #2'
 author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due March 2, 2023"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 # Instructions
@@ -62,10 +64,36 @@ e) We would end up getting more false positives since the threshold for rejectin
 ## Conceptual Problem 2 (2 pts)
 
 Suppose that we test $m = 1000$ independent null hypotheses, of which 10% are true, at significance level $\alpha = 0.05$ and achieve a false discovery rate of $q = 0.20$. Construct a table following Table 13.2 in the textbook, identifying the appropriate values of $V$, $S$, $U$, $W$, and $R$ in this situation.
-
+$$
+\begin{tabular}{|l|c|c|c|}
+\hline
+ & $H_0$ is true & $H_0$ is false & Total\\
+\hline
+Reject $H_0$ & 5 & 45 & 50\\
+\hline
+Do Not Reject $H_0$ & 95 & 855 & 950\\
+\hline
+Total & 100 & 900 & 1000\\
+\hline
+\end{tabular}
+$$
 ## Conceptual Problem 3 (3 pts)
 
 Suppose that we test $m = 1000$ independent null hypotheses, of which an unknown number $m_0$ are true, at significance level $\alpha = 0.05$. Suppose that each test also has a power of 0.80. Find and plot the false discovery rate as a function of $m_0$.
+
+$$
+\begin{tabular}{|l|c|c|c|}
+\hline
+ & $H_0$ is true & $H_0$ is false & Total\\
+\hline
+Reject $H_0$ &  &  & 50\\
+\hline
+Do Not Reject $H_0$ &  &  & 950\\
+\hline
+Total & m_0 & 1000-m_0 & 1000\\
+\hline
+\end{tabular}
+$$
 
 ## Conceptual Problem 4 (2.5 pts)
 
