@@ -35,13 +35,37 @@ This lab assignment is worth a total of **15 points**.
 
 Run the code in ISLR Lab 3.6.6. Put each chunk from the textbook in its own chunk.
 
+```{r 3.6.6 p1}
+head(Carseats)
+```
+
+```{r 3.6.6 p2}
+lm.fit <- lm(Sales ~ . + Income:Advertising + Price:Age,
+data = Carseats)
+summary(lm.fit)
+```
+
+```{r 3.6.6 p3}
+attach(Carseats)
+contrasts(ShelveLoc)
+```
+
 ## Part b (Explanation: 1 pt)
 
 Interpret the slope estimate corresponding to `ShelveLocGood` in the model fit in part (a).
 
+-> When a sale switches from CompPrice to Age, ShelveLocGood increases by 4.85.
+
 ## Part c (Code: 1 pt; Explanation: 1.5 pts)
 
 Using the RateMyProfessor dataset, fit a linear model predicting the overall rating of a professor (`overall`) from the difficulty rating (`difficulty`), chili pepper rating (`hotness`), and rank (`rank`). What are the reference levels for each categorical variable? How do you know?
+
+```{r linear model for RMP}
+lm1 <- lm(overall ~ difficulty + hotness + rank, data = RateMyProfessor)
+summary(lm1)
+```
+
+-> The reference level for hotness is cold because the summary only shows hot. The reference level for rank is Assistant Professor because the summary only shows Associate Professor and Professor.
 
 ## Part d (Explanation: 1.5 pts)
 
@@ -99,6 +123,32 @@ Do your equations support your conclusions from part (c)? Explain why or why not
 ## Part a (Code: 0.5 pts)
 
 Run the first four code chunks in ISLR Lab 7.8.1 (up through the point where `fit2b` is created). Put each chunk from the textbook in its own chunk.
+
+```{r 7.8}
+library(ISLR2)
+attach(Wage)
+```
+
+```{r 7.8.1 p1}
+fit <- lm(wage ~ poly(age , 4), data = Wage)
+coef(summary(fit))
+```
+
+```{r 7.8.1 p2}
+fit2 <- lm(wage ~ poly(age , 4, raw = T), data = Wage)
+coef(summary(fit2))
+```
+
+```{r 7.8.1 p3}
+fit2a <- lm(wage ~ age + I(age^2) + I(age^3) + I(age^4),
+data = Wage)
+coef(fit2a)
+```
+
+```{r 7.8.1 p4}
+fit2b <- lm(wage ~ cbind(age , age^2, age^3, age^4),
+data = Wage)
+```
 
 ## Part b (Code: 1 pt)
 
