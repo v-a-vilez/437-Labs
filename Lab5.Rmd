@@ -121,6 +121,32 @@ Do your equations support your conclusions from part (c)? Explain why or why not
 
 Run the first four code chunks in ISLR Lab 7.8.1 (up through the point where `fit2b` is created). Put each chunk from the textbook in its own chunk.
 
+```{r 7.8}
+library(ISLR2)
+attach(Wage)
+```
+
+```{r 7.8.1 p1}
+fit <- lm(wage ~ poly(age , 4), data = Wage)
+coef(summary(fit))
+```
+
+```{r 7.8.1 p2}
+fit2 <- lm(wage ~ poly(age , 4, raw = T), data = Wage)
+coef(summary(fit2))
+```
+
+```{r 7.8.1 p3}
+fit2a <- lm(wage ~ age + I(age^2) + I(age^3) + I(age^4),
+data = Wage)
+coef(fit2a)
+```
+
+```{r 7.8.1 p4}
+fit2b <- lm(wage ~ cbind(age , age^2, age^3, age^4),
+data = Wage)
+```
+
 ## Part b (Code: 1 pt)
 
 In the code chunk below, create a data frame with a single variable, `age`, ranging from 18 to 80, then use the `augment` function (in the `broom` package) to obtain the predicted wage, standard error of the mean wage, and the lower and upper bounds of a 95% confidence interval for the population mean wage at each age. (You can use any of `fit`, `fit2`, `fit2a`, or `fit2b` - they should all give the same predictions.)
