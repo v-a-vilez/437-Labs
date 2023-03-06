@@ -1,0 +1,454 @@
+---
+title: "Multiple Linear Regression - Example Code and Activities"
+author: "Math 437 Spring 2023"
+date: "2/27/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## The Data
+
+We are going to be working with baseball salary data again. This time we will be using data from the Lahman database, found in the `Lahman` package, and hopefully there will be a few players you have heard of.
+
+We're going to try to predict hitters' salary again. This is going to take a bit of setup; this code comes directly from the help files from the Lahman package.
+
+```{r create hitters data, warning = FALSE, message = FALSE}
+library(Lahman) # Still baseball data, but more accurate and more current
+library(dplyr)
+
+salaries <- Salaries %>%
+  select(playerID, yearID, teamID, salary)
+peopleInfo <- People %>%
+  select(playerID, birthYear, birthMonth, nameLast,
+         nameFirst, bats)
+batting <- battingStats() %>% 
+  left_join(salaries, 
+            by =c("playerID", "yearID", "teamID")) %>%
+  left_join(peopleInfo, by = "playerID") %>%
+  mutate(age = yearID - birthYear - 
+           1L *(birthMonth >= 10)) %>%
+  arrange(playerID, yearID, stint)
+
+```
+
+Now let's filter so we just have the 2016 data (the latest year salary information is available) and put in a few extra conditions so that we're pretty sure we only have full-time hitters, not part-time players, injured players, or pitchers.
+
+```{r batting-2016}
+batting_2016 <- batting %>% filter(yearID == 2016,
+                                   !is.na(salary), # filters out NA for salary
+                                   G >= 100, AB >= 200 #filtering out specific stuf like part time players/injured 
+                                   ) %>%
+  mutate(salary = salary/1000) # salary in thousands, instead of dollars
+```
+
+## Our First Model
+
+Let's try to predict the salary based on the number of home runs and the number of walks.
+
+```{r model-1}
+lm1 <- lm(salary ~ HR + BB, data = batting_2016)
+summary(lm1)
+```
+
+1. How do we interpret each number in the Estimate column?
+Interpretation of intercept: We predict the salary will be $855k when BOTH HR & BB are 0.
+Interpretation of slope 1: we predict the salary will increase by $122k when HR increases by 1 and BB stays constant. 
+Interpretation of slope 2: We predict the salary wil increase by $71K when BB increases by 1 & HR stays constant.
+
+### The ANOVA Test
+
+We can do an ANOVA test for the significance of the full model:
+
+```{r ANOVA-1}
+F.stat <- summary(lm1)$fstatistic  # value, numdf, dendf: F(numdf, dendf) = value
+F.stat
+```
+
+```{r ANOVA-2}
+# wrapping the assignment in () will also output to console
+(p.value <- pf(F.stat[1], F.stat[2], F.stat[3], lower.tail = FALSE))
+```
+
+Notice that the p-value we got with the `pf` function is the same as what came out of the `summary` function!
+
+We can also do partial ANOVA tests. R actually will run a partial ANOVA test for the significance of adding each variable to the model one-at-a-time:
+
+```{r ANOVA-3}
+anova(lm1)
+summary(lm1)
+```
+
+Notice that the p-value for `BB` is the same as was output in the summary, but the p-value for `HR` is different. It turns out that partial ANOVA is very sensitive to the order that you input the terms into the model:
+
+```{r ANOVA-4}
+lm2 <- lm(salary ~ BB + HR, data = batting_2016)
+anova(lm2)
+summary(lm1)
+```
+
+1. Why is this?
+lm1 ANOVA for HR: H0 : null model mu salary = B0 vs Ha: mu_salary = B0+B1*HR
+lm2 ANOVA for HR: H0 : null model mu_salary = B0+B1*BB 
+              vs Ha: mu_salary = B0+B1 x BB + B2 *HR
+
+for anova anything in a row before is assumed to be in H0 already.
+
+### R-Squared
+
+```{r r-squared}
+summary(lm1)$r.squared
+```
+the closer we are to 1 for r^2, the more we are capturing on the line, even if its terrible at prediction of new points 
+1. How do we interpret the R-squared value of 0.128?
+$R^2 = 0.128$ means our model can explain 12.8% of the variation in salary (our y-variable) 
+
+Notice that this is different from:
+
+```{r adj r-squared}
+summary(lm1)$adj.r.squared
+```
+
+We will talk about adjusted R-squared after we get back from spring break.
+
+when we have more than 1 variable, we can increase R^2 by adding more variables - even if they are more-or-less useless
+
+### Parameter Confidence Intervals
+
+Confidence intervals for each parameter in the model use the `confint` function:
+
+```{r confint}
+confint(lm1, level = 0.99) 
+```
+
+If you want the confidence interval for the slope corresponding to a specific predictor, you can either specify the row in the summary output or the name of the predictor:
+
+```{r confint-2}
+confint(lm1, parm = "HR")
+confint(lm1, parm = 2)
+```
+
+Notice that we get 95% CI by default.
+
+### Prediction
+
+To predict the salary for new players, we use the `predict` function.
+
+```{r pred-1}
+predict(lm1) %>% head(10) # prints only first 10 predictions
+```
+
+When we don't pass in a `newdata` argument, it just predicts for each row in the training set. We should typically pass in the holdout set for `newdata`. Here we don't have a holdout set, so I just create some fake data:
+
+```{r pred-2}
+new.df <- tibble(HR = c(2, 10, 15), BB = c(30, 50, 60)) # makes sure variables are named the same for dataframes
+
+predict(lm1, newdata = new.df)
+```
+
+It's much easier to read out if we add the predictions to the data frame. The `broom` package makes this really easy:
+
+```{r pred with broom}
+broom::augment(lm1,
+               newdata = new.df)
+```
+
+We can get confidence intervals for $\mu_{Y}$ and prediction intervals for $y$ by adding additional arguments to the `predict` function.
+
+```{r confint and predint}
+predict(lm1, newdata = new.df, interval = "confidence", level = 0.95)
+predict(lm1, newdata = new.df, interval = "prediction", level = 0.95)
+```
+both centered around $y$
+
+
+1. What's the difference between these intervals?
+where they come from and their range.
+
+We can also use `augment` to make our life much easier:
+
+```{r pred with broom CI}
+broom::augment(lm1,
+               newdata = new.df,
+               interval = "confidence")
+```
+
+2. How do we interpret the 95% confidence interval in row 1?
+We estimate with 95% confidence that when HR = 10 and BB = 50, the population mean salary is between $4430K and 6805K dollars.
+
+## Checking Model Assumptions
+
+The workhorse plot is our residual vs. fit plot:
+
+```{r residual plot}
+plot(lm1, which = 1) # fitted values -> y_hat cuz it includes both HR and BB
+```
+
+1. What patterns do you notice in this residual plot?
+the weird clumps means that the data is right skewed. The red line(averages) is the is consistently below 0. 
+
+To check normality we can create a normal q-q plot. The `qqnorm` plot will do this with any dataset, but if we want specifically a q-q plot of the residuals, we can use:
+
+```{r qqplot}
+plot(lm1, which = 2)
+```
+
+2. What does this plot tell us? Does this confirm any suspicions from the residual plot?
+it tells us that the data is skewed right. yes, it is underestimating in the middle. rsidual is showing non constant variance
+
+If we're unsure about heteroskedasticity, we can use the scale-location plot to help us:
+
+```{r scale-location}
+plot(lm1, which = 3)
+```
+
+Three other plots help us identify potential outliers and high-leverage points:
+
+```{r cook and leverage}
+plot(lm1, which = 4)  # Cook's distance shows the outliers 
+plot(lm1, which = 5)  # residual vs. leverage
+plot(lm1, which = 6)  # Cook's distance vs leverage (we should care about) 
+```
+
+Skip this part
+3. Which players get consistently identified as potential outliers? First find the row numbers in the plots above, then fill in the code chunk below to identify the players corresponding to those row numbers:
+
+```{r check outliers}
+batting_2016 %>% 
+  slice() %>% # fill in slice() with the identified row numbers
+  select(nameFirst, nameLast, HR, BB, salary, age)
+```
+
+Are there any players with crazy-high leverage?
+
+```{r check leverage-1}
+hist(hatvalues(lm1))
+```
+
+We expect the leverage to be right-skewed, but I don't see any outliers, so probably not anything super-concerning. The highest leverage player is...
+
+```{r check leverage-2}
+batting_2016 %>%
+  slice(which.max(hatvalues(lm1))) %>%
+  select(nameFirst, nameLast, HR, BB, salary, age)
+```
+
+
+## Collinearity and Multicollinearity
+
+To check for collinearity, we can obtain the correlation matrix:
+
+```{r check collinearity}
+with(batting_2016, cor(HR, BB)) #attach , checks correlation, and then detach 
+#batting_2016 %>% dplr::select(HR,BB) %>% cor() #full matrix would be helpful for more than two variables
+```
+
+The correlation here is about 0.5. Is this a big deal? Hard to tell. We can check the variance inflation factor (vif):
+
+```{r vif}
+library(car)
+vif(lm1)
+```
+
+A vif of 1.35 is not that bad. This suggests that even though we have some collinearity, it will not massively affect our coefficient estimates or standard errors.
+
+When we have more than 2 predictors in the model, we have to also watch out for multicollinearity. For an example of extreme collinearity and multicollinearity, we will use three predictors: slugging percentage, on-base percentage, and OPS: 
+
+```{r correlation matrix}
+cor(batting_2016 %>% select(SlugPct, OBP, OPS))
+```
+
+Notice that any model with these predictors could be massively affected by collinearity:
+
+```{r collinearity}
+lm3 <- lm(salary ~ SlugPct + OPS, data = batting_2016)
+summary(lm3)
+
+vif(lm3)
+```
+
+Yep, a variance inflation factor of 10.6 suggests major collinearity issues!
+
+But look at what happens when we try to include all three predictors:
+
+```{r multicollinearity}
+lm4 <- lm(salary ~ OBP + SlugPct + OPS, data = batting_2016)
+summary(lm4) # Can't even fit the model!
+```
+
+What is going on here?
+OPS is the actual linear combination of the other two so it is n ot working right
+
+The `vif` function throws an error that sheds some light on the issue:
+
+```{r vif with multicollinearity, eval = F}
+vif(lm4)
+```
+aliased coefficients means there is something in the model that is a linear combination of the others that need to get rid of. 
+
+## Indicator Variables in Multiple Linear Regression
+
+Let's add a single indicator variable for the league the player is in:
+
+```{r dummy-1}
+lm.dummy <- lm(salary ~ lgID, data = batting_2016)
+summary(lm.dummy)
+```
+
+1. What is our reference level here?
+we looked at the data set (View(batting_2016)) and saw that anything that wasn't NL was AL so ref level = "AL". usually the first alphabetically
+
+2. What is our least-squares regression equation?
+salary_hat = 7364.8 + (-2071.1)*(lgID=NL)
+
+3. What is the predicted salary for a player in the American League? In the National League? 
+for AL the predicted salary is going to be salary_hat = 7364.8 + (-2071.1)*(0) = 7364.8.
+for NL the predicted salary is going to be salary_hat = 7364.8 + (-2071.1)*(1) = 5293.7
+
+4. How do we interpret the slope in this model?
+we can say when a player switches from AL to NL, the expected/predicted salary drops by $2071K
+
+By default, the reference level is the first alphabetically. To use a different reference level, we need to use the `relevel` function. However, this function only works on factor variables:
+
+```{r relevel}
+batting_2016a <- batting_2016 %>% mutate(league = as.factor(lgID))
+batting_2016a$league <- relevel(batting_2016a$league, ref = "NL")
+
+lm.dummy2 <- lm(salary ~ league, data = batting_2016a)
+summary(lm.dummy2)
+```
+
+Notice what happens with the coefficients:
+
+```{r dummy coefficients}
+coef(lm.dummy)
+coef(lm.dummy2)
+```
+
+### Multiple Indicator Variables
+
+Let's subset to just the 5 NL West teams:
+
+```{r multiple indicator variables}
+nlwest <- batting_2016 %>% filter(teamID %in% c("LAN", "SFN", "SDN", "COL", "ARI"))
+lm.dummy3 <- lm(salary ~ teamID, data = nlwest)
+summary(lm.dummy3)
+```
+
+1. What is our reference level here?
+ref level = "ARI"
+
+2. What is our least-squares regression equation?
+salary_hat = 2713 + 2479(teamID = COL) + 3309(teamID = LAN) + 1134(teamID = SDN) + 6333(teamID = SFN)
+
+3. How do we interpret the slope corresponding to `LAN` in this model?
+when the player switches teams from ARI to LAN, the expected or the predicted salary will increase by $3309K
+
+Notice that the F-statistic and p-value for this model also test $H_0:$ the population mean salary is the same for all 5 teams. Compare to the one-way ANOVA:
+
+```{r lm vs anova}
+# One-way ANOVA
+oneway.test(salary ~ teamID, data = nlwest, var.equal = TRUE)
+```
+
+## Interaction Effects
+
+An interaction effect is coded with a `:`
+
+```{r interaction-1}
+lm.interaction <- lm(salary ~ HR + BB + HR:BB, data = nlwest)
+summary(lm.interaction)
+```
+
+1. What is our least-squares regression equation?
+salary_hat = -4405.8 + 644.1(HR) + 219.9 (BB) - 12.7 (HR)(BB)
+
+2. How do we interpret the slope corresponding to `HR` in this model?
+
+
+3. What does it mean for the interaction term to have a negative slope?
+it means that the salary for home run decreases as BB goes up
+when BB = 0: salary_hat = -4405.8 + 644.1 (hr) +0 +0 = -4405.8 + 644.1(HR)
+#644.1 is the increase in salary for evey additional hr they do.
+when BB = 1: salary_hat = -4405.8 + 644.1 (hr) +219.9 + (-12.7)(Hr)(1) = -4185.9 + 631.4 (HR)
+when BB = 25: salary_hat = -4405.8 + 644.1 (hr) +219.9(25) + (-12.7)(Hr)(25) = 1091.7 + 326.6(HR)
+
+Notice that all three slopes are significant at the 5% significance level, but the overall model is not! Once we start adding interaction effects, hypothesis tests start getting a bit wonky due to collinearity issues:
+
+```{r collinearity interaction}
+cor(model.matrix(lm.interaction)[,-1]) # 1st column is intercept
+```
+
+We know that adding another term to the model will make the R-squared increase. 
+
+```{r r-squared comparison}
+lm.no_interaction <- lm(salary ~ HR + BB, data = nlwest)
+
+summary(lm.no_interaction)$r.squared
+summary(lm.interaction)$r.squared
+```
+
+Is this a significant increase?
+
+```{r anova for interaction term}
+anova(lm.interaction)
+```
+
+### Including Main and Interaction Effects
+
+`*` is a shorcut for combining `+` and `:`, therefore to include both main and interaction effects of HR and BB:
+
+```{r main and interaction}
+lm.equivalent <- lm(salary ~ HR * BB, data = nlwest)
+
+summary(lm.interaction)
+summary(lm.equivalent)
+```
+
+### Looking for Interaction Effects
+
+Remember that we can look at the combined effect of a quantitative and categorical predictor on the quantitative response by adding colors on a scatterplot:
+
+```{r interaction plot 1, warning = FALSE, message = FALSE}
+library(ggplot2)
+interact_plot <- ggplot(batting_2016a, aes(x = HR, y = salary)) +
+  geom_point(aes(color = league)) +  # color-code points
+  geom_smooth(aes(color = league), method = "lm", se = FALSE)  # add a regression line for each group
+print(interact_plot)
+```
+
+1. Does there appear to be an interaction effect between `league` and `HR`? Why or why not?
+
+Here's the linear regression model:
+
+```{r interaction model 2}
+lm.interaction2a <- lm(salary ~ HR * league, data = batting_2016a)
+summary(lm.interaction2a)
+```
+
+2. How do we interpret the slopes corresponding to each main effect?
+
+3. What would be the equation for predicting salary from HR looking only at the AL? Looking only at the NL?
+salary_hat = 2991.7 + 142.2(HR) + 79.71(league = AL) + 72.65(HR)(league= AL)
+in AL: salary_hat = 2991.7 + 142.2(HR) + 79.71(1) + 72.65(HR)(1) = 3071.41 + 218.48(HR)
+in NL: salary_hat = 2991.7 + 142.2(HR) + 79.71(0) + 72.65(HR)(0) = 2991.7 + 142.2(HR)
+
+
+We can change the reference level:
+
+```{r change ref level}
+batting_2016a$league <- relevel(as.factor(batting_2016a$league), ref = "AL")
+
+lm.interaction2b <- lm(salary ~ HR * league, data = batting_2016a)
+summary(lm.interaction2b)
+```
+
+4. According to this summary, what would be the equation for predicting salary from HR looking only at the AL? Looking only at the NL?
+
+In base R, we can use `interaction.plot`, but I think that the scatterplot is much easier to read:
+
+```{r interaction.plot}
+with(batting_2016a, interaction.plot(x.factor = HR, trace.factor = league, response = salary))
+```

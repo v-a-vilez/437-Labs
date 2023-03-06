@@ -21,6 +21,7 @@ This homework assignment is worth a total of **40 points**.
 library(ISLR2)
 library(ggplot2)
 library(dplyr)
+library(DescTools) #for application problem 2
 ```
 
 # Key Terms (5 pts)
@@ -39,8 +40,11 @@ Read Chapter 13 of Introduction to Statistical Learning, Second Edition. Based o
 4. Briefly explain why it is necessary to adjust the significance level (or equivalently, the p-values) when testing a large number of null hypotheses.
 -> It is necessary to adjust the significance level when testing a large number of null hypothesis because we are bound to get very small p-values. If we reject each null hypothesis without accounting for the fact that we have performed a large number of tests, we will end up with a lot of Type I Errors.
 5. Compare and contrast the *Family-Wise Error Rate* (FWER) and the *False Discovery Rate* (FDR).
+-> FWER and FDR are two different methods used to control type 1 errors. The difference is that FWER is the probability of making at least type 1 error while FDR is the proportion of type 1 errors that the model is allowed to make. FWER has four widely-used methods: Bonferroni, Holm's, Tukeys, and Scheffe's; while FDR has one widely-used method: Benjamini-Hochberg. It is difficult to contol for FDR since it requires the user to know the power and the number of null hypotheses that are false. 
 6. Compare and contrast the *Bonferroni Method* and *Holm's Step-Down Method* for controlling the FWER.
+->Bonferroni's and holm's step-down method are two ways to control FWER for m null hypotheses. They both have no assumptions about the null hypothesis, the type of test statistic used or the independence or dependence of the p-values. however Holm's is better than Bonferroni, because it is less conservative so it usually results in fewer type 2 errors. So holms has a greater power than bonferroni. 
 7. Why do we prefer to use *Tukey's Method* or *Scheffe's Method* to control the FWER? In what conditions is it appropriate to use those methods instead of the Bonferroni or Holm methods?
+-> We prefer to use Tukey's Method or Scheffe's Method to control FWER because in certain situations, we can achieve a higher power using these two methods over Bonferroni and holms. It is appropriate to use Tukey or Scheffes when some of the m p-values for the m pairwise comparisons are not independent. SO when we control for FWER, we can be less conservative to have a higher power.
 8. Briefly describe the *Benjamini-Hochberg* procedure for controlling the FDR.
 9. What is/are the major assumption(s) of a *permutation test*? What is the general procedure for obtaining the null distribution of a test statistic using a permutation test?
 10. When is it useful/recommended to use a permutation testing approach as opposed to a traditional theory-based approach?
@@ -112,7 +116,7 @@ Textbook Exercise 5.4.2 parts (e), (g), and (h). For part (g), you should create
 
 ```{r 5.4.2 part g}
 n = 1:100000
-plot(n, 1 - (1 - 1/n)^n, typ = "l", log = "x")
+plot(n, 1 - (1 - 1/n)^n, typ = "l")
 abline(h = 1 - exp(-1), col = "red")
 ```
 -> The limit of (1 - 1/n)^n as $n \rightarrow \infty$ is exp(-1). As n gets larger, we see that 1 - (1 - 1/n)^n approaches 1 - exp(-1).
@@ -315,14 +319,23 @@ hist(ci_basic_df4$lower)
 hist(ci_norm_df4$lower)
 ```
 
-summary...
+-> The theory-based and bootstrap-based methods are not guaranteed to achieve the appropriate coverage. The only method that is range-preserving is percentile because the others give p-values less than 0. A bootstrap method is useful to obtain a confidence interval when there is a very large sample because we don't have to rely on invalid assumptions of a dataset.
 
 # Applied Problems
 # Vanessa
 
 ## Applied Problem 1 (Code: 4 pts; Explanation: 2 pts)
 
-Using the `dplyr` package, subset the `mpg` dataset from the `ggplot2` package to include only the cars from 2008 that are minivans, pickups, or SUVs (`%in%` is a useful replacement for `==` when trying to match to more than one possibility). Using this new dataset, determine which of the following statements is/are true, using an $\alpha = 0.10$ significance level/family-wise error rate or a $q = 0.10$ false discovery rate:
+Using the `dplyr` package, subset the `mpg` dataset from the `ggplot2` package to include only the cars from 2008 that are minivans, pickups, or SUVs (`%in%` is a useful replacement for `==` when trying to match to more than one possibility).
+
+```{r subset of mpg}
+mpg_sub <- mpg %>% filter(class %in% c('minivan','pickup','suv'), year == 2008)
+mpg_sub1 <- mpg %>% filter(class %in% c('minivan','pickup'), year == 2008)
+mpg_sub2 <- mpg %>% filter(class %in% c('pickup','suv'), year == 2008)
+mpg_sub3 <- mpg %>% filter(class %in% c('minivan','suv'), year == 2008)
+```
+
+Using this new dataset, determine which of the following statements is/are true, using an $\alpha = 0.10$ significance level/family-wise error rate or a $q = 0.10$ false discovery rate:
 
 1. There is a significant difference in highway gas mileage between minivans and SUVs.
 2. There is a significant difference in highway gas mileage between pickups and SUVs.
@@ -330,13 +343,92 @@ Using the `dplyr` package, subset the `mpg` dataset from the `ggplot2` package t
 
 Use the following methods.
 
-(a) Three two-sample t-tests with no adjustments for multiple testing. Store all three p-values in a single vector so that you can use the `p.adjust` function in later parts.
+(a) Three two-sample t-tests with no adjustments for multiple testing. Store all three p-values in a single vector so that you can use the `p.adjust` function in later parts. 
+
+```{r prob 2A}
+p1 <- t.test(formula = hwy ~ class, data = mpg_sub1, alternative = "g",var.equal = TRUE)$p.value
+p2 <- t.test(formula = hwy ~ class, data = mpg_sub2, alternative = "g",var.equal = TRUE)$p.value
+p3 <- t.test(formula = hwy ~ class, data = mpg_sub3, alternative = "g",var.equal = TRUE)$p.value
+
+p_all <- c(p1,p2,p3)
+p_all
+
+sum (p_all <= .1)
+```
+At $\alpha = 0.10$, we can say that 1 and 3 are true. 
+
 (b) Three two-sample t-tests followed by Bonferroni's method. 
+
+```{r prob 2b}
+p1 <- t.test(formula = hwy ~ class, data = mpg_sub1, alternative = "g",var.equal = TRUE)$p.value
+p2 <- t.test(formula = hwy ~ class, data = mpg_sub2, alternative = "g",var.equal = TRUE)$p.value
+p3 <- t.test(formula = hwy ~ class, data = mpg_sub3, alternative = "g",var.equal = TRUE)$p.value
+
+p_all <- c(p1,p2,p3)
+p_all
+
+q.values.Bon <- p.adjust(p_all, method = "bonferroni")
+q.values.Bon
+
+sum (q.values.Bon <= .1)
+
+```
+At $\q = 0.10$, we can say that 1 and 3 are true. 
+
 (c) Three two-sample t-tests followed by Holm's step-down method.
+
+```{r prob 2c}
+p1 <- t.test(formula = hwy ~ class, data = mpg_sub1, alternative = "g",var.equal = TRUE)$p.value
+p2 <- t.test(formula = hwy ~ class, data = mpg_sub2, alternative = "g",var.equal = TRUE)$p.value
+p3 <- t.test(formula = hwy ~ class, data = mpg_sub3, alternative = "g",var.equal = TRUE)$p.value
+
+p_all <- c(p1,p2,p3)
+p_all
+
+
+q.values.H <- p.adjust(p_all, method = "holm")
+q.values.H
+
+sum (q.values.H <= .1)
+```
+At $\q = 0.10$, we can say that 1 and 3 are true. 
+
 (d) A one-way ANOVA followed by Tukey's method.
+
+```{r prob 2d}
+p1a <- aov(formula = hwy ~ class, data = mpg_sub1)
+p2a <- aov(formula = hwy ~ class, data = mpg_sub2)
+p3a <- aov(formula = hwy ~ class, data = mpg_sub3)
+
+p_all_anova <- c(p1a,p2a,p3a)
+
+TukeyHSD(x = p1a)
+TukeyHSD(x = p2a)
+TukeyHSD(x = p3a)
+```
+At $\q = 0.10$, we can say that 1,2, and 3 are true. 
+
 (e) Three two-sample t-tests followed by the Benjamini-Hochberg (BH) method.
 
+```{r prob 2e}
+p1 <- t.test(formula = hwy ~ class, data = mpg_sub1, alternative = "g",var.equal = TRUE)$p.value
+p2 <- t.test(formula = hwy ~ class, data = mpg_sub2, alternative = "g",var.equal = TRUE)$p.value
+p3 <- t.test(formula = hwy ~ class, data = mpg_sub3, alternative = "g",var.equal = TRUE)$p.value
+
+p_all <- c(p1,p2,p3)
+p_all
+
+
+q.values.BH <- p.adjust(p_all, method = "BH")
+q.values.BH
+
+sum (q.values.BH <= .1)
+```
+At $\q = 0.10$, we can say that 1 and 3 are true. 
+
 Compare and contrast your results.
+For all except Tukey's Method, we could say that there is a significant difference in minivan and suvs, and there is a significant difference in minivans and pickups. For Tukey's method we could say that there is a significant differnce in minivans and suvs, minivans and pickups, and pickups and suvs. 
+
 
 ## Applied Problem 2 (Code: 1 pt; Explanation: 1 pt)
 
@@ -344,6 +436,92 @@ Use a one-way ANOVA followed by Scheffe's method (`ScheffeTest` in the DescTools
 
 There is a significant difference in highway gas mileage between pickups and non-pickups (SUVs and minivans).
 
+```{r ANOVA }
+#remember to add DescTools thru packages
+#library(DescTools)
+
+p3a <- aov(formula = hwy ~ class, data = mpg_sub3)
+
+ScheffeTest(x = p3a)
+```
+The statement "There is a significant difference in highway gas mileage between pickups and non-pickups (SUVs and minivans)" is true. 
+
 ## Applied Problem 3 (Code: 5 pts; Explanation: 3 pts)
 
 Textbook Exercise 5.4.9.
+
+```{r ISLR 5.4.9 exercise a}
+#a) mean of medv
+medv_muhat <- mean(Boston$medv)
+medv_muhat
+```
+
+```{r ISLR 5.4.9 exercise b}
+#b) standard error of muhat
+se_muhat <- sd(Boston$medv)/sqrt(length(Boston$medv))
+se_muhat
+```
+
+```{r ISLR 5.4.9 exercise c}
+#c) bootstrap the mean
+muhat_boot <- numeric(10000)
+for (i in 1:10000) {
+  boot_samp <- sample(Boston$medv, size = length(Boston$medv),replace = T)
+  muhat_boot[i] <- mean(boot_samp)
+}
+se_muhat_boot <- sd(muhat_boot)
+se_muhat_boot
+```
+
+this number is pretty close to the number we got in part b, so its most likely correct.
+
+```{r ISLR 5.4.9 exercise d}
+# d) confidence interval using bootstrap se
+low_int <- medv_muhat - 2* se_muhat_boot
+up_int <- medv_muhat + 2* se_muhat_boot
+low_int
+up_int
+t.test(Boston$medv)
+```
+
+```{r ISLR 5.4.9 exercise e}
+# e) median of Boston medv
+muhat_med <- median(Boston$medv)
+muhat_med
+```
+
+```{r ISLR 5.4.9 exercise f}
+# f) bootstrap the median
+muhat_boot2 <- numeric(10000)
+for (i in 1:10000) {
+  boot_samp2 <- sample(Boston$medv, size = length(Boston$medv),replace = T)
+  muhat_boot2[i] <- median(boot_samp2)
+}
+se_muhat_boot2 <- sd(muhat_boot2)
+se_muhat_boot2
+```
+
+the standard error of the bootstrapped median samples is 0.3808. We estimate with 95% confidence that the population median of 'medv' is in the interval [22.53 - 0.7581, 22.53 + 0.7581]
+
+```{r ISLR 5.4.9 exercise g}
+# g) estimate for the tenth percentile of medv
+muhat_0.1 <- quantile(Boston$medv, probs = .1)
+muhat_0.1
+```
+
+```{r ISLR 5.4.9 exercise h}
+# h) bootstrap the tenth quantile
+muhat_boot3 <- numeric(10000)
+for (i in 1:10000) {
+  boot_samp3 <- sample(Boston$medv, size = length(Boston$medv),replace = T)
+  muhat_boot3[i] <- quantile(boot_samp3,probs = .1)
+}
+se_muhat_boot3 <- sd(muhat_boot3)
+se_muhat_boot3
+
+```
+
+the standard error of the bootstrapped tenth quantile samples is 0.3808. We estimate with 95% confidence that the tenth quantile of 'medv' is in the interval [22.53 - 1.0026, 22.53 + 1.0026].
+
+
+
