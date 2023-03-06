@@ -35,13 +35,37 @@ This lab assignment is worth a total of **15 points**.
 
 Run the code in ISLR Lab 3.6.6. Put each chunk from the textbook in its own chunk.
 
+```{r 3.6.6 p1}
+head(Carseats)
+```
+
+```{r 3.6.6 p2}
+lm.fit <- lm(Sales ~ . + Income:Advertising + Price:Age,
+data = Carseats)
+summary(lm.fit)
+```
+
+```{r 3.6.6 p3}
+attach(Carseats)
+contrasts(ShelveLoc)
+```
+
 ## Part b (Explanation: 1 pt)
 
 Interpret the slope estimate corresponding to `ShelveLocGood` in the model fit in part (a).
 
+-> When a sale switches from CompPrice to Age, ShelveLocGood increases by 4.85.
+
 ## Part c (Code: 1 pt; Explanation: 1.5 pts)
 
 Using the RateMyProfessor dataset, fit a linear model predicting the overall rating of a professor (`overall`) from the difficulty rating (`difficulty`), chili pepper rating (`hotness`), and rank (`rank`). What are the reference levels for each categorical variable? How do you know?
+
+```{r linear model for RMP}
+lm1 <- lm(overall ~ difficulty + hotness + rank, data = RateMyProfessor)
+summary(lm1)
+```
+
+-> The reference level for hotness is cold because the summary only shows hot. The reference level for rank is Assistant Professor because the summary only shows Associate Professor and Professor.
 
 ## Part d (Explanation: 1.5 pts)
 
