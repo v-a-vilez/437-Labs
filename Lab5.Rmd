@@ -94,40 +94,62 @@ We predict that an attractive assistant professor would have the highest overall
 ## Part a (Code: 0.5 pts)
 
 Run the single line of code in ISLR Lab 3.6.4. 
-```{r islr 3.6.4}
-summary(lm(medv ~ lstat*age, data = Boston))
+
+```{r ISLR lab 3.6.4}
+summary(lm(medv~lstat*age, data = Boston))
 ```
+
 
 ## Part b (Explanation: 2 pts)
 
 Notice that `age` is a significant predictor of `medv` in the model without the interaction term (from ISLR Lab 3.6.3 on Lab 4), but it is no longer a significant predictor of `medv` once we add in the interaction term. The p-value is huge (0.971!). What do you think is happening here? Are we okay to remove the `age` variable from the model with the interaction term? Why or why not?
 
+The lstat is affecting the slope of age in the model so the p-value is bigger in this model. In this model, age is affected by the estimate and a 0.004 increase in lstat, because we are not holding it constant.
+We are not okay to remove the `age` variable because we need to include the main effect of each variable even though `age` is not significant in the model.  
+
 ## Part c (Code: 1 pt; Explanation: 1.5 pts)
 
 Create a new dataset, `associates`, by `filter`ing the `RateMyProfessor` dataset to include only the Associate Professors.
 
+```{r subset RateMyProfessor}
+associates <- RateMyProfessor %>% filter(rank %in% 'Associate Professor')
+```
+
+
 Next, complete this code chunk to create a graph of overall rating vs. difficulty rating for the associate professors, with "hot" professors shown in red and "cold" professors shown in blue. Remember to delete `eval = FALSE` once you get the code to run!
 
-```{r ggplot associates, eval = FALSE}
-ggplot() + # add appropriate arguments here or in the next line
+```{r ggplot associates}
+ggplot(associates, aes(difficulty, overall, color = hotness)) + # add appropriate arguments here or in the next line
   geom_point(alpha = 0.25) +
   # if you added arguments to geom_point, add the same arguments to geom_smooth
   # otherwise don't touch these lines - they will run fine
   geom_smooth(method = "lm", se = FALSE) + # regression line, no confidence bands
   scale_color_manual(name = "Chili Pepper Rating",  # make legend nice
                      labels = c(hot = "Attractive", cold = "Less-attractive"),
-                     values = c(hot = "red", cold = "blue")) +
+                     values = c(hot = "red", cold = "blue")) 
 ```
 
 How does the difficulty of the professor modify the relationship between attractiveness and overall rating?
+The more difficult that students find a professor, the students will give them a lower overall rating but attractive professors generally have a higher overall over less-attractive professors.
 
 ## Part d (Code: 1 pt; Computation and Explanation: 2 pts)
 
 Using the `RateMyProfessor` dataset, fit a linear model predicting overall rating from the difficulty rating (`difficulty`), chili pepper rating (`hotness`), rank (`rank`), and an interaction term between `difficulty` and `hotness`.
 
+```{r lm of rate my professor, eval = FALSE}
+#lm.interaction <- lm(salary ~ HR + BB + HR:BB, data = nlwest)
+lm.int <- lm(overall~ difficulty + hotness + rank + difficulty:hotness, data = RateMyProfessor)
+summary(lm.int)
+```
+
 Using your results, write out the least-squares regression equation predicting overall rating from difficulty for an attractive associate professor. Also, write out the least-squares regression equation predicting overall rating from difficulty for a less-attractive associate professor. Explain how you obtained each equation.
+-> overall = 5.4709 - 0.6409(difficulty) - 0.2524(hotness = hot) - 0.0489(rank = Associate Professor) - 0.0448(rank = Professor) + 0.2971(difficulty)(hotness = hot)
+when hotness = hot = 1 and rank = associate = 1, overall = 5.4709 - 0.6409(difficulty) - 0.2524(1) - 0.0489(1) - 0.0448(0) + 0.2971(difficulty)(1) = 5.1696 - 0.3438(difficulty). 
+
+when hotness = cold = 0 and rank = associate = 1, overall = 5.4709 - 0.6409(difficulty) - 0.2524(0) - 0.0489(1) - 0.0448(0) + 0.2971(difficulty)(0) = 5.422 - 0.6409(difficulty)
 
 Do your equations support your conclusions from part (c)? Explain why or why not.
+Yes these equations support my claim from part (c). If you consider a difficulty = 4.5, then the overall for an attractive associate professor is 3.6225 while the overall for a less-attractive associate professor is 2.53795. so the more difficult a less attractive associate professor is, the less their overall is comapred to an attrctive associate professor.  
 
 # Problem 3: Regression with Nonlinear Transformations of the Predictors
 
