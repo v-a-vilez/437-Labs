@@ -190,6 +190,14 @@ In the code chunk below, create a data frame with a single variable, `age`, rang
 What is the 95% confidence interval for the population mean wage of 25-year-olds? 50-year-olds?
 
 ```{r use augment to get predictions out}
-
+#agelims <- range(age)
+age.df <- tibble(sample(Wage$age, 3000))
+predict(fit, newdata = age.df)
+broom::augment(
+  fit, 
+  newdata = age.df,
+  se_fit = TRUE,
+  interval = "confidence"
+)
 ```
 
