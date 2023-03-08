@@ -46,8 +46,13 @@ Read Chapter 13 of Introduction to Statistical Learning, Second Edition. Based o
 7. Why do we prefer to use *Tukey's Method* or *Scheffe's Method* to control the FWER? In what conditions is it appropriate to use those methods instead of the Bonferroni or Holm methods?
 -> We prefer to use Tukey's Method or Scheffe's Method to control FWER because in certain situations, we can achieve a higher power using these two methods over Bonferroni and holms. It is appropriate to use Tukey or Scheffes when some of the m p-values for the m pairwise comparisons are not independent. SO when we control for FWER, we can be less conservative to have a higher power.
 8. Briefly describe the *Benjamini-Hochberg* procedure for controlling the FDR.
+-> We start with a q (value for which we want to control FDR). We then compute p-values for the m hypotheses. The p-values then get ordered and tested at differing significance levels. We then reject all hypotheses associated with p-values that are deemed significant.
+
 9. What is/are the major assumption(s) of a *permutation test*? What is the general procedure for obtaining the null distribution of a test statistic using a permutation test?
+-> We assume independence, and we assume observations are exchangeable. Generally, for two random variables X and Y, we can randomly swap observations in X with observations in Y, and the test statistic will have the same distribution as the original data, which works only if H_0 holds. The procedure is as follows: Compute T, the two sample statistic on the original data. Then for b = 1,...,B where B is a large number, we permute the observations at random and compute T on the permuted data. From there we can compute a p-value.
+
 10. When is it useful/recommended to use a permutation testing approach as opposed to a traditional theory-based approach?
+-> It is useful to use a permutation testing approach when we do not know the distribution of a test statistic. It is also useful in the instance where certain assumptions are difficult to meet.
 
 # Conceptual Problems
 # Michael
@@ -73,35 +78,39 @@ $$
 \hline
  & $H_0$ is true & $H_0$ is false & Total\\
 \hline
-Reject $H_0$ & 5 & 45 & 50\\
+Reject $H_0$ & 5 & 20 & 25\\
 \hline
-Do Not Reject $H_0$ & 95 & 855 & 950\\
+Do Not Reject $H_0$ & 95 & 880 & 975\\
 \hline
 Total & 100 & 900 & 1000\\
 \hline
 \end{tabular}
 $$
+# alpha is probability of making a type I error
+
 ## Conceptual Problem 3 (3 pts)
 
 Suppose that we test $m = 1000$ independent null hypotheses, of which an unknown number $m_0$ are true, at significance level $\alpha = 0.05$. Suppose that each test also has a power of 0.80. Find and plot the false discovery rate as a function of $m_0$.
 
-$$
-\begin{tabular}{|l|c|c|c|}
-\hline
- & $H_0$ is true & $H_0$ is false & Total\\
-\hline
-Reject $H_0$ &  &  & 50\\
-\hline
-Do Not Reject $H_0$ &  &  & 950\\
-\hline
-Total & m_0 & 1000-m_0 & 1000\\
-\hline
-\end{tabular}
-$$
+FDR roughly equal to V/R roughly equal to 0.05*m0/(800-.75m0)
+
+```{r C 3}
+m0 = seq(0,1000)
+FDR <- 0.05*m0/(800-.75*m0)
+plot(FDR)
+```
+
+
 
 ## Conceptual Problem 4 (2.5 pts)
 
 Textbook Exercise 5.4.2 parts (a), (b), and (c).
+  
+a) The probability that the first bootstrap observation is the jth one is 1/n. Therefore, the probability that the first bootstrap observation is not the jth one is 1 - 1/n.
+
+b) Similar to the first, the second observation has a probability of 1/n. Hence, the probability that the second bootstrap observation is not the jth one is 1 - 1/n.
+
+c) From b, we can see that each sample is independent from one another. So for n observations, we have (1 - 1/n)^n.
 
 # Simulation Problems 
 # Phuong
