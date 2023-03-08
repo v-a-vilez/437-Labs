@@ -54,7 +54,7 @@ contrasts(ShelveLoc)
 
 Interpret the slope estimate corresponding to `ShelveLocGood` in the model fit in part (a).
 
--> When a sale switches from CompPrice to Age, ShelveLocGood increases by 4.85.
+-> When a sale increases by 1 unit, ShelveLocGood increases by 4.85.
 
 ## Part c (Code: 1 pt; Explanation: 1.5 pts)
 
