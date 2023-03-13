@@ -1,0 +1,226 @@
+---
+title: 'Lab Assignment #6'
+author: "Math 437 - Modern Data Analysis"
+date: "Due March 15, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+The purpose of this lab is to introduce a few different classification strategies. In this lab we will work with k-nearest neighbors, logistic regression, and their generalizations to more than 2 response categories.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+library(class) # knn
+library(nycflights13) # Problem 3
+library(nnet) # multinomial logistic regression
+library(workflows)
+library(parsnip)
+library(recipes)
+library(rsample)
+library(broom)
+```
+
+This lab assignment is worth a total of **20 points**.
+
+# Problem 1: Example Code 
+
+## Part a (Code: 1.5 pts)
+
+Run the code in ISLR Labs 4.7.1, 4.7.2, and 4.7.6. Put each chunk from the textbook in its own chunk.
+
+## Part b (Explanation: 1 pt)
+
+In Lab 4.7.6, both the k-nn model with `k=5` and the logistic regression model using `probs > 0.5` as the classification threshold produced a test error rate (misclassification rate) of 6.6% using the `Caravan` dataset. Explain why we would prefer to use the k-nn model.
+
+## Part c (Explanation: 1 pt)
+
+If you forget to include the `family = binomial` argument when calling `glm`, what does R try to do instead of running a logistic regression? It may be useful to look up the documentation for the `glm` function, look up the part of the Logistic Regression Class Activity where we actually did this, and/or read Section 4.6.3 of the textbook.
+
+# Problem 2: Analysis of iris Dataset: virginica vs versicolor
+
+The `iris` dataset is a well-known benchmark dataset for evaluating the performance of new classification algorithms on small sets of data. It is found in the `datasets` package (which should automatically be loaded when you start R).
+
+The dataset consists of five variables: the response variable (`Species`) and four explanatory variables (`Sepal.Length`, `Sepal.Width`, `Petal.Length`, and `Petal.Width`, each measured in cm). Because the species are fairly distinct in terms of the four explanatory variables, we should expect near-100% accuracy with any decent classification model.
+
+In this problem, we will do all of our modeling without using the `tidymodels` packages.
+
+## Part a (Code: 2 pts)
+
+We will start out by working with only the species `virginica` and `versicolor`. Create a new dataset, `iris_vv`, by filtering to only include those two species. Then, pick two of the explanatory variables and, using the `ggplot2` package, create a scatterplot showing the relationship between those two variables, color-coded based on the `Species`.
+
+## Part b (Code: 2 pts)
+
+Prepare your dataset for the k-nearest neighbors algorithm by doing the following:
+
+### Step 1: Create the training and holdout sets
+
+Randomly select 20 observations to be in the holdout set. The remaining observations are in the training set. Call these new datasets `iris.train` and `iris.test`.
+
+HINT: The easiest way to do this is to `sample` from the indices and subset accordingly.
+
+### Step 2: Scale the predictor variables
+
+Create two new datasets, `iris.train.X` and `iris.test.X`, containing the explanatory variables in each set. Remember that you need to scale the variables in both the training and holdout sets based on the training set!
+
+## Part c (Code: 2 pts; Explanation: 0.5 pts)
+
+With the `knn` function, use 5-nearest neighbors to predict the species of each observation in the `iris.test` holdout set. Create a `table` showing the predicted and actual species in the holdout set. What is the prediction accuracy of this model?
+
+## Part d (Code: 1 pt; Explanation: 1 pt)
+
+Fit a logistic regression model on the training set predicting `Species` from the four explanatory variables. Unlike with k-nearest neighbors, you do not need to scale the variables. Note that there may be some weirdness with figuring out the reference level for `Species`, so you may want to use the `relevel` function to set that before fitting the model.
+
+Use the `summary` or `coef` function to obtain the coefficient estimates, and write out the equation of the fitted logistic regression model.
+
+## Part e (Code: 2 pts; Explanation: 0.5 pts)
+
+Use the `predict` function to obtain predictions for the `iris.test` holdout set. Remember to include the argument `type = "response"` to output predictions as probabilities!
+
+Predict the class of each flower in the holdout set using a decision boundary of 0.5 (i.e., if the predicted probability of being in *versicolor* vs. *virginica* is above 0.5, predict the flower to be in *versicolor*). Create a `table` showing the predicted and actual species in the holdout set. What is the prediction accuracy of this model on the holdout set?
+
+# Problem 3: Analysis of flights Dataset
+
+There are three major airports that serve the New York City metro area: John F. Kennedy International Airport (JFK), Newark Liberty International Airport (EWR), and LaGuardia Airport (LGA). Newark is a United Airlines hub, JFK is an American Airlines hub, while Delta has hubs at both JFK and LGA.
+
+The `flights` dataset contains flights from 2013 that departed one of those three airports. Here we filter the dataset to include only flights that departed on one of those three carriers. 
+
+```{r filter flights}
+flights2 <- flights %>% filter(
+  carrier %in% c("UA", "AA", "DL"),
+  !is.na(dep_delay)
+) %>%
+  mutate(origin = as.factor(origin))
+```
+
+Let's try to predict which airport a flight departed from into based on the carrier as well as the distance the flight has covered and the departure delay. In this problem we'll do everything the `tidymodels` way.
+
+## Part a (Code: 1 pt)
+
+First, we'll use 3-nearest neighbors to predict the departure airport of each observation in the `flights_test` holdout set.
+
+```{r pre-processing and model spec}
+knn_model <- nearest_neighbor(mode = "classification", neighbors = 3, dist_power = 2)
+
+set.seed(2222)
+flights_split <- initial_split(flights2, prop = 0.8)
+flights_train <- training(flights_split)
+flights_test <- testing(flights_split)
+
+knn_prep <- recipe(
+  origin ~ carrier + distance + dep_delay, # response ~ predictors
+  data = flights_train
+) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_normalize(all_numeric_predictors()) # center and scale numeric predictors
+
+flights_knn <- workflow() %>%
+  add_model(knn_model) %>%
+  add_recipe(knn_prep)
+```
+
+In the chunk below, write code that will `fit` the model on the training set. (If your model runs for ~3 seconds without an error message, start on part (b) while you wait for the chunk to churn.)
+
+```{r fitting k-nn}
+
+```
+
+Next, use the `augment` function to create the tibble `flights_knn_predictions` containing the predictions for each flight in the `flights_test` dataset. 
+
+```{r predicting with broom::augment}
+
+```
+
+## Part b (Explanation: 1 pt)
+
+While you wait for your code to run, as best you can, answer the following questions:
+
+* How did we ensure that roughly 20% of the data was in the holdout set, even though we didn't know the exact size of my dataset?
+
+* What does the `step_dummy` function do, and why did we need to do it?
+
+## Part c (Code: 0.5 pts; Explanation: 0.5 pts)
+
+Now let's use multinomial logistic regression to do the same predictions. Multinomial logistic regression requires much less fuss than k-nearest neighbors when it comes to data prep. Remember, since this uses *regression* frameworks, rescaling the variables just messes with intercept and slopes! 
+
+The two main functions I use to do this are `VGAM::vglm` and `nnet::multinom`. I find that `vglm` is more generalizable, but it doesn't play nice with `tidymodels`, so we'll use `multinom` instead.
+
+```{r fit multinomial}
+# just run this - it all works
+multinom_model <- multinom_reg(mode = "classification") # everything else is default
+
+multinom_prep <- recipe(
+  origin ~ carrier + distance + dep_delay, # response ~ predictors
+  data = flights_train
+) %>%
+  step_dummy(all_nominal_predictors())
+
+flights_multinom <- workflow() %>%
+  add_model(multinom_model) %>%
+  add_recipe(multinom_prep)
+```
+
+In the chunk below, write code that will `fit` the model on the training set and store the result in the object `flights_multinom_fit`.
+
+```{r fit the model}
+
+```
+
+What reference (baseline) level was chosen?
+
+## Part d (Code: 0.5 pts)
+
+Getting the coefficients out as a separate R object is a bit of a pain, but we can do it:
+
+```{r multinomial coefficients}
+multinom_coef <- extract_fit_engine(flights_multinom_fit) %>% coef()
+print(multinom_coef)
+```
+
+To interpret our coefficients, we can usually hack our way to *softmax* coding by adding a zero row (corresponding to the reference/baseline level) at the very top of the coefficient matrix. Then we can look at the effect of a change in the predictor variable on the log-odds of being in any response group relative to any other response group.
+
+```{r coef matrix}
+coef_softmax <- rbind(EWR = numeric(5),
+                      multinom_coef)
+print(coef_softmax)
+```
+
+Now, for two flights with the same carrier and distance, a one-mile increase in distance is associated with a 0.0017 increase in the log-odds of being from JFK as compared to EWR, and a 0.0006 decrease in the log-odds of being from LGA as compared to EWR. By subtracting the two nonzero slopes, we find that a one-mile increase in distance is associated with a $0.0017 - (-0.0006)$ = 0.0023 increase in the log-odds of being from JFK as compared to LGA.
+
+Inference with a multinomial logistic regression model is possible by calling the `multinom` function directly (tidymodels appears to drop the standard errors from the output), but instead we're going to instead focus on prediction.
+
+If we use the `multinom` function directly, then we can use the `predict` function just like in linear and logistic regression, but we have to use either `class` or `probs` as our `type` argument - we can't use `response` and then pick an arbitrary boundary threshold, since now we have multiple boundaries between different groups.
+
+The `augment` function does away with this ridiculousness and gives us both class predictions and the predicted probability of being in each class without having the remember what argument to use for `type`. Using the `augment` function, create the tibble `flights_multinom_predictions` containing the predictions for each flight in the `flights_test` dataset. 
+
+```{r multinom prediction}
+
+```
+
+
+```{r multinom predictions 43-45}
+flights_multinom_predictions %>% dplyr::select(
+  origin,
+  .pred_class,
+  .pred_EWR,
+  .pred_JFK,
+  .pred_LGA
+) %>%
+  slice(43:45) # equivalent to data[43:45,] but works with a pipe
+```
+
+When we have multi-class classification problems, it is possible that no class reaches a 50% probability (e.g., observation 44). In these situations, observations are still classified to the *most likely* airport, we just note that there is a lot more uncertainty about the prediction. 
+
+## Part e (Code: 1 pt)
+
+Using the `accuracy` function in the `yardstick` package, find the prediction accuracy of each model.
+
+## Part f (Explanation: 1 pt)
+
+Briefly discuss the advantages of using the 3-nearest neighbors algorithm over the multinomial logistic regression model on the `flights` data, and the advantages of using the multinomial logistic regression model over the 3-nearest neighbors algorithm. Prediction accuracy is important, but not the only thing you should compare.
