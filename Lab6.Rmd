@@ -1,6 +1,6 @@
 ---
 title: 'Lab Assignment #6'
-author: "Math 437 - Modern Data Analysis"
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due March 15, 2023"
 output: pdf_document
 ---
