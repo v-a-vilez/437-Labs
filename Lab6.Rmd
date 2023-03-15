@@ -50,14 +50,17 @@ The `iris` dataset is a well-known benchmark dataset for evaluating the performa
 The dataset consists of five variables: the response variable (`Species`) and four explanatory variables (`Sepal.Length`, `Sepal.Width`, `Petal.Length`, and `Petal.Width`, each measured in cm). Because the species are fairly distinct in terms of the four explanatory variables, we should expect near-100% accuracy with any decent classification model.
 
 In this problem, we will do all of our modeling without using the `tidymodels` packages.
+```{r 2a}
+iris_vv <- iris %>% filter(Species == c("virginica","versicolor"))
+ggplot(iris_vv,aes(x=Petal.Length, y=Sepal.Length, col=Species)) + geom_point()
 
-## Part a (Code: 2 pts)
+```
 
-We will start out by working with only the species `virginica` and `versicolor`. Create a new dataset, `iris_vv`, by filtering to only include those two species. Then, pick two of the explanatory variables and, using the `ggplot2` package, create a scatterplot showing the relationship between those two variables, color-coded based on the `Species`.
 
 ## Part b (Code: 2 pts)
 
 Prepare your dataset for the k-nearest neighbors algorithm by doing the following:
+
 
 ### Step 1: Create the training and holdout sets
 
@@ -65,13 +68,44 @@ Randomly select 20 observations to be in the holdout set. The remaining observat
 
 HINT: The easiest way to do this is to `sample` from the indices and subset accordingly.
 
+```{r 2b step 1}
+set.seed(437)
+test.rows <- sample(nrow(iris_vv), 20, replace = FALSE)
+iris.train <- iris_vv[-test.rows,]
+iris.test <- iris_vv[test.rows,]
+```
+
 ### Step 2: Scale the predictor variables
 
 Create two new datasets, `iris.train.X` and `iris.test.X`, containing the explanatory variables in each set. Remember that you need to scale the variables in both the training and holdout sets based on the training set!
 
+```{r 2b step 1}
+iris.train.x <- iris.train %>% 
+  dplyr::select(Petal.Length, Petal.Width, Sepal.Length, Sepal.Width) %>% 
+  scale()
+iris.test.x <- iris.test %>% 
+  dplyr::select(Petal.Length, Petal.Width, Sepal.Length, Sepal.Width) %>%
+  mutate(
+    Petal.Length = (Petal.Length - mean(iris.train$Petal.Length))/sd(iris.train$Petal.Length),
+    Petal.Width = (Petal.Width - mean(iris.train$Petal.Width))/sd(iris.train$Petal.Width),
+    Sepal.Length = (Sepal.Length - mean(iris.train$Sepal.Length))/sd(iris.train$Sepal.Length),
+    Sepal.Width = (Sepal.Width - mean(iris.train$Sepal.Width))/sd(iris.train$Sepal.Width),
+  )
+```
+
 ## Part c (Code: 2 pts; Explanation: 0.5 pts)
 
 With the `knn` function, use 5-nearest neighbors to predict the species of each observation in the `iris.test` holdout set. Create a `table` showing the predicted and actual species in the holdout set. What is the prediction accuracy of this model?
+iris.train$Species
+```{r 2c}
+set.seed(437)
+k1 <- knn(train = iris.train.x, test = iris.test.x, 
+          cl = iris.train$Species, k = 5)
+table(k1, iris.test$Species)
+(9 + 8)/20
+```
+
+-> We have a prediction accuracy of 85%.
 
 ## Part d (Code: 1 pt; Explanation: 1 pt)
 
@@ -79,12 +113,44 @@ Fit a logistic regression model on the training set predicting `Species` from th
 
 Use the `summary` or `coef` function to obtain the coefficient estimates, and write out the equation of the fitted logistic regression model.
 
+```{r 2d}
+iris.train$Species <- relevel(iris.train$Species, ref = "versicolor")
+logr_iris <- glm(Species ~ Sepal.Width + Sepal.Length + Petal.Width + Petal.Length, data = iris.train,
+                     family = "binomial")
+summary(logr_iris)
+```
+
+logit(p) = -51.731 - 8.959(Sepal.Width) - 60.689(Sepal.Length) + 96.297(Petal.Width) + 59.73(Petal.Length)
+
 ## Part e (Code: 2 pts; Explanation: 0.5 pts)
 
 Use the `predict` function to obtain predictions for the `iris.test` holdout set. Remember to include the argument `type = "response"` to output predictions as probabilities!
 
 Predict the class of each flower in the holdout set using a decision boundary of 0.5 (i.e., if the predicted probability of being in *versicolor* vs. *virginica* is above 0.5, predict the flower to be in *versicolor*). Create a `table` showing the predicted and actual species in the holdout set. What is the prediction accuracy of this model on the holdout set?
 
+```{r 2e}
+predicted_probs_m <- predict(logr_iris, newdata = iris.test, type = "response")
+
+p.threshold <- 0.5
+
+#Use if_else from dplyr to do the prediction
+predicted_category_m <- if_else(predicted_probs_m < p.threshold, "versicolor", "virginica")
+
+logr_prediction_m <- tibble(Sepal.Length = iris.test$Sepal.Length,
+                           Sepal.Width = iris.test$Sepal.Width,
+                           Petal.Length = iris.test$Petal.Length,
+                           Petal.Width = iris.test$Petal.Width,
+                           Species = iris.test$Species,
+                          pred_prob = predicted_probs_m, pred_class = predicted_category_m)
+
+logr_prediction_m
+
+table(logr_prediction_m$pred_class, logr_prediction_m$Species, 
+      dnn = c("Predicted","Actual"))
+19/20
+```
+
+-> 95% accurate
 # Problem 3: Analysis of flights Dataset
 
 There are three major airports that serve the New York City metro area: John F. Kennedy International Airport (JFK), Newark Liberty International Airport (EWR), and LaGuardia Airport (LGA). Newark is a United Airlines hub, JFK is an American Airlines hub, while Delta has hubs at both JFK and LGA.
