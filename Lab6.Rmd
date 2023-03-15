@@ -35,13 +35,179 @@ This lab assignment is worth a total of **20 points**.
 
 Run the code in ISLR Labs 4.7.1, 4.7.2, and 4.7.6. Put each chunk from the textbook in its own chunk.
 
+```{r 4.7.1 p1}
+names(Smarket)
+dim(Smarket)
+summary(Smarket)
+pairs(Smarket)
+```
+
+```{r 4.7.1 p2}
+#cor(Smarket)
+cor(Smarket[, -9])
+```
+
+```{r 4.7.1 p3}
+attach(Smarket)
+plot(Volume)
+```
+
+```{r 4.7.2 p1}
+glm.fits <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, 
+  data = Smarket, family = binomial
+)
+
+summary(glm.fits)
+```
+
+```{r 4.7.2 p2}
+coef(glm.fits)
+summary(glm.fits)$coef
+summary(glm.fits)$coef[,4]
+```
+
+```{r 4.7.2 p3}
+glm.probs <- predict(glm.fits, type = "response")
+glm.probs[1:10]
+contrasts(Direction)
+```
+
+```{r 4.7.2 p4}
+glm.pred <- rep("Down", 1250)
+glm.pred[glm.probs > .5] = "Up"
+```
+
+```{r 4.7.2 p5}
+table(glm.pred, Direction)
+(507 + 145) / 1250
+mean(glm.pred == Direction)
+```
+
+```{r 4.7.2 p6}
+train <- (Year < 2005)
+Smarket.2005 <- Smarket[!train,]
+dim(Smarket.2005)
+Direction.2005 <- Direction[!train]
+```
+
+```{r 4.7.2 p7}
+glm.fits <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume ,
+  data = Smarket , family = binomial , subset = train
+)
+glm.probs <- predict(glm.fits, Smarket.2005, type = "response")
+```
+
+```{r 4.7.2 p8}
+glm.pred <- rep("Down", 252)
+glm.pred[glm.probs > .5] <- "Up"
+table(glm.pred, Direction.2005)
+mean(glm.pred == Direction.2005)
+mean(glm.pred != Direction.2005)
+```
+
+```{r 4.7.2 p9}
+glm.fits <- glm(Direction ~ Lag1 + Lag2 , data = Smarket ,
+  family = binomial , subset = train)
+glm.probs <- predict(glm.fits, Smarket.2005, type = "response")
+glm.pred <- rep("Down", 252)
+glm.pred[glm.probs > .5] <- "Up"
+table(glm.pred, Direction.2005)
+mean(glm.pred == Direction.2005)
+106/ (106 +76)
+```
+
+```{r 4.7.2 p10}
+predict(glm.fits, newdata = data.frame(Lag1 = c(1.2, 1.5), Lag2 = c(1.1, -0.8)), 
+                                       type = "response")
+```
+
+```{r 4.7.6 p1}
+train.X <- cbind(Lag1, Lag2)[train, ]
+test.X <- cbind(Lag1, Lag2)[!train, ]
+train.Direction <- Direction[train]
+```
+
+```{r 4.7.6 p2}
+set.seed(1)
+knn.pred <- knn(train.X, test.X, train.Direction, k=1)
+table(knn.pred, Direction.2005)
+(83 + 43) /252
+```
+
+```{r 4.7.6 p3}
+knn.pred <- knn(train.X, test.X, train.Direction, k=3)
+table(knn.pred, Direction.2005)
+mean(knn.pred == Direction.2005)
+```
+
+```{r 4.7.6 p4}
+dim(Caravan)
+attach(Caravan)
+summary(Purchase)
+348 / 5822
+```
+
+```{r 4.7.6 p5}
+standardized.X <- scale (Caravan[, -86])
+var(Caravan[,1])
+var(Caravan[,2])
+var(standardized.X[,1])
+var(standardized.X[,2])
+```
+
+```{r 4.7.6 p6}
+test <- 1:1000
+train.X <- standardized.X[-test,]
+test.X <- standardized.X[test, ]
+train.Y <- Purchase[-test]
+test.Y <- Purchase[test]
+set.seed(1)
+knn.pred <- knn(train.X, test.X, train.Y, k =1)
+mean(test.Y != knn.pred)
+mean(test.Y != "No")
+```
+
+```{r 4.7.6 p7}
+table(knn.pred, test.Y)
+9 / (68 + 9)
+```
+
+```{r 4.7.6 p8}
+knn.pred <- knn (train.X, test.X, train.Y, k = 3)
+table (knn.pred , test.Y)
+5/26
+knn.pred <- knn (train.X, test.X, train.Y, k = 5)
+table (knn.pred , test.Y)
+4/15
+```
+
+```{r 4.7.6 p9}
+glm.fits <- glm(Purchase ~ ., data = Caravan ,
+  family = binomial , subset = -test)
+glm.probs <- predict (glm.fits , Caravan[test , ],
+  type = "response")
+glm.pred <- rep ("No", 1000)
+glm.pred[glm.probs > .5] <- " Yes "
+table (glm.pred , test.Y)
+glm.pred <- rep ("No", 1000)
+glm.pred[glm.probs > .25] <- " Yes "
+table (glm.pred , test.Y)
+11/ (22+11)
+```
+
 ## Part b (Explanation: 1 pt)
 
 In Lab 4.7.6, both the k-nn model with `k=5` and the logistic regression model using `probs > 0.5` as the classification threshold produced a test error rate (misclassification rate) of 6.6% using the `Caravan` dataset. Explain why we would prefer to use the k-nn model.
 
+We would prefer to use the knn model because it is the easier model to use, and we know the two models will act the same. 
+
 ## Part c (Explanation: 1 pt)
 
 If you forget to include the `family = binomial` argument when calling `glm`, what does R try to do instead of running a logistic regression? It may be useful to look up the documentation for the `glm` function, look up the part of the Logistic Regression Class Activity where we actually did this, and/or read Section 4.6.3 of the textbook.
+
+If we do not specify a `family` then the default is Gaussian so  will try to use this instead of a logisitic regression.
 
 # Problem 2: Analysis of iris Dataset: virginica vs versicolor
 
@@ -194,13 +360,22 @@ flights_knn <- workflow() %>%
 In the chunk below, write code that will `fit` the model on the training set. (If your model runs for ~3 seconds without an error message, start on part (b) while you wait for the chunk to churn.)
 
 ```{r fitting k-nn}
-
+flights_knn_fit <- fit(flights_knn, data = flights_train)
+flights_knn_fit
 ```
 
 Next, use the `augment` function to create the tibble `flights_knn_predictions` containing the predictions for each flight in the `flights_test` dataset. 
 
 ```{r predicting with broom::augment}
+flights_knn_predictions <- broom::augment(flights_knn_fit, new_data = flights_test, type = "prob")
 
+flights_knn_predictions %>% dplyr::select(
+  origin,
+  .pred_class,
+  .pred_EWR,
+  .pred_JFK,
+  .pred_LGA
+) %>% head(10)
 ```
 
 ## Part b (Explanation: 1 pt)
@@ -208,8 +383,10 @@ Next, use the `augment` function to create the tibble `flights_knn_predictions` 
 While you wait for your code to run, as best you can, answer the following questions:
 
 * How did we ensure that roughly 20% of the data was in the holdout set, even though we didn't know the exact size of my dataset?
+When we initially split the dataset `flight` we set the prob = 0.8, which is the proportion of data to be retained for analysis. So 80% was used for analysis and 20% for testing.  
 
 * What does the `step_dummy` function do, and why did we need to do it?
+The `step_dummy` function converts nominal data (ie character factors) into a numerical binary model terms for the levels of the original data. it need to be used in the recipe because tidymodel will not run with character/factor variables. 
 
 ## Part c (Code: 0.5 pts; Explanation: 0.5 pts)
 
@@ -235,10 +412,12 @@ flights_multinom <- workflow() %>%
 In the chunk below, write code that will `fit` the model on the training set and store the result in the object `flights_multinom_fit`.
 
 ```{r fit the model}
-
+flights_multinom_fit <- fit(flights_multinom, data = flights_train)
+flights_multinom_fit
 ```
 
 What reference (baseline) level was chosen?
+The reference level is EWR, because it was first alphabetically. 
 
 ## Part d (Code: 0.5 pts)
 
@@ -266,7 +445,7 @@ If we use the `multinom` function directly, then we can use the `predict` functi
 The `augment` function does away with this ridiculousness and gives us both class predictions and the predicted probability of being in each class without having the remember what argument to use for `type`. Using the `augment` function, create the tibble `flights_multinom_predictions` containing the predictions for each flight in the `flights_test` dataset. 
 
 ```{r multinom prediction}
-
+flights_multinom_predictions <- broom::augment(flights_multinom_fit, new_data = flights_test, type = "prob")
 ```
 
 
@@ -287,6 +466,15 @@ When we have multi-class classification problems, it is possible that no class r
 
 Using the `accuracy` function in the `yardstick` package, find the prediction accuracy of each model.
 
+```{r accuracy}
+accuracy(flights_knn_predictions, truth = origin, estimate = .pred_class)
+accuracy(flights_multinom_predictions, truth = origin, estimate = .pred_class)
+```
+
+
 ## Part f (Explanation: 1 pt)
 
 Briefly discuss the advantages of using the 3-nearest neighbors algorithm over the multinomial logistic regression model on the `flights` data, and the advantages of using the multinomial logistic regression model over the 3-nearest neighbors algorithm. Prediction accuracy is important, but not the only thing you should compare.
+
+KNN was an easy model to use however because it is using the 3 nearest, most of the predictions are 0 or 1. So the accuracy of it is 98%. With multinomial, we can use the coefficient matrix to understand the slopes, but the predictions are more varied which makes the accuracy 72%. SO knn makes better predictions than multinomial. 
+
