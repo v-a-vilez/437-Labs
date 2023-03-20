@@ -67,6 +67,48 @@ Then, using the `summary` function on your confusion matrix, check your answers.
 ## Part a (Code: 1 pt)
 
 Run the code in ISLR Lab 4.7.3.
+```{r 4.7.1 p3}
+attach(Smarket)
+```
+
+```{r 4.7.2 p6}
+train <- (Year < 2005)
+Smarket.2005 <- Smarket[!train,]
+Direction.2005 <- Direction[!train]
+```
+
+```{r 4.7.3.a}
+library (MASS)
+train <- (Year < 2005)
+lda.fit <- lda(Direction ~ Lag1 + Lag2 , data = Smarket , subset = train)
+lda.fit
+plot (lda.fit)
+```
+
+```{r 4.7.3.b}
+lda.pred <- predict (lda.fit , Smarket.2005)
+names (lda.pred)
+```
+
+```{r 4.7.3.c}
+lda.class <- lda.pred$class
+table (lda.class, Direction.2005)
+mean (lda.class == Direction.2005)
+```
+
+```{r 4.7.3.d}
+sum (lda.pred$posterior[, 1] >= .5)
+sum (lda.pred$posterior[, 1] < .5)
+```
+
+```{r 4.7.3.e}
+lda.pred$posterior[1:20, 1]
+lda.class[1:20]
+```
+
+```{r 4.7.3.f}
+sum (lda.pred$posterior[, 1] > .9)
+```
 
 ## Part b (Code: 1 pt)
 
