@@ -114,6 +114,18 @@ sum (lda.pred$posterior[, 1] > .9)
 
 Run the code in ISLR Lab 4.7.4.
 
+```{r 4.7.4 p1}
+qda.fit <- qda(Direction ~ Lag1 + Lag2 , data = Smarket ,
+subset = train)
+qda.fit
+```
+
+```{r 4.7.4 p2}
+qda.class <- predict(qda.fit , Smarket.2005)$class
+table(qda.class , Direction.2005)
+mean(qda.class == Direction.2005)
+```
+
 ## Part c (Code: 1 pt)
 
 Fit a LDA model on the training set predicting whether a flight will be delayed (`arr_ontime` = "no") based on the departure delay (`dep_delay`), `carrier`, `distance` traveled, and `origin`.
