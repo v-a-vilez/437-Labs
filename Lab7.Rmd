@@ -50,6 +50,14 @@ Non-randomly divide the `flights2` dataset into `flights_training`, which contai
 
 Then, fit a Naive Bayes model on the training set predicting whether a flight will be delayed (`arr_ontime` = "no") based on the departure delay (`dep_delay`), `carrier`, `distance` traveled, and `origin`.
 
+```{r flights training and test}
+train <- (flights2$month < 11)
+flights_training <- flights2[train, ]
+flights_test <- flights2[!train,]
+
+
+```
+
 ## Part c (Code: 1.5 pts)
 
 Unfortunately, there is no easy way to use `augment` on this model, so we'll have to make the predictions ourselves.
