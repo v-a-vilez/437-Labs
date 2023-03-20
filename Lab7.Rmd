@@ -31,6 +31,39 @@ This lab assignment is worth a total of **25 points**.
 
 Run the code in ISLR Lab 4.7.5.
 
+```{r attaching smarket}
+library (e1071)
+attach(Smarket)
+```
+
+
+```{r 7.5 p1}
+train <- (Smarket$Year < 2005)
+Smarket.2005 <- Smarket[!train , ]
+Direction.2005 <- Direction[!train]
+
+nb.fit <- naiveBayes(Direction ~ Lag1 + Lag2 , data = Smarket , subset = train)
+
+nb.fit
+```
+
+```{r 7.5 p2 mean/sd}
+mean(Lag1[train][Direction[train] == "Down"])
+sd(Lag1[train][Direction[train] == "Down"])
+```
+
+```{r 7.5 p3 predict}
+nb.class <- predict (nb.fit, Smarket.2005)
+table(nb.class, Direction.2005)
+mean(nb.class == Direction.2005)
+```
+
+```{r 7.5 p4}
+nb.preds <- predict (nb.fit , Smarket.2005, type = "raw")
+nb.preds[1:5, ]
+```
+
+
 ## Part b (Code: 1 pt)
 
 Recall that in Lab 6 we filtered the flights to only the United, American, and Delta carriers. Here we add another variable, `arr_ontime`, to represent whether the flight arrived on time or not.
@@ -51,11 +84,15 @@ Non-randomly divide the `flights2` dataset into `flights_training`, which contai
 Then, fit a Naive Bayes model on the training set predicting whether a flight will be delayed (`arr_ontime` = "no") based on the departure delay (`dep_delay`), `carrier`, `distance` traveled, and `origin`.
 
 ```{r flights training and test}
-train <- (flights2$month < 11)
+train <- (flights2$month < 11) #train from January to october
 flights_training <- flights2[train, ]
 flights_test <- flights2[!train,]
+```
 
+```{r flights nb fit}
+flights_nb <- naiveBayes(arr_ontime ~ dep_delay + carrier + distance + origin, data = flights_training)
 
+flights_nb
 ```
 
 ## Part c (Code: 1.5 pts)
@@ -63,12 +100,35 @@ flights_test <- flights2[!train,]
 Unfortunately, there is no easy way to use `augment` on this model, so we'll have to make the predictions ourselves.
 
 First, make class predictions on the `flights_test` dataset using similar code to that done in Lab 4.7.5. Then, create the `flights_nb_predictions` data frame or tibble containing two columns: `predicted`, representing the predicted classes, and `actual`, representing the actual classes. Use `flights_nb_predictions` to obtain the confusion matrix for the model.
+```{r flights nb predict}
+#flights_nb_pred_probs <- predict(flights_nb, newdata = flights_test, type = "raw")
+flights_nb_pred_class <- predict(flights_nb, newdata = flights_test, type = "class")
+
+flights_nb_predictions <- data.frame(predicted = flights_nb_pred_class,
+                               actual = flights_test$arr_ontime )
+
+confusion_flightsnb <- conf_mat(flights_nb_predictions, truth = actual, estimate = predicted)
+
+confusion_flightsnb
+
+```
 
 ## Part d (Code: 0.5 pts; Explanation: 2 pts)
 
 Without running any additional code, use the confusion matrix from part (c) to estimate the sensitivity, specificity, positive predictive value, and negative predictive value for the model. Express all answers as fractions and then convert to decimals rounded to the thousandths place (3 decimal places). 
 
+sensitivity = 3957/ 9249 = 0.428
+specificity = 12961 / 13449 = 0.964
+positive predictive value = 3957 / 4445 = 0.890
+negative predictive value = 12961 / 18253 = 0.710
+
 Then, using the `summary` function on your confusion matrix, check your answers. Remember that we are trying to predict that a flight will be delayed (`arr_ontime` = "no").
+
+```{r fligts confusion matrix summary}
+summary(confusion_flightsnb)
+```
+
+The proportions from the confusion table match the estimates from the summary. 
 
 # Problem 2: Discriminant Analysis
 
