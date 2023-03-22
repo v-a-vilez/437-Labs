@@ -134,21 +134,21 @@ The proportions from the confusion table match the estimates from the summary.
 
 ## Part a (Code: 1 pt)
 
-Run the code in ISLR Lab 4.7.3.
 ```{r 4.7.1 p3}
 attach(Smarket)
 ```
 
 ```{r 4.7.2 p6}
-train <- (Year < 2005)
+train.islr <- (Year < 2005)
 Smarket.2005 <- Smarket[!train,]
 Direction.2005 <- Direction[!train]
 ```
 
+Run the code in ISLR Lab 4.7.3.
 ```{r 4.7.3.a}
 library (MASS)
 train <- (Year < 2005)
-lda.fit <- lda(Direction ~ Lag1 + Lag2 , data = Smarket , subset = train)
+lda.fit <- lda(Direction ~ Lag1 + Lag2 , data = Smarket , subset = train.islr)
 lda.fit
 plot (lda.fit)
 ```
@@ -198,11 +198,25 @@ mean(qda.class == Direction.2005)
 
 Fit a LDA model on the training set predicting whether a flight will be delayed (`arr_ontime` = "no") based on the departure delay (`dep_delay`), `carrier`, `distance` traveled, and `origin`.
 
+```{r 2c}
+lda.fit <- lda(arr_ontime ~ dep_delay + carrier + distance + origin , data = flights2 , subset = train)
+```
+
+
 ## Part d (Code: 1.5 pts)
 
 Unfortunately, there is no easy way to use `augment` on this model, so we'll have to make the predictions ourselves.
 
 First, make class predictions on the `flights_test` dataset using similar code to that done in Lab 4.7.3. Then, create the `flights_lda_predictions` data frame or tibble containing two columns: `predicted`, representing the predicted classes, and `actual`, representing the actual classes. Use `flights_lda_predictions` to obtain the confusion matrix for the model.
+
+```{r 2d}
+lda.pred.f <- predict (lda.fit , flights_test)
+lda.class.f <- lda.pred.f$class
+
+flights_lda_predictions <- data.frame(predicted = lda.class.f, actual = flights_test$arr_ontime)
+table(flights_lda_predictions)
+```
+
 
 ## Part e (Code: 0.5 pts; Explanation: 2 pts)
 
@@ -210,10 +224,40 @@ Without running any additional code, use the confusion matrix from part (d) to e
 
 Then, using the `summary` function on your confusion matrix, check your answers. Remember that we are trying to predict that a flight will be delayed (`arr_ontime` = "no").
 
+Sensitivity: 2201/(2201 + 7048) = 0.238
+Specificity: 13414/(35 + 13414) = 0.997
+Positive predictive value: 2201 + 35 = 2236
+Negative predictive value: 7048 + 13414 = 20462
+
+```{r 2e}
+summary(flights_lda_predictions)
+```
+
+
 ## Part f (Code: 3 pts; Explanation: 2 pts)
 
 Repeat parts (c) through (e) for the QDA model. (Obviously, call your new data frame/tibble `flights_qda_predictions` instead.)
 
+```{r 2f (c)}
+qda.fit <- qda(arr_ontime ~ dep_delay + carrier + distance + origin , data = flights2 , subset = train)
+```
+
+```{r 2f (d)}
+qda.pred.f <- predict (qda.fit , flights_test)
+qda.class.f <- qda.pred.f$class
+
+flights_qda_predictions <- data.frame(predicted = qda.class.f, actual = flights_test$arr_ontime)
+table(flights_qda_predictions)
+```
+
+Sensitivity: 4079/(4079 + 5170) = 0.441
+Specificity: 12959/(12959 + 490) = 0.964
+TPV: 4079 + 490 = 4569
+NPV: 5170 + 12959 = 18129
+
+```{r 2e}
+summary(flights_qda_predictions)
+```
 # Problem 3: Model Selection
 
 ## Part a (Code: 2 pts)
