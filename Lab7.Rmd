@@ -31,7 +31,7 @@ This lab assignment is worth a total of **25 points**.
 
 Run the code in ISLR Lab 4.7.5.
 
-```{r attaching smarket}
+```{r attaching smarket, message = FALSE, warning = FALSE}
 library (e1071)
 attach(Smarket)
 ```
@@ -134,7 +134,7 @@ The proportions from the confusion table match the estimates from the summary.
 
 ## Part a (Code: 1 pt)
 
-```{r 4.7.1 p3}
+```{r 4.7.1 p3, warning=FALSE, message=FALSE}
 attach(Smarket)
 ```
 
@@ -212,7 +212,6 @@ First, make class predictions on the `flights_test` dataset using similar code t
 ```{r 2d}
 lda.pred.f <- predict (lda.fit , flights_test)
 lda.class.f <- lda.pred.f$class
-
 flights_lda_predictions <- data.frame(predicted = lda.class.f, actual = flights_test$arr_ontime)
 table(flights_lda_predictions)
 ```
@@ -245,7 +244,6 @@ qda.fit <- qda(arr_ontime ~ dep_delay + carrier + distance + origin , data = fli
 ```{r 2f (d)}
 qda.pred.f <- predict (qda.fit , flights_test)
 qda.class.f <- qda.pred.f$class
-
 flights_qda_predictions <- data.frame(predicted = qda.class.f, actual = flights_test$arr_ontime)
 table(flights_qda_predictions)
 ```
@@ -258,6 +256,7 @@ NPV: 5170 + 12959 = 18129
 ```{r 2e}
 summary(flights_qda_predictions)
 ```
+
 # Problem 3: Model Selection
 
 ## Part a (Code: 2 pts)
@@ -266,13 +265,90 @@ Add a column to the `flights_nb_predictions`, `flights_lda_predictions`, and `fl
 
 Then, compute the Brier scores for each model. As shown in the class activity, it is easiest to use the `mutate` function to obtain the "squared error" for each observation and then average the squared error.
 
+```{r flights adding predicetd column nb}
+flights_nb_pred_probs <- predict(flights_nb, newdata = flights_test, type = "raw")
+flights_nb_predictions2 <- data.frame(prediction = flights_nb_predictions, probs = flights_nb_pred_probs[,1])
+
+#View(flights_nb_predictions2)
+```
+
+```{r flights adding predicetd column lda}
+flights_lda_pred_probs <- lda.pred.f$posterior[,1]
+flights_lda_predictions2 <- cbind(flights_lda_predictions, flights_lda_pred_probs)
+
+#View(flights_lda_predictions2)
+```
+
+```{r flights adding predicetd column qda}
+flights_qda_pred_probs <- qda.pred.f$posterior[,1]
+flights_qda_predictions2 <- cbind(flights_qda_predictions, flights_qda_pred_probs)
+
+#View(flights_qda_predictions2)
+```
+
+```{r computing brier scores}
+brier_nb <- flights_nb_predictions2 %>% mutate(
+  squared_error = case_when(
+    prediction.predicted == "no" ~ (1 - probs)^2,
+    prediction.predicted == "yes" ~ (probs)^2
+  )
+)
+mean(brier_nb$squared_error)
+
+brier_lda <- flights_lda_predictions2 %>% mutate(
+  squared_error = case_when(
+    predicted == "no" ~ (1 - flights_lda_pred_probs)^2,
+    predicted == "yes" ~ (flights_lda_pred_probs)^2
+  )
+)
+mean(brier_lda$squared_error)
+
+brier_qda <- flights_qda_predictions2 %>% mutate(
+  squared_error = case_when(
+    predicted == "no" ~ (1 - flights_qda_pred_probs)^2,
+    predicted == "yes" ~ (flights_qda_pred_probs)^2
+  )
+)
+mean(brier_qda$squared_error)
+```
+
+
 ## Part b (Code: 1 pt)
 
 Using the `mn_log_loss` function, obtain the cross-entropy/log loss for each of the three models.
 
+```{r log_loss}
+mn_log_loss(flights_nb_predictions2,
+            truth = prediction.actual,
+            probs,
+            event_level = "first"
+)
+
+mn_log_loss(flights_lda_predictions2,
+            truth = actual,
+            flights_lda_pred_probs,
+            event_level = "first"
+)
+
+mn_log_loss(flights_qda_predictions2,
+            truth = actual,
+            flights_qda_pred_probs,
+            event_level = "first"
+)
+
+```
+
+
 ## Part c (Code: 1 pt)
 
 Using the `mcc` function, obtain the Matthews Correlation Coefficient for each of the three models. 
+
+```{r mcc}
+mcc(flights_nb_predictions2, truth = prediction.actual, estimate = flights_nb_predictions2[,1])
+mcc(flights_lda_predictions2, truth = actual, estimate = flights_lda_predictions2[,1])
+mcc(flights_qda_predictions2, truth = actual, estimate = flights_qda_predictions2[,1])
+```
+
 
 ## Part d (Explanation: 1.5 pts)
 
@@ -280,12 +356,18 @@ Compare the Brier score, log loss, and Matthews correlation coefficient for the 
 
 | Model | Brier | log loss | MCC |
 |:---:|---:|---:|---:|
-| Naive Bayes |  |  |  |
-| LDA |  |  |  |
-| QDA |  |   |  |
+| NB  | 0.011 | 0.774 | 0.485 |
+| LDA | 0.0863 | 0.586 | 0.388 |
+| QDA | 0.012 |  0.724 | 0.496	 |
 
 Which of the three models performs the best on this test set by each measure?
+
+brier: Naive Bayes did the best
+Log loss: LDA did the best
+MCC: LDA did the best
 
 ## Part e (Explanation: 1.5 pts)
 
 If you had to recommend one of the three models to use to predict whether a flight would be delayed, would you use the Naive Bayes, LDA, or QDA model? Explain.
+
+We recommend LDA because it has a lower log-loss and MCC, so it is more accurate and is more confident in each prediction.
