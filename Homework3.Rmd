@@ -141,7 +141,7 @@ summary(m.lrm)
 
 Using the code in the Multiple Linear Regression Examples file as a guide, create an interaction plot showing city gas mileage on the x-axis and using `fl` as the `trace.factor`. What does the interaction plot reveal about the relationship between `cty` and `fl` that helps explain your results from part (b)?
 
-```{r 1c interation plot}
+```{r 1c}
 mlr_interact_plot <- ggplot(mpg_new, aes(x = cty, y = hwy)) +
   geom_point(aes(color = fl)) + 
   geom_smooth(aes(color = fl), method = "lm", se = FALSE)
@@ -153,7 +153,7 @@ print(mlr_interact_plot)
 
 Argue that the error terms in this model are not independent. (HINT: actually view the dataset and see what cars are in it.)
 
--> Since there are four different car brands, they are not independent because some of them have the same models with different mileages.
+-> Since there are four different car brands, they are not independent because each car brand has two models with different mileages.
 
 #Michael
 ## Applied Problem 2 (15 pts total)
