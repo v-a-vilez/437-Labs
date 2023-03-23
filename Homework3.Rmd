@@ -19,10 +19,6 @@ This homework assignment is worth a total of **45 points**.
 
 Read Chapter 3 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
 
-# Phuong 1-5
-# Michael 6-10
-# Vanessa 11-14
-
 1. What is the difference between the *population regression line* and the *least-squares regression line*? When do we use the notation $\beta_1$ vs. $\hat{\beta}_1$?
 -> The population regression line is defined by $Y = \beta_0 + \beta_1X + \epsilon$. The least-squares regression line is defined by $\hat{y} = \hat{\beta}_0 + \hat{\beta}_1x$. We use $\beta_1$ to represent the intercept or slope and $\hat{\beta}_1$ to denoted the estimated/predicted coefficient or parameter.
 2. What is a *residual*? Why are the residuals important in finding the $\hat{\beta}_j$?
@@ -39,16 +35,45 @@ Read Chapter 3 of Introduction to Statistical Learning, Second Edition. Based on
 9. With what kind of data would you expect to see correlation of error terms when fitting a linear regression model? Why?
 10. Give a rule of thumb for guessing that a point has an *outlier* residual. Give a rule of thumb for guessing that a point is a *high leverage* point.  
 11. Explain why creating a scatterplot matrix of the response variable $y$ and all predictor variables is insufficient for detecting outliers and high leverage points.
+-> Creating a scatterpolt matrix of the response variable and the predictor variables shows the relationship, if there is any, between the response and the respected predictor. In order to find an outlier and determine the leverage of that outlier, we need to use the model's summary plots, such as residuals vs leverage and cooke's distance versus leverage.  
 12. Can *collinearity* be suspected based on inspecting the scatterplot matrix and correlation matrix? What about *multicollinearity*? Explain why/why not. 
+-> Collinearity can be suspected based on inspecting the scatterplot matrix or a correlation matrix. Multicollinearity can only be detected by computing a VIF, so we cannot use a scatterpolt matrix or a correlation matrix. 
 13. What is the *variance inflation factor*? When/why do we use it? How is it computed?
+-> The variance inflation factor is the ratio of the variance of beta_hat_j when fitting the full model divided by the variance of beta_hat_j, if fit on its own. We use it to determine if multiple predictors have multicollinearity. we compute VIF of beta_hat_j by using the formula 1/(1-R^2) where R^2 is the R^2 from a regression of X_j onto all of the other predictors.
 14. Briefly explain how *k-nearest neighbors regression* works. What are its advantages and disadvantages compared to linear regression?
+-> Given a value for K, using KNN regression we first separate out the K training observations that are closest to the class of K. It then gives the nearest K neighbors a vote which is then used to find the distance using either Minkowski's distance or Mahalanobis distance. It is using the K nearest neighbors to figure out the average. A few advantages of KNN is since KNN is nonparametric, there are no assumptions that need to be checked before using KNN regression and depending on the K, we can get a very flexible model. A few disadvantages of KNN is that it is hard to interpret, in order to get reasonable predictions there need to be lots of data, and we need to scale variables and if it is done incorrectly, then the predictions are unreliable. 
 
-#Vanessa
+
 # Conceptual Problems
 
 ## Conceptual Problem 1 (3 pts) 
 
 Textbook Exercise 3.7.3.
+a) EQ: Salary = 50 + 20(GPA) + 0.07(IQ) + 35(Level) + (0.01)(GPA)(IQ) + (-10)(GPA)(Level)
+(Level = 0) : Salary = 50 + 20(GPA) + 0.07(IQ) + 35(0) + (0.01)(GPA)(IQ) + (-10)(GPA)(0)
+    = 50 + 20(GPA) + 0.07(IQ) + (0.01)(GPA)(IQ)
+(Level = 1) : Salary = 50 + 20(GPA) + 0.07(IQ) + 35(1) + (0.01)(GPA)(IQ) + (-10)(GPA)(1)
+    = 85 + 10(GPA) + 0.07(IQ) + (0.01)(GPA)(IQ)
+
+i. For a fixed value of IQ and GPA, high school graduates earn more, on average, than college graduates.
+This statement is false. Consider an IQ = 100 and a GPA = 3.0, a high school graduate would earn 120K and a college graduate would earn 125K. 
+
+ii. For a fixed value of IQ and GPA, college graduates earn more, on average, than high school graduates.
+This statement is true. Consider an IQ = 100 and a GPA = 3.0, a high school graduate would earn 120K and a college graduate would earn 125K.
+
+iii. For a fixed value of IQ and GPA, high school graduates earn more, on average, than college graduates provided that the GPA is high enough.
+This statement is true. Consider a GPA = 4.0 and an IQ = 100, a high school graduate would earn 141K and a college graduate would earn 136K. 
+
+iv. For a fixed value of IQ and GPA, college graduates earn more, on average, than high school graduates provided that the GPA is high enough.
+This statement is true. Consider a GPA = 4.0 and an IQ = 100, a high school graduate would earn 141K and a college graduate would earn 136K.
+
+b) Predict the salary of a college graduate with IQ of 110 and a GPA of 4.0.
+(Level = 1) : Salary = 50 + 20(GPA) + 0.07(IQ) + 35(1) + (0.01)(GPA)(IQ) + (-10)(GPA)(1)
+    = 85 + 10(GPA) + 0.07(IQ) + (0.01)(GPA)(IQ)
+    = 85 + 10(4) + 0.07(110) + (0.01)(4)(110) = 137.1
+The predicted salary of a college graduate with an IQ of 110 and a GPA of 4.0 is 137.1K.
+
+c) False. Even though the coefficient is small this is not indicative of the interaction effect between GPA and IQ. The p value would tell us how significant the interaction effect would be. 
 
 ## Conceptual Problem 2 (4 pts total)
 
@@ -84,12 +109,130 @@ In Math 338 you likely learned that in simple linear regression, the slope estim
 
 For 1 pt extra credit: Show that under the additional assumption that $\hat{\beta}_1 \neq 0$ and $\hat{\beta_2} \neq 0$, the converse also holds; that is, if $\hat{\beta_j} = r_{x_j y} \frac{s_y}{s_{x_j}} \neq 0$ ($j = 1, 2$), then $r_{x_1 x_2} = 0$.
 
-#Vanessa 
 # Simulation Problems
 
 ## Simulation Problem 1 (5 pts)
 
 Textbook Exercise 3.7.13 parts (a)-(f).
+```{r 7.13 pa}
+set.seed(1)
+x <- rnorm(n= 100, mean = 0, sd =1)
+```
+
+```{r 7.13 pb}
+eps <- rnorm(n = 100, mean = 0, sd = 0.25)
+```
+
+```{r 7.13 pc}
+Y = -1 + 0.5*x + eps
+length(Y)
+```
+The length of the vector y is 100. The values of ${\beta_1}$ = 1 and ${\beta_1}$ = 0.5
+
+```{r 7.13 p d}
+plot(Y,x)
+```
+```{r 7.13 pe}
+lm1 <- lm(Y~x)
+summary(lm1)
+```
+The estimation of $\hat{\beta_0}$ is -1.00942 which is off a few decimals(0.00942) below ${\beta_0}$
+The estimation of $\hat{\beta_1}$ is 0.49973 which is off a few decimals (0.00027) below ${\beta_1}$
+
+```{r 7.13 pf}
+plot(x,Y)
+abline(lm1,col = 1)
+abline(-1,0.5, col = 2)
+legend(-1,c("Predicted","Actual"), col = 1:2, lwd = 2)
+```
+
+```{r 7.13 pg}
+lm2 = lm(Y ~ x + I(x^2))
+summary(lm2)
+```
+
+The Adjusted R-squared of the linear model = 0.7762 while the quadratic model's Adjusted R-squared is 0.7784. So introducing a quadratic term to the model only increases the performance of the model by .22%
+
+```{r 7.13 pah}
+set.seed(1)
+x <- rnorm(n= 100, mean = 0, sd =1)
+```
+
+```{r 7.13 pbh}
+eps <- rnorm(n = 100, mean = 0, sd = 0.10)
+```
+
+```{r 7.13 pch}
+Y = -1 + 0.5*x + eps
+length(Y)
+```
+The length of the vector y is 100. The values of ${\beta_0}$ = 1 and ${\beta_1}$ = 0.5. 
+
+```{r 7.13 p dh}
+
+plot(Y,x)
+```
+
+
+```{r 7.13 pe}
+
+lm2 <- lm(Y~x)
+summary(lm2)
+```
+The estimation of $\hat{\beta_0}$ is -1.003769 which is off a few decimals(0.003769) below beta_0.
+The estimation of $\hat{\beta_1}$ is 0.499894 which is off a few decimals (0.000106) below beta_1.
+
+```{r 7.13 pfh}
+plot(x,Y)
+abline(lm2,col = 1)
+abline(-1,0.5, col = 2)
+legend(-1,c("Predicted","Actual"), col = 1:2, lwd = 2)
+```
+
+This model with the lower variance of .10 in epsilon is more accurate than the original model with a variance of .25. 
+
+```{r 7.13 pai}
+set.seed(1)
+x <- rnorm(n= 100, mean = 0, sd =1)
+```
+
+```{r 7.13 pbi}
+eps <- rnorm(n = 100, mean = 0, sd = 0.70)
+```
+
+```{r 7.13 pci}
+Y = -1 + 0.5*x + eps
+length(Y)
+```
+The length of the vector y is 100. The values of ${\beta_0}$ = 1 and ${\beta_1}$ = 0.5. 
+
+```{r 7.13 p di}
+plot(Y,x)
+```
+
+
+```{r 7.13 pei}
+lm3 <- lm(Y~x)
+summary(lm3)
+```
+The estimation of $\hat{\beta_0}$ is -1.02638 which is off a few decimals(0.02638) below beta_0.
+The estimation of $\hat{\beta_1}$ is 0.49926 which is off a few decimals (0.00074) below beta_1.
+
+```{r 7.13 pfi}
+plot(x,Y)
+abline(lm3,col = 1)
+abline(-1,0.5, col = 2)
+legend(-1,c("Predicted","Actual"), col = 1:2, lwd = 2)
+```
+
+This model with the higher variance of .70 in epsilon is less accurate than the original model with a variance of .25. The lines for actual and predicted do not appear to line up anymore in some parts of the model line. 
+
+```{r confint pi}
+confint(lm1)
+confint(lm2)
+confint(lm3)
+```
+The higher the standard deviation the less accurate range that the linear model will predict. 
 
 ## Simulation Problem 2 (4 pts total)
 
@@ -97,13 +240,65 @@ Textbook Exercise 3.7.13 parts (a)-(f).
 
 Textbook Exercise 3.7.14 parts (a)-(c).
 
+```{r 7.14 pa}
+set.seed (1)
+x1 <- runif(100)
+x2 <- 0.5 * x1 + rnorm (100) / 10
+y <- 2 + 2 * x1 + 0.3 * x2 + rnorm (100)
+```
+
+Y = 2 + 2x1 + 0.3x2 + epsilon
+the coefficient of ${\beta_0}$ is 2, the coefficient of ${\beta_1}$ is 2 and the coefficient of ${\beta_2}$ is 0.3. 
+
+```{r 7.14 pb}
+cor(x1,x2)
+plot(x1,x2)
+```
+
+```{r 7.14 pc}
+lm1 <- lm(y~x1+x2)
+summary(lm1)
+```
+the least squared regression line is y = 2.1305 + 1.4396(x1) + 1.0097(x2)
+$\hat{\beta_0}$ = 2.1305 which is .1305 more than ${\beta_0}$, $\hat{\beta_1}$ = 1.4396 which is 0.5604 more than ${\beta_1}$, $\hat{\beta_2}$ = 1.0097 which is 0.7097 more than ${\beta_1}$. The model overestimated ${\beta_2}$ while underestimating ${\beta_1}$ and ${\beta_0}$. You can reject the null ${\beta_1}$ = 0, with a p value of 0.0487, but you cannot reject the null ${\beta_2}$ = 0.  
+
 ### Part b (Code: 0.5 pts; Explanation: 0.5 pts)
 
 Center `x1`, `x2`, and `y` to have mean 0 (the slopes should remain the same after centering the data). What are the values of $\hat{\beta_1}$ and $\hat{\beta_2}$ that minimize MSE/RSS? Compare these values to the true $\beta_1$ and $\beta_2$ as well as the $\hat{\beta_1}$ and $\hat{\beta_2}$ obtained in 3.7.14c.
 
 HINT: you should have derived a formula in Conceptual Problem 2, so all you have to do is find the right values based on your simulated data and plug them into the formula.
 
-#Phuong
+```{r sim 2b}
+set.seed (1)
+x1 <- runif(100)
+x2 <- 0.5 * x1 + rnorm (100) / 10
+y <- 2 + 2 * x1 + 0.3 * x2 + rnorm (100)
+
+x1_c <- scale(x1, scale = FALSE)
+x2_c <- scale(x2, scale = FALSE)
+y_c <- scale(y, scale = FALSE)
+
+#lm2 <- lm(y_c~x1_c+x2_c)
+#summary(lm2)
+
+#correlation
+r_x1y <- cor(x1_c,y_c)
+r_x2y <- cor(x2_c,y_c)
+r_x1x2 <- cor(x1_c,x2_c)
+
+#variance
+s_y <- var(y_c)
+s_x1 <- var(x1_c)
+s_x2 <- var(x2_c)
+
+beta_hat_1 <- (r_x1y*s_y*(1-(r_x1x2^2))-s_y*r_x1x2*(r_x2y-r_x1x2*r_x1y))/(s_x1*(1-(r_x1x2^2)))
+beta_hat_1
+beta_hat_2 <- (s_y*(r_x2y-r_x1x2*r_x1y))/(s_x2*(1-(r_x1x2^2)))
+beta_hat_2
+```
+
+Based on the formulas from conceputal part b, $\hat{\beta_1}$ = 6.3232 which is 4.8836 more than ${\beta_1}$, $\hat{\beta_2}$ = 6.9719 which is 5.9622 more than ${\beta_1}$. These equations overestimate both $\hat{\beta}$'s.
+
 # Applied Problems
 
 ## Applied Problem 1 (7 pts total)
@@ -155,7 +350,7 @@ Argue that the error terms in this model are not independent. (HINT: actually vi
 
 -> Since there are four different car brands, they are not independent because each car brand has two models with different mileages.
 
-#Michael
+
 ## Applied Problem 2 (15 pts total)
 
 *Mediation analysis* is a technique, often used in social science and health science, that combines causal modeling with multiple linear regression to estimate the effect of a potential confounding variable on the relationship between a predictor and response variable. The steps in mediation analysis are the following:
