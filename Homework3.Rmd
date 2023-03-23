@@ -24,10 +24,15 @@ Read Chapter 3 of Introduction to Statistical Learning, Second Edition. Based on
 # Vanessa 11-14
 
 1. What is the difference between the *population regression line* and the *least-squares regression line*? When do we use the notation $\beta_1$ vs. $\hat{\beta}_1$?
+-> The population regression line is defined by $Y = \beta_0 + \beta_1X + \epsilon$. The least-squares regression line is defined by $\hat{y} = \hat{\beta}_0 + \hat{\beta}_1x$. We use $\beta_1$ to represent the intercept or slope and $\hat{\beta}_1$ to denoted the estimated/predicted coefficient or parameter.
 2. What is a *residual*? Why are the residuals important in finding the $\hat{\beta}_j$?
+-> A residual is the difference between the observed response value and the predicted response value. Residuals are important in finding the $\hat{\beta}_j$ because we can examine how well the model fits best in the data set.
 3. Write a sentence to interpret what $\beta_3$ means in the model given by Equation (3.20). (Make sure to use appropriate units!)
+-> $\beta_3$ is the average effect on sales of a one unit increase in newspapers, holding all other predictors fixed.
 4. Give two statistics that measure the fit (or lack thereof) of a multiple linear regression model. For each statistic, as it increases, does the F-statistic for an ANOVA test with $H_0: \beta_1 = \ldots = \beta_p = 0$ increase or decrease?
+-> RSE and R-squared both measure the fit of a multiple linear regression model. As RSE increases, the F-statistic will decrease. As R-squared increases, the F-statistic will increase.
 5. Explain how to turn a factor variable into one or more *dummy variables* (indicator variables).
+-> To turn a factor variable into one or more dummy variables, we need to create a new variable that takes the form: 1 (Yes) and 0 (No), and use this variable as a predictor.
 6. Refer to the model whose coefficient estimates are given in Table 3.8. If the *baseline* (reference level) changed to West, what would be the equation of the new least-squares regression plane? 
 7. What is the difference between a *main effect* and an *interaction effect*?
 8. What kind of patterns should you look for in the *residual plot* to identify non-linear relationships between the predictors and the response? What kind of patterns should you look for to identify heteroscedasticity?
@@ -116,17 +121,39 @@ mpg_new <- mpg %>%
 
 Fit a simple linear regression model predicting highway gas mileage (`hwy`) from the fuel type `fl` (r = regular gas, p = premium gas). Interpret the `flr` coefficient in the summary. Is this coefficient significant (at the 5% significance level)?
 
+```{r 1a}
+s.lrm <- lm(hwy ~ fl, data = mpg_new)
+summary(s.lrm)
+```
+-> As the highway gas mileage increases, the regular gas fuel type increases by 2.72. `flr` is significant since it is less than the significance level (0.03 < 0.05).
+
 ### Part b (Code: 1 pt; Explanation: 1 pt)
 
 Fit a multiple linear regression model predicting highway gas mileage from the fuel type and the city gas mileage. Interpret the `flr` coefficient in the summary. Is this coefficient significant (at the 5% significance level)?
+
+```{r 1b}
+m.lrm <- lm(hwy ~ fl + cty, data = mpg_new)
+summary(m.lrm)
+```
+-> As the highway gas mileage increases, the regular gas fuel type increases by 0.53, holding the city gas mileage constant. `flr` is not significant since it is greater than the significance level (0.45 > 0.05).
 
 ### Part c (Code: 1 pt; Explanation: 1 pt)
 
 Using the code in the Multiple Linear Regression Examples file as a guide, create an interaction plot showing city gas mileage on the x-axis and using `fl` as the `trace.factor`. What does the interaction plot reveal about the relationship between `cty` and `fl` that helps explain your results from part (b)?
 
+```{r 1c interation plot}
+mlr_interact_plot <- ggplot(mpg_new, aes(x = cty, y = hwy)) +
+  geom_point(aes(color = fl)) + 
+  geom_smooth(aes(color = fl), method = "lm", se = FALSE)
+print(mlr_interact_plot)
+```
+-> The interaction between the city gas mileage and fuel type is that the lower the `cty`, the more interaction effects occur with the `fl`.
+
 ### Part d (Explanation: 1 pt)
 
 Argue that the error terms in this model are not independent. (HINT: actually view the dataset and see what cars are in it.)
+
+-> Since there are four different car brands, they are not independent because some of them have the same models with different mileages.
 
 #Michael
 ## Applied Problem 2 (15 pts total)
