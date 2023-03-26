@@ -458,12 +458,12 @@ Then, obtain a bootstrap 95% confidence interval for the indirect effect. It is 
 library(boot)
 ```
 
-
 ```{r A2c function}
-assertive_indirect_effect <- function(df){
-  non_caus_fit <- lm(assertive_behavior ~ beautification, data = df)
-  caus_fit <- lm(sexual_motivation ~ beautification, data = df)
-  mult_fit <- lm(assertive_behavior ~ sexual_motivation + beautification, data = df)
+assertive_indirect_effect <- function(df, indices){
+  d <- df[indices,]
+  non_caus_fit <- lm(assertive_behavior ~ beautification, data = d)
+  caus_fit <- lm(sexual_motivation ~ beautification, data = d)
+  mult_fit <- lm(assertive_behavior ~ sexual_motivation + beautification, data = d)
   b_1 <- caus_fit$coefficients["beautificationyes"]
   c_2 <- mult_fit$coefficients["sexual_motivation"]
   ind_eff <- b_1*c_2
@@ -471,8 +471,18 @@ assertive_indirect_effect <- function(df){
 }
 ```
 
-```{r A2c}
-assertive_boot <- boot(data = assertive_woman2, statistic = assertive_indirect_effect, R = 1000, formula = assertive_woman2 )
-```### Part d (Explanation: 2 pts)
+```{r A2c boot}
+set.seed(437)
+assertive_boot <- boot(data = assertive_woman, statistic = assertive_indirect_effect, R = 1000)
+```
+
+```{r bootci}
+boot.ci(assertive_boot, type = "bca")
+```
+
+
+### Part d (Explanation: 2 pts)
 
 Based on your bootstrap confidence interval, do you find sufficient evidence to reject $H_0:$ there is no indirect effect of beautification on assertiveness as mediated via sexual motivation in favor of $H_a:$ there is such an indirect effect? Explain your reasoning.
+
+-> We would reject $H_0$ since we do not have 0 within out bootstrapped interval (0 being indicative of no indirect effect).
