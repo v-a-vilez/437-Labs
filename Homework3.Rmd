@@ -385,23 +385,94 @@ Argue that the error terms in this model are not independent. (HINT: actually vi
 The researchers proposed a causal model in which `sexual_motivation` (mediator M) mediates the relationship between `beautification` (predictor X) and `assertive_behavior` (response Y). These variables can be found in the `assertive_woman` dataset.
 
 Perform an exploratory data analysis on this dataset. You should be able to answer the following questions:
+```{r A2a csv}
+assertive_woman <- read.csv("assertive_woman.csv")
+```
+
+
+```{r A2a}
+plot(as.factor(assertive_woman$beautification))
+hist(assertive_woman$sexual_motivation, breaks = 25)
+hist(assertive_woman$assertive_behavior, breaks = 25)
+assertive_woman2 <- assertive_woman %>% mutate(
+  Beautification_num = as.factor(assertive_woman$beautification)
+)
+pairs(assertive_woman2[,2:4])
+```
+
 
 * What does each variable in the dataset mean? How was it measured? (It would be a good idea to read the *Experiment 1 Procedure and materials* section of the linked paper.)
+
+beautification: Binary yes/no if it was conceivable that the participant spent 15 minutes altering their appearance for the conditions.
+
+sexual_motivation: The average of the extent to which the participant related to the following traits on a scale of 1 to 7; (seductive, flirtatious, sexually open, sensuous, and promiscuous)
+
+assertive_behavior: Researchers were asked to rate a 30 second monologue of the participant for how assertive the participant came across on a scale of 1 to 7. 
+
+
 * Is there any missing data? If so, is there an obvious explanation for any of the missingness?
+
+There is no missing data.
+
+
 * What is the (univariate) distribution of each variable?
+
+For beautification, it follows a Bernoulli distribution with "Yes" and "No" rather than 0,1. 
+sexual_motivation appears to have a uniform-adjacent distribution.
+assertive_behavior appears to have a left skewed normal distribution.
+
+
 * Which pairs of variables appear to be related? Can you create a plot that shows potential relationships between all three variables?
+
+None of the variables seem to be clearly related to each other.
+
+
 * Do any women appear to be particularly unusual (i.e., are there any outliers or women outside the range of sensible values for one or more variables)?
+
+All of the women appear to reasonably lie within the data set as a whole.
+
+
 
 ### Part b (Code: 2 pts)
 
 Create the three regression models (as defined in the problem introduction) in R and obtain point estimates of the direct and indirect effect of `beautification` on `assertive_behavior`.
+
+```{r A2b}
+non_caus_fit <- lm(assertive_behavior ~ beautification, data = assertive_woman)
+caus_fit <- lm(sexual_motivation ~ beautification, data = assertive_woman)
+mult_fit <- lm(assertive_behavior ~ sexual_motivation + beautification, data = assertive_woman)
+summary(non_caus_fit)
+summary(caus_fit)
+summary(mult_fit)
+```
+
+Direct: 0.27
+Indirect: 0.19
 
 ### Part c (Code: 2 pts)
 
 Create a function, `assertive_indirect_effect`, that takes in a data frame `df`, runs the three regression models from Part b using the data frame `df`, and returns the indirect effect.
 
 Then, obtain a bootstrap 95% confidence interval for the indirect effect. It is probably easiest to use the `boot` and `boot.ci` functions in the `boot` package, but you can code your own bootstrapping if you really want to. The researchers used 95% BCa confidence intervals, but you do not need to replicate their work.
+```{r boot}
+library(boot)
+```
 
-### Part d (Explanation: 2 pts)
+
+```{r A2c function}
+assertive_indirect_effect <- function(df){
+  non_caus_fit <- lm(assertive_behavior ~ beautification, data = df)
+  caus_fit <- lm(sexual_motivation ~ beautification, data = df)
+  mult_fit <- lm(assertive_behavior ~ sexual_motivation + beautification, data = df)
+  b_1 <- caus_fit$coefficients["beautificationyes"]
+  c_2 <- mult_fit$coefficients["sexual_motivation"]
+  ind_eff <- b_1*c_2
+  return(ind_eff)
+}
+```
+
+```{r A2c}
+assertive_boot <- boot(data = assertive_woman2, statistic = assertive_indirect_effect, R = 1000, formula = assertive_woman2 )
+```### Part d (Explanation: 2 pts)
 
 Based on your bootstrap confidence interval, do you find sufficient evidence to reject $H_0:$ there is no indirect effect of beautification on assertiveness as mediated via sexual motivation in favor of $H_a:$ there is such an indirect effect? Explain your reasoning.
