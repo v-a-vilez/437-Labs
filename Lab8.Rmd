@@ -1,0 +1,77 @@
+---
+title: 'Lab Assignment #8'
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due April 5, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+The purpose of this lab is to introduce model selection in regression.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+library(leaps)
+
+madden17_QB <- readr::read_csv("madden17_QB.csv")
+```
+
+This lab assignment is worth a total of **15 points**.
+
+# Problem 1: Model Selection Using Cross-Validation
+
+## Part a (Code: 1 pt)
+
+Run the code in ISLR Labs 5.3.2 and 5.3.3. Put each chunk from the textbook in its own chunk.
+
+## Part b (Code: 3 pts; Explanation: 1 pt)
+
+Using the Auto dataset and 5-fold cross-validation, determine which of these sets of predictors produces the best linear model for predicting mpg, and explain your reasoning:
+
+* horsepower and displacement
+* acceleration and displacement
+* horsepower and acceleration
+* horsepower, acceleration, and displacement
+
+*Do not* use the `cv.glm` function. Instead, modify the code in the "Automated Model Selection" class activity to do the cross-validation. Either the "Base R" or "tidymodels" example is fine to follow.
+
+## Part c (Code: 2 pts)
+
+For the model you selected in part (b), re-fit the model on the entire `Auto` dataset. Then, write a couple of lines of code to compute $C_p$ and $BIC$ for this model (as given in the book) without relying on the `AIC`/`BIC` functions or any functions in the `olsrr` package. Some hints:
+
+* You can obtain RSS by creating an `aov` object and running the code `summary(aov_object)[[1]]`, then finding the appropriate way to subset the resulting matrix.
+* You can obtain $\hat{\sigma}$ for a model by running `summary(full_model)$sigma`. You may assume that the full model is the one with all three predictors.
+
+## Problem 2: Subset Selection
+
+### Part a (Code: 1 pt)
+
+Run the code in ISLR Lab 6.5.1, "Best Subset Selection" and "Forward and Backward Stepwise Selection" subsections. (Do not run the "Choosing Among Models Using the Validation-Set Approach and Cross-Validation" section.)
+
+### Part b (Explanation: 1 pt)
+
+Briefly explain how to interpret the plots created by `plot(regfit.full, scale = "some metric")` at the end of the Best Subset Selection section.
+
+### Part c (Code: 1 pt; Explanation: 1 pt)
+
+In the rest of this problem, we will explore a situation in which the true model is *known* (more-or-less). In this true model, however, the error term is due to rounding and is *not* normally distributed, and there are some major collinearity issues. Let's see whether these violations of least-squares assumptions affect subset selection.
+
+The madden17_QB dataset contains the overall rating (`OVR`) and individual skill ratings for 112 quarterbacks in the Madden NFL 2017 video game. According to an article on fivethirtyeight.com, the overall rating for quarterbacks is a linear combination of the following skill ratings: `AWR`, `THP`, `SAC`, `MAC`, `DAC`, `PAC`, `SPD`, `AGI`, `RUN`, and `ACC`. The other 34 skill ratings are not relevant.
+
+Perform best subset selection on this dataset, using `nvmax = 10`. You may have to remove the categorical variables (`Name` and `Team`) in the formula or the dataset used to fit the model.
+
+Did the algorithm correctly identify the 10 important variables in the model? If not, which variables were incorrectly left out, and which were incorrectly included?
+
+### Part d (Code: 1 pt; Explanation: 1 pt)
+
+Perform forward selection on this dataset, using `nvmax = 20`. How many variables are in the "best" model using BIC as a selection criterion? What about Cp? For the "best" model (using one of the criteria), which variables were incorrectly left out, and which were incorrectly included?
+
+## Part e (Code: 1 pt; Explanation: 1 pt)
+
+Perform backward selection on this dataset, using `nvmax = 20`. How many variables are in the "best" model using BIC as a selection criterion? What about Cp? For the "best" model (using one of the criteria), which variables were incorrectly left out, and which were incorrectly included?
