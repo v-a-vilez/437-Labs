@@ -1,0 +1,189 @@
+---
+title: 'Homework Assignment #4'
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due Sometime After We Get Back From Spring Break"
+output: pdf_document
+---
+
+# Instructions
+
+You should submit either two or three files:
+
+1. You should write your solutions to the Applied Problems and Conceptual Problem 3 in this R Markdown file and submit the (.Rmd) file.
+2. You should knit the final solution file to pdf and submit the pdf. If you are having trouble getting code chunks to run, add `eval = FALSE` to the chunks that do not run. If you are having trouble getting R Studio to play nice with your LaTeX distribution, I will begrudgingly accept an HTML file instead. 
+3. Solutions to the Key Terms and the other Conceptual Problems can be submitted in a separate Word or pdf file or included in the same files as your solutions to Conceptual Problem 3 and the Applied Problems.
+
+This homework assignment is worth a total of **50 points**.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+library(tidymodels) 
+
+# You will need other packages to fit models in the Applied Problem
+# List them here or as you encounter the need for them
+
+misinformation1 <- readr::read_csv("misinformation1.csv")
+```
+
+# Key Terms (5 pts)
+
+Read Chapter 4 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
+
+1. Explain how to convert probabilities to *odds* and to *logits*.
+2. Write a sentence to interpret each Coefficient in Table 4.3.
+3. Why is the choice of a *baseline* (or *reference level*) for the response variable critical when interpreting slopes in multinomial logistic regression, but not so much in (standard) logistic regression?
+4. In *Bayes' Theorem* (Equation 4.15), what does $\pi_k$ represent about class $k$? What does $f_k(x)$ represent?
+5. Compare and contrast the assumptions about the predictor(s) in *linear discriminant analysis* vs. *quadratic discriminant analysis*. Which approach leads to more complex/flexible models?
+6. Use the *confusion matrix* in Table 4.5 to find the *sensitivity*, *specificity*,  *positive predictive value* and *negative predictive value* for this algorithm. It's okay to keep your answers as fractions.
+7. What do the x-axis and y-axis on a *receiver operating characteristic* (ROC) curve represent? What is the curve actually a function of? 
+8. Compare and contrast the assumptions about the predictors in *linear discriminant analysis* vs. *Naive Bayes*. When are they equivalent?
+9. Consider the five methods compared in Section 4.5.2: LDA, QDA, Naive Bayes, Logistic Regression, K-Nearest Neighbors. Which methods would you guess to perform best when you suspect the decision boundary to be (a) linear, (b) moderately nonlinear, (c) highly complex?
+10. How does "regression" work in a *generalized linear model*?
+
+# Conceptual Problems
+
+## Conceptual Problem 1 (2 pts) 
+
+Textbook Exercise 4.8.1.
+
+## Conceptual Problem 2 (4 pts)
+
+### Part a (1 pt)
+
+Textbook Exercise 4.8.2.
+
+### Part b (3 pts)
+
+Suppose that within Group 1, $X \sim Pois(\lambda_1)$ and within Group 2, $X \sim Pois(\lambda_2)$. Using techniques employed in the proof in part (a), find the estimated Bayes decision boundary for classifying an observation to Group 1 vs. Group 2. You may assume $\hat{\lambda_k}$ is computed as the sample mean of the observations in group $k$ in the training set and that $\hat{\pi}_k$ is computed as the proportion of observations in the training set that are in group $k$.
+
+## Conceptual Problem 3 (6 pts total)
+
+Linear discriminant analysis is actually not a Bayesian concept! It was introduced by Fisher in his analysis of iris data as a dimensionality reduction method! In this problem, you will follow Fisher's logic and replicate his discrimination function.
+
+Fisher's original LDA example concerned only the setosa and versicolor flowers, so we filter the iris dataset to include only those species.
+
+```{r iris_sv, message = FALSE, warning = FALSE}
+iris_sv <- iris %>% filter(Species %in% c("setosa", "versicolor"))
+```
+
+### Part a (Code: 1.5 pts)
+
+Let $x_1$ be Sepal Length, $x_2$ be Sepal Width, $x_3$ be Petal Length, and $x_4$ be Petal Width. Fisher wants to find the linear combination of the four variables $X = \lambda_1 x_1 + \lambda_2 x_2 + \lambda_3 x_3 + \lambda_4 x_4$ that maximizes the overall "distance" in sample means between *versicolor* and *setosa*, accounting for variation and covariation within each group.
+
+Specifically, he wants to project this four-dimensional predictor space into a single dimension along which the ratio $D^2/S$ is maximized, where $D$ is the difference in sample means and $S$ is the total within-class sum of squares (i.e., $SSE$ in an ANOVA table) after transformation.
+
+Fisher starts by computing a "sum of squares and products" matrix S in each group. The S matrices can be found more easily in R by obtaining the variance-covariance matrix for the numerical predictors (e.g., using the `cov` function) and multiplying the entries by (n-1). Finally, Fisher adds the S matrices for each group to get the overall within-class variation.
+
+Using R, create the `S_setosa`, `S_versicolor`, and `S_overall` matrices.
+
+### Part b (Code: 1 pt; Explanation: 0.5 pts)
+
+Fisher then solves a system of four linear equations in four unknowns ($\lambda_1$, $\lambda_2$, $\lambda_3$, $\lambda_4$) that relates $S$ to the vector of differences in sample means, i.e., $S \lambda = D$ where $D$ is the vector of differences in sample means.
+
+The discriminant function is then the inner product of $\lambda$ and $x$. This solution is unique up to a scaling factor. Fisher suggests to scale $\lambda$ such that $\lambda_1 = 1$.
+
+Using R, solve the matrix equation (`%*%` does matrix multiplication and `solve` does matrix inversion) and perform Fisher's suggested scaling, then write out the discriminant function as a linear function of $x_1$, $x_2$, $x_3$, $x_4$.
+
+### Part c (Code: 1 pt)
+
+Add a new variable to the `iris_sv` data frame, `discrim`, containing the values of the discriminant function for each flower. Create a dot plot showing the Species (response) vs. the discriminant function value (predictor). You may also want to color-code by Species.
+
+### Part d (Code and/or Explanation: 2 pts)
+
+Explain how to use your results to classify a *new* iris flower to either *setosa* or *versicolor*. (Hint: think about where the decision boundary is...)
+
+# Applied Problems
+
+## Applied Problem 1 (33 pts total)
+
+This problem involves the `misinformation1` dataset. In 2020, while biomedical researchers were attempting to develop a vaccine for COVID-19, public health researchers were attempting to predict whether a person would get a vaccine once one was available. 
+
+The `misinformation1` dataset contains responses of a subset of 673 Americans to a survey about COVID-19. The `Vaccine` variable indicates whether the person said they would get the vaccine ("Yes") or said they would not ("No"). Here I create a `misinformation2` dataset to convert the `Vaccine` variable to a factor variable.
+
+```{r create misinformation2}
+misinformation2 <- misinformation1 %>% mutate(
+  Vaccine = as.factor(Vaccine)
+)
+```
+
+The researchers who analyzed this data believed that people who thought that COVID-19 was a higher public risk (`COVID_Risk`) and people who had higher trust in scientists (`Trust_in_Scientists`) would be more likely to say they would get the vaccine, while those who were more susceptible to believing misinformation (`Misinformation`) about the vaccine would be less likely to say they would get the vaccine. So we will use those three predictors in our models.
+
+### Part a (Code: 1 pt)
+
+Randomly divide the `misinformation2` dataset into a holdout set with 20-25% of the data (anywhere from 130 to 170 observations is fine) and a training set with the remaining observations. I used seed `222` in my split, but you do not need to replicate my results. Either the "Base R" or the tidymodels (using `rsample`) way of doing the split is acceptable.
+
+### Part b (Code: 4 pts; Explanation: 1 pt)
+
+Use K-nearest neighbors with a Euclidean distance (`dist_power = 2`) metric to predict whether someone will get the COVID-19 vaccine. Use repeated 5-fold cross-validation to find the optimal value of k, and explain why you chose that value of k. Remember to do all the necessary preparation work and fit the model on the entire training set afterwards. It is probably easiest to use a tidymodels workflow to do this part.
+
+### Part c (Code:  1.5 pts; Computation: 1 pt)
+
+Make your predictions on the holdout set. Then, obtain the confusion matrix for this model on the holdout set. Using the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the K-nearest neighbors model with your optimal value of K.
+
+Confirm your estimates by getting the `summary` of the confusion matrix. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
+
+### Part d (Code: 1 pt; Explanation: 1 pt)
+
+Logistic regression fixes a lot of issues that are present in k-nearest neighbors. For one thing, we don't have to do any of the pre-processing and can use the variables on their original scale, which makes interpretation much easier.
+
+Fit a logistic regression model on the training set predicting `Vaccine` from `COVID_Risk`, `Trust_in_Scientists`, and `Misinformation`. Use the `glm` function (don't use tidymodels here, because tidymodels will remove the information you need to do the inference in Part f) with an appropriate `family` argument.
+
+Use the `summary` or `coef` function to obtain the coefficient estimates, and write out the equation of the fitted logistic regression model. You can use either the log-odds formulation or the probability formulation, but please make sure you are describing what you are finding the log-odds or probability of.
+
+### Part e (Explanation: 2 pts)
+
+Write a sentence interpreting the coefficient corresponding to `Trust_in_Scientists` in the logistic regression model. It is easiest to exponentiate the coefficient and discuss a *multiplicative* increase in odds.
+
+### Part f (Code: 0.5 pt; Explanation: 2 pts)
+
+Using the `confint` function, obtain 95% confidence intervals for the parameters of the population logistic regression model. Based on the confidence intervals, which of the researchers' suspicions about the relationship between `Vaccine` and the three predictors can you conclude are true?
+
+### Part g (Code: 2 pts; Computation: 1 pt)
+
+Let's make sure we understand how to make class predictions without using tidymodels.
+
+Use the `predict` function to obtain predictions for the validation set. Remember to include the argument `type = "response"` to output predictions as probabilities!  Note that `augment` is a bit finicky when passing in a `glm` object, so you should not use that function here.
+
+Using similar code to Lab 4.7.2 or an `if_else` statement, classify each respondent in the validation set as either getting the vaccine ("Yes") or not ("No") using the estimated  Bayes decision boundary.
+
+Use the `table` function to obtain the confusion matrix for this model on the holdout set. Based on the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the logistic regression model.
+
+Confirm your estimates using the `conf_mat` and `summary` functions in the `yardstick` package. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
+
+### Part h (Code: 2.5 pts; Computation: 1 pt)
+
+Fit a naive Bayes model on the training set predicting `Vaccine` from `COVID_Risk`, `Trust_in_Scientists`, and `Misinformation` and obtain predictions for the holdout set. You can use either version from lab (using the `naiveBayes` function in the e1071 package) or the tidymodels version (using the klaR and discrim packages).
+
+Obtain the confusion matrix for this model on the holdout set. Using the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the naive Bayes model.
+
+Confirm your estimates by summarizing the confusion matrix again. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
+
+### Part i (Code: 0.5 pts; Explanation: 1 pt)
+
+Obtain the correlation matrix and vif for the predictors in the logistic regression model. Using your results, argue that the major assumption of naive Bayes is reasonably justified with these predictors.
+
+### Part j (Code: 2.5 pts; Computation: 1 pt)
+
+Fit a linear discriminant analysis (LDA) model on the training set predicting `Vaccine` from `COVID_Risk`, `Trust_in_Scientists`, and `Misinformation` and obtain predictions for the holdout set. You should use the `lda` function in the MASS package but can use it either by itself (as shown in the lab) or as the "engine" in the tidymodels workflow.
+
+Obtain the confusion matrix for this model on the holdout set. Using the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the LDA model.
+
+Confirm your estimates by summarizing the confusion matrix again. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
+
+### Part k (Code: 3 pts)
+
+For each of the four models, obtain the Matthews Correlation Coefficient, (mean) log-loss, and Brier score.
+
+### Part l (Code: 2 pts)
+
+For each of the four models, produce a plot of the receiver operating characteristic (ROC) curve, and obtain the area under the curve (AUC).
+
+### Part m (Explanation: 1.5 pts)
+
+Which of the four models you fit (k-nn, logistic regression, naive Bayes, or LDA) would you argue is the "best" model for predicting whether or not someone would get a COVID-19 vaccine? Justify your answer based on a metric *other* than accuracy.
