@@ -174,9 +174,85 @@ cp_2
 
 Run the code in ISLR Lab 6.5.1, "Best Subset Selection" and "Forward and Backward Stepwise Selection" subsections. (Do not run the "Choosing Among Models Using the Validation-Set Approach and Cross-Validation" section.)
 
+```{r BSS p1}
+library(ISLR2)
+View(Hitters)
+names(Hitters)
+dim(Hitters)
+sum(is.na(Hitters$Salary))
+```
+```{r BSS p2}
+Hitters <- na.omit(Hitters)
+dim(Hitters)
+sum(is.na(Hitters))
+```
+```{r BSS p3}
+library(leaps)
+regfit.full <- regsubsets(Salary ~ ., Hitters)
+summary(regfit.full)
+```
+```{r BSS p4}
+regfit.full <- regsubsets(Salary ~ ., data = Hitters ,
+nvmax = 19)
+reg.summary <- summary(regfit.full)
+```
+```{r BSS p5}
+names(reg.summary)
+```
+```{r BSS p6}
+reg.summary$rsq
+```
+```{r BSS p7 & 8}
+par(mfrow = c(2, 2))
+plot(reg.summary$rss , xlab = "Number of Variables",
+ylab = "RSS", type = "l")
+plot(reg.summary$adjr2 , xlab = "Number of Variables",
+ylab = "Adjusted RSq", type = "l")
+
+which.max(reg.summary$adjr2)
+points (11, reg.summary$adjr2 [11] , col = "red", cex = 2,
+pch = 20)
+```
+```{r BSS p9}
+plot(reg.summary$cp, xlab = "Number of Variables",
+ylab = "Cp", type = "l")
+which.min(reg.summary$cp)
+points (10, reg.summary$cp[10] , col = "red", cex = 2,
+pch = 20)
+which.min(reg.summary$bic)
+plot(reg.summary$bic , xlab = "Number of Variables",
+ylab = "BIC", type = "l")
+points (6, reg.summary$bic [6], col = "red", cex = 2,
+pch = 20)
+```
+```{r BSS p10}
+plot(regfit.full , scale = "r2")
+plot(regfit.full , scale = "adjr2")
+plot(regfit.full , scale = "Cp")
+plot(regfit.full , scale = "bic")
+```
+```{r BSS p11}
+coef(regfit.full , 6)
+```
+```{r FBSS p1}
+regfit.fwd <- regsubsets(Salary ~ ., data = Hitters ,
+nvmax = 19, method = "forward")
+summary(regfit.fwd)
+regfit.bwd <- regsubsets(Salary ~ ., data = Hitters ,
+nvmax = 19, method = "backward")
+summary(regfit.bwd)
+```
+```{r FBSS p2}
+coef(regfit.full , 7)
+coef(regfit.fwd , 7)
+coef(regfit.bwd , 7)
+```
+
 ### Part b (Explanation: 1 pt)
 
 Briefly explain how to interpret the plots created by `plot(regfit.full, scale = "some metric")` at the end of the Best Subset Selection section.
+
+-> The x-axis represents the predicting variables and the y-axis represents the response variable. The top row of each plot contains a black square for each variable selected according to the optimal model associated with that statistic. The higher, the better the model.
 
 ### Part c (Code: 1 pt; Explanation: 1 pt)
 
@@ -188,10 +264,40 @@ Perform best subset selection on this dataset, using `nvmax = 10`. You may have 
 
 Did the algorithm correctly identify the 10 important variables in the model? If not, which variables were incorrectly left out, and which were incorrectly included?
 
+```{r 2c}
+madden17_QB1 <- madden17_QB[,3:47]
+mad_regfit.full <- regsubsets(OVR ~ ., data = madden17_QB1 , nvmax = 10)
+mad_reg.summary <- summary(mad_regfit.full)
+
+plot(mad_regfit.full , scale = "r2")
+plot(mad_regfit.full , scale = "adjr2")
+plot(mad_regfit.full , scale = "Cp")
+plot(mad_regfit.full , scale = "bic")
+```
+-> The algorithm correctly identifies the 10 important variables except for AIC, where it incorrectly included SFA.
+
 ### Part d (Code: 1 pt; Explanation: 1 pt)
 
 Perform forward selection on this dataset, using `nvmax = 20`. How many variables are in the "best" model using BIC as a selection criterion? What about Cp? For the "best" model (using one of the criteria), which variables were incorrectly left out, and which were incorrectly included?
 
+```{r 2d}
+mad_regfit.fwd <- regsubsets(OVR ~ ., data = madden17_QB1 ,
+nvmax = 20, method = "forward")
+mad_regit.fwd_summary <- summary(mad_regfit.fwd)
+mad_regit.fwd_summary$bic
+mad_regit.fwd_summary$cp
+```
+-> "explain"
+
 ## Part e (Code: 1 pt; Explanation: 1 pt)
 
 Perform backward selection on this dataset, using `nvmax = 20`. How many variables are in the "best" model using BIC as a selection criterion? What about Cp? For the "best" model (using one of the criteria), which variables were incorrectly left out, and which were incorrectly included?
+
+```{r 2e}
+mad_regfit.bwd <- regsubsets(OVR ~ ., data = madden17_QB1 ,
+nvmax = 20, method = "backward")
+mad_regit.bwd_summary <- summary(mad_regfit.bwd)
+mad_regit.bwd_summary$bic
+mad_regit.bwd_summary$cp
+```
+-> "explain"
