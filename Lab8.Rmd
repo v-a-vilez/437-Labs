@@ -252,7 +252,7 @@ coef(regfit.bwd , 7)
 
 Briefly explain how to interpret the plots created by `plot(regfit.full, scale = "some metric")` at the end of the Best Subset Selection section.
 
--> The x-axis represents the predicting variables and the y-axis represents the response variable. The top row of each plot contains a black square for each variable selected according to the optimal model associated with that statistic. The higher, the better the model.
+-> The x-axis shows all the predictor variables while the y-axis shows the corresponding model selection values. Each row is a different model and each black box shows what variables are used in each model. The higher the model on the graph, the better it is.
 
 ### Part c (Code: 1 pt; Explanation: 1 pt)
 
@@ -286,8 +286,9 @@ nvmax = 20, method = "forward")
 mad_regit.fwd_summary <- summary(mad_regfit.fwd)
 mad_regit.fwd_summary$bic
 mad_regit.fwd_summary$cp
+coef (regmadfit.fwd , 12)
 ```
--> "explain"
+-> For BIC, the best model includes 12 variables and for Cp, the best model includes 15 variables. For BIC, it incorrectly included SFA and PBK.
 
 ## Part e (Code: 1 pt; Explanation: 1 pt)
 
@@ -299,5 +300,6 @@ nvmax = 20, method = "backward")
 mad_regit.bwd_summary <- summary(mad_regfit.bwd)
 mad_regit.bwd_summary$bic
 mad_regit.bwd_summary$cp
+coef (regmadfit.bwd , 10)
 ```
--> "explain"
+-> For BIC, the best model includes 10 variables, while for CP, the best model includes 19 variables. The best model incorrectly includes SFA, and CTH, leaving out RUN and ACC.
