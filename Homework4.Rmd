@@ -32,7 +32,8 @@ misinformation1 <- readr::read_csv("misinformation1.csv")
 ```
 
 # Key Terms (5 pts)
-
+# Michael 1-5
+# Phuong 6-10
 Read Chapter 4 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
 
 1. Explain how to convert probabilities to *odds* and to *logits*.
