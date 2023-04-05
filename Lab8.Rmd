@@ -30,6 +30,42 @@ This lab assignment is worth a total of **15 points**.
 
 Run the code in ISLR Labs 5.3.2 and 5.3.3. Put each chunk from the textbook in its own chunk.
 
+```{r 5.3.2 p1}
+glm.fit <- glm(mpg~horsepower, data = Auto)
+coef(glm.fit)
+```
+
+```{r 5.3.2 p2}
+lm.fit <- lm(mpg ~ horsepower, data = Auto)
+coef(lm.fit)
+```
+
+```{r 5.3.2 p3}
+#library(boot) #included earlier
+glm.fit <- glm(mpg~horsepower , data = Auto)
+cv.err <- cv.glm (Auto , glm.fit)
+cv.err$delta
+```
+
+```{r 5.3.2 p4}
+cv.error <- rep (0, 10)
+for (i in 1:10) {
+  glm.fit <- glm (mpg ~ poly(horsepower , i), data = Auto)
+  cv.error[i] <- cv.glm (Auto , glm.fit)$delta[1]
+}
+cv.error
+```
+
+```{r 5.3.3 p1}
+set.seed(17)
+cv.error.10 <- rep(0,10)
+for (i in 1:10) {
+  glm.fit <- glm (mpg ~ poly (horsepower , i), data = Auto)
+  cv.error.10[i] <- cv.glm (Auto , glm.fit , K = 10)$delta[1]
+}
+cv.error.10
+```
+
 ## Part b (Code: 3 pts; Explanation: 1 pt)
 
 Using the Auto dataset and 5-fold cross-validation, determine which of these sets of predictors produces the best linear model for predicting mpg, and explain your reasoning:
@@ -41,12 +77,96 @@ Using the Auto dataset and 5-fold cross-validation, determine which of these set
 
 *Do not* use the `cv.glm` function. Instead, modify the code in the "Automated Model Selection" class activity to do the cross-validation. Either the "Base R" or "tidymodels" example is fine to follow.
 
+### Step 1: Set up your folds
+
+```{r set up k folds}
+set.seed(17)
+k <- 5
+n <- nrow(mpg)
+reorder_rows <- sample(n)
+fold_numbers <- (reorder_rows %% k) + 1 # otherwise we get fold 0
+```
+
+### Step 2: Create a function for your accuracy metric
+
+```{r MSE function}
+model_MSE <- function(model, df, response){
+  # model: a model object
+  # df: a data frame on which we want to predict
+  # response: a character vector giving the name of the response variable
+  
+  predictions <- predict(model, newdata = df)
+  MSE <- mean((predictions - df[[response]])^2)
+  return(MSE)
+}
+```
+
+### Step 3: Create all the models of interest
+
+```{r create all models}
+models <- vector("list", length = 4)
+models[[1]] <- lm(mpg ~ horsepower + displacement, data = Auto)
+models[[2]] <- lm(mpg ~ acceleration + displacement, data = Auto)
+models[[3]] <- lm(mpg ~ horsepower + acceleration, data = Auto)
+models[[4]] <- lm(mpg ~ horsepower + displacement + acceleration, data = Auto)
+```
+
+### Step 4: Run the cross-validation
+
+```{r model fits}
+nmodels <- length(models)
+cv_error <- matrix(0, nrow = k, ncol = nmodels)
+# each row of cv_error represents a fold
+# each column of cv_error represents a model
+
+for (i in 1:k){
+  fold_validation_rows <- which(fold_numbers == i)
+  train_set <- Auto[-fold_validation_rows,]
+  validation_set <- Auto[fold_validation_rows,]
+  
+  for(j in 1:nmodels){
+    models[[j]] <- update(models[[j]], data = train_set)
+    cv_error[i, j] <- model_MSE(models[[j]], df = validation_set, response = "mpg")
+  }
+}
+
+```
+
+### Step 5: Obtain estimates of MSE
+
+```{r estimate MSE}
+apply(cv_error, 2, mean)
+```
+
+```{r estimate RMSE}
+cv_rmse <- sqrt(cv_error)
+apply(cv_rmse, 2, mean)
+```
+Here model 2 has the lower cross-validated MSE and RMSE. It is 3.88 off the actual value. 
+
 ## Part c (Code: 2 pts)
 
 For the model you selected in part (b), re-fit the model on the entire `Auto` dataset. Then, write a couple of lines of code to compute $C_p$ and $BIC$ for this model (as given in the book) without relying on the `AIC`/`BIC` functions or any functions in the `olsrr` package. Some hints:
 
 * You can obtain RSS by creating an `aov` object and running the code `summary(aov_object)[[1]]`, then finding the appropriate way to subset the resulting matrix.
 * You can obtain $\hat{\sigma}$ for a model by running `summary(full_model)$sigma`. You may assume that the full model is the one with all three predictors.
+
+```{r 1c refit}
+model2 <- lm(mpg ~ acceleration + displacement, data = Auto)
+
+aov_object <- aov(model2, data = Auto)
+summary(aov_object)[[1]]
+RSS <- 8371.7
+
+fullmodel <- lm(mpg ~ horsepower + acceleration + displacement, data = Auto)
+sigma_hat <- summary(full_model)$sigma
+
+d = 2 # number of predictors
+bic_2 <- RSS/sigma_hat^2 + d*log(n)
+cp_2 <- (RSS + 2*(sigma_hat^2)*d)/n
+bic_2
+cp_2
+```
 
 ## Problem 2: Subset Selection
 
