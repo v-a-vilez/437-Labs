@@ -153,14 +153,13 @@ For the model you selected in part (b), re-fit the model on the entire `Auto` da
 
 ```{r 1c refit}
 model2 <- lm(mpg ~ acceleration + displacement, data = Auto)
-
-aov_object <- aov(model2, data = Auto)
-summary(aov_object)[[1]]
-RSS <- 8371.7
+#aov_object <- aov(model2, data = Auto)
+#summary(aov_object)[[1]]
+summ_model2 <- augment(model2, data = Auto)
+RSS <- sum(summ_model2$.resid^2)
 
 fullmodel <- lm(mpg ~ horsepower + acceleration + displacement, data = Auto)
-sigma_hat <- summary(full_model)$sigma
-
+sigma_hat <- summary(fullmodel)$sigma
 d = 2 # number of predictors
 bic_2 <- RSS/sigma_hat^2 + d*log(n)
 cp_2 <- (RSS + 2*(sigma_hat^2)*d)/n
