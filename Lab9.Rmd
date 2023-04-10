@@ -1,0 +1,200 @@
+---
+title: 'Lab Assignment #9'
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due April 12, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+The purpose of this lab is to introduce ridge regression and LASSO.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(ggplot2)
+library(dplyr)
+library(tidymodels)
+library(glmnet)
+library(insuranceData)
+library(glmnet)
+```
+
+This lab assignment is worth a total of **15 points**.
+
+# Problem 1: Book Code
+
+## Part a (Code: 2 pts)
+
+Run the code in ISLR Lab 6.5.2.
+
+```{r pre 6.5.2}
+Hitters <- na.omit(Hitters)
+x <- model.matrix (Salary ~ ., Hitters)[, -1]
+y <- Hitters$Salary
+```
+
+
+```{r 6.5.2 p1}
+#library(glmnet)
+grid <- 10^seq(10, -2, length = 100)
+ridge.mod <- glmnet (x, y, alpha = 0, lambda = grid)
+```
+
+```{r 6.5.2 p2}
+dim(coef(ridge.mod))
+```
+
+```{r 6.5.2 p3}
+ridge.mod$lambda[50]
+coef (ridge.mod)[, 50]
+sqrt ( sum ( coef (ridge.mod)[-1, 50]^2))
+```
+
+```{r 6.5.2 p4}
+ridge.mod$lambda[60]
+coef (ridge.mod)[, 60]
+sqrt ( sum ( coef (ridge.mod)[-1, 60]^2))
+```
+
+```{r 6.5.2 p5}
+predict(ridge.mod, s = 50, type = "coefficients")[1:20, ]
+```
+
+```{r 6.5.2 p6}
+set.seed (1)
+train <- sample (1: nrow (x), nrow (x) / 2)
+test <- (-train)
+y.test <- y[test]
+```
+
+```{r 6.5.2 p7}
+ridge.mod <- glmnet (x[train , ], y[train], alpha = 0, lambda = grid, thresh = 1e-12)
+ridge.pred <- predict (ridge.mod , s = 4, newx = x[test , ])
+mean ((ridge.pred - y.test)^2)
+```
+
+```{r 6.5.2 p8}
+mean (( mean (y[train]) - y.test)^2)
+```
+
+```{r 6.5.2 p9}
+ridge.pred <- predict (ridge.mod , s = 1e10 , newx = x[test , ])
+mean ((ridge.pred - y.test)^2)
+```
+
+```{r 6.5.2 p10}
+ridge.pred <- predict (ridge.mod , s = 0, newx = x[test , ], exact = T, x = x[train , ], y = y[train])
+mean ((ridge.pred - y.test)^2)
+lm(y ~ x, subset = train)
+predict(ridge.mod , s = 0, exact = T, type = "coefficients", x = x[train , ], y = y[train])[1:20, ]
+```
+
+```{r 6.5.2 p11}
+set.seed (1)
+cv.out <- cv.glmnet(x[train , ], y[train], alpha = 0)
+plot (cv.out)
+bestlam <- cv.out$lambda.min
+bestlam
+```
+
+```{r 6.5.2 p12}
+ridge.pred <- predict (ridge.mod , s = bestlam,newx = x[test , ])
+mean ((ridge.pred - y.test)^2)
+```
+
+```{r 6.5.2 p13}
+out <- glmnet (x, y, alpha = 0)
+predict(out , type = "coefficients", s = bestlam)[1:20, ]
+```
+
+```{r 6.5.2 p14 lasso start}
+lasso.mod <- glmnet(x[train , ], y[train], alpha = 1, lambda = grid)
+plot(lasso.mod)
+```
+
+```{r 6.5.2 p15}
+set.seed (1)
+cv.out <- cv.glmnet(x[train , ], y[train], alpha = 1)
+plot (cv.out)
+bestlam <- cv.out$lambda.min
+lasso.pred <- predict(lasso.mod , s = bestlam , newx = x[test , ])
+mean ((lasso.pred - y.test)^2)
+```
+
+```{r 6.5.2 p16}
+out <- glmnet(x, y, alpha = 1, lambda = grid)
+lasso.coef <- predict(out , type = "coefficients", s = bestlam)[1:20, ]
+lasso.coef
+lasso.coef[lasso.coef != 0]
+```
+
+## Part b (Explanation: 1 pt)
+
+Which variables in the original Hitters dataset are *not* in the matrix `x`? What happened to them?
+
+The variables Salary, League, Division, and NewLeague are not in the matrix x. They became indicator variables where for LeagueN 1 = N, DivisionW 1 = W, and NewLeagueN where 1 = N. Salary is not included any more since it the response variable.  
+
+## Part c (Explanation: 1 pt)
+
+Explain how to "force" R to fit an intercept-only model using the `glmnet` function.
+
+In order to make R fit an intercept-only mode set x to be a null matrix, so there are no predictors in the model. then glmnet will try to fit an intercept-only model. 
+
+## Part d (Explanation: 1 pt)
+
+Given an optimal cross-validated value of $\lambda$, does ridge regression or LASSO tend to produce simpler models? Explain your reasoning.
+
+Lasso would give simpler models, because Lasso can get rid of predictors while ridge regression cannot and will use all predictors the entire time. 
+
+# Problem 2: Auto Insurance Claims
+
+The `AutoBi` dataset in the `insuranceData` package contains information about a sample of 1,340 automobile insurance claims from 2002.
+
+The response variable here is `LOSS`, the total economic loss (in thousands). We take the base 10 log of the claimed loss to make the regression a bit easier, and transform several predictors, to create the `AutoBi2` dataset.
+
+```{r insurance fix}
+data(AutoBi) # Auto insurance claim dataset
+
+AutoBi2 <- AutoBi %>% transmute(
+  attorney = if_else(ATTORNEY == 1, "yes", "no"),
+  gender = if_else(CLMSEX == 1, "male", "female"),
+  marital = case_when(MARITAL == 1 ~ "married",
+                      MARITAL == 2 ~ "single",
+                      MARITAL == 3 ~ "widowed",
+                      MARITAL == 4 ~ "divorced",
+                      TRUE ~ NA_character_),
+  driver_insured = if_else(CLMINSUR == 1, "yes", "no"),
+  seatbelt = if_else(SEATBELT == 1, "yes", "no"),
+  age = CLMAGE,
+  log_loss = log10(1000*LOSS) # log 10 of claimed loss in the claim, not actually log-loss as in the accuracy metric
+) %>% filter(!is.na(gender), !is.na(marital), !is.na(driver_insured),
+                              !is.na(seatbelt), !is.na(age))
+```
+
+## Part a (Code: 1 pt)
+
+Divide the `AutoBi2` dataset into a training set and a test set. The test set should contain approximately 25% of the original dataset.
+
+## Part b (Code: 2 pts)
+
+Using tidymodels, set up a workflow for a ridge regression model predicting `log_loss` from the other variables (`attorney`, `gender`, `marital`, `driver_insured`, `seatbelt`, and `age`) including both the appropriate `model` and `recipe`.  In part (c) you will tune the model, so make sure to include `penalty = tune()`.
+
+## Part c (Code: 2 pts)
+
+Use 10-fold cross-validation with 2 repeats to determine the optimal value of $\lambda$ using the 1-standard error rule and the RMSE metric. It turns out that not a lot of shrinkage is necessary here; use a grid from 0 to 0.5 in increments of 0.05 (i.e., use the `expand.grid` function to manually set up your $\lambda$ grid rather than using `grid_regular`).
+
+What is the optimal value of $\lambda$ according to your cross-validation?
+
+## Part d (Code: 2 pts)
+
+Finalize your ridge regression workflow to use this value of $\lambda$, then fit the ridge regression model on the entire training set.
+
+Use the model to make predictions on the test set and obtain the estimate of test RMSE. 
+
+## Part e (Code: 3 pts)
+
+Repeat parts (b)-(d) for the LASSO model.
