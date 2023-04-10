@@ -178,23 +178,144 @@ AutoBi2 <- AutoBi %>% transmute(
 ## Part a (Code: 1 pt)
 
 Divide the `AutoBi2` dataset into a training set and a test set. The test set should contain approximately 25% of the original dataset.
+```{r 2a}
+set.seed(437)
+auto_split <- initial_split(AutoBi2, prop = 0.75)
+auto_test <- testing(auto_split)
+auto_train <- training(auto_split)
+```
 
 ## Part b (Code: 2 pts)
 
 Using tidymodels, set up a workflow for a ridge regression model predicting `log_loss` from the other variables (`attorney`, `gender`, `marital`, `driver_insured`, `seatbelt`, and `age`) including both the appropriate `model` and `recipe`.  In part (c) you will tune the model, so make sure to include `penalty = tune()`.
 
+```{r 2b workflow}
+ridge_model <- linear_reg(mode = "regression", engine = "glmnet",
+                          penalty = tune(), 
+                          mixture = 0) 
+
+ridge_wflow <- workflow() %>%
+  add_model(ridge_model)
+```
+
+```{r 2b recipe}
+ridge_recipe <- recipe(
+  log_loss ~ attorney + gender + marital + driver_insured + seatbelt + age,
+  data = auto_train
+) %>%
+  step_normalize(all_numeric_predictors()) %>% # don't scale the response
+  step_dummy(all_nominal_predictors())
+
+ridge_wflow <- ridge_wflow %>%
+  add_recipe(ridge_recipe)
+```
+
+
 ## Part c (Code: 2 pts)
 
 Use 10-fold cross-validation with 2 repeats to determine the optimal value of $\lambda$ using the 1-standard error rule and the RMSE metric. It turns out that not a lot of shrinkage is necessary here; use a grid from 0 to 0.5 in increments of 0.05 (i.e., use the `expand.grid` function to manually set up your $\lambda$ grid rather than using `grid_regular`).
 
+```{r 2c kfold}
+set.seed(437)
+auto_kfold <- vfold_cv(auto_train, v = 10, repeats = 2) 
+
+ridge_grid <- expand.grid(penalty = 10^seq(0, 0.5, by = 0.05))
+ridge_tune1 <- tune_grid(ridge_model, 
+                      ridge_recipe, 
+                      resamples = auto_kfold, 
+                      grid = ridge_grid)
+
+```
+
+```{r 2c optim}
+ridge_best <- select_by_one_std_err(
+  ridge_tune1,
+  metric = "rmse",
+  desc(penalty) # order penalty from largest (highest bias = simplest model) to smallest
+)
+ridge_best
+```
+
 What is the optimal value of $\lambda$ according to your cross-validation?
+-> 1.413
 
 ## Part d (Code: 2 pts)
 
 Finalize your ridge regression workflow to use this value of $\lambda$, then fit the ridge regression model on the entire training set.
 
 Use the model to make predictions on the test set and obtain the estimate of test RMSE. 
+```{r 2d finalize}
+ridge_wflow_final <- finalize_workflow(ridge_wflow, parameters = ridge_best) 
+
+ridge_fit <- fit(ridge_wflow_final, data = auto_train)
+ridge_fit
+```
+```{r 2d predict}
+predictions_ridge <- broom::augment(ridge_fit, new_data = auto_test)
+predictions_ridge %>% dplyr::select(
+  log_loss, .pred
+)
+rmse(predictions_ridge, truth = log_loss, estimate = .pred)
+```
 
 ## Part e (Code: 3 pts)
 
 Repeat parts (b)-(d) for the LASSO model.
+```{r 2e workflow}
+ridge_model <- linear_reg(mode = "regression", engine = "glmnet",
+                          penalty = tune(), 
+                          mixture = 1) 
+
+ridge_wflow <- workflow() %>%
+  add_model(ridge_model)
+```
+
+```{r 2e recipe}
+ridge_recipe <- recipe(
+  log_loss ~ attorney + gender + marital + driver_insured + seatbelt + age,
+  data = auto_train
+) %>%
+  step_normalize(all_numeric_predictors()) %>% # don't scale the response
+  step_dummy(all_nominal_predictors())
+
+ridge_wflow <- ridge_wflow %>%
+  add_recipe(ridge_recipe)
+```
+
+```{r 2e kfold}
+set.seed(437)
+auto_kfold <- vfold_cv(auto_train, v = 10, repeats = 2) 
+
+ridge_grid <- expand.grid(penalty = 10^seq(0, 0.5, by = 0.05))
+ridge_tune1 <- tune_grid(ridge_model, 
+                      ridge_recipe, 
+                      resamples = auto_kfold, 
+                      grid = ridge_grid)
+
+```
+
+```{r 2e optim}
+ridge_best <- select_by_one_std_err(
+  ridge_tune1,
+  metric = "rmse",
+  desc(penalty) # order penalty from largest (highest bias = simplest model) to smallest
+)
+ridge_best
+```
+
+-> LASSO suggests lambda = 3.162
+
+```{r 2e finalize}
+ridge_wflow_final <- finalize_workflow(ridge_wflow, parameters = ridge_best) 
+
+ridge_fit <- fit(ridge_wflow_final, data = auto_train)
+ridge_fit
+```
+
+```{r 2e predict}
+predictions_ridge <- broom::augment(ridge_fit, new_data = auto_test)
+predictions_ridge %>% dplyr::select(
+  log_loss, .pred
+)
+rmse(predictions_ridge, truth = log_loss, estimate = .pred)
+```
