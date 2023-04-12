@@ -131,6 +131,47 @@ misinf_test <- testing(misinf_split)
 
 Use K-nearest neighbors with a Euclidean distance (`dist_power = 2`) metric to predict whether someone will get the COVID-19 vaccine. Use repeated 5-fold cross-validation to find the optimal value of k, and explain why you chose that value of k. Remember to do all the necessary preparation work and fit the model on the entire training set afterwards. It is probably easiest to use a tidymodels workflow to do this part.
 
+```{r 5-fold CV loocv}
+misinf_loocv_tidy <- loo_cv(misinf_train)
+```
+
+```{r 5-fold CV function for loocv}
+validation_results <- function(splits, k){
+
+  training_set <- analysis(splits)
+  validation_set <- assessment(splits)
+
+  # fit the model
+  knn_model_predictions <- kknn(Vaccine ~ COVID_Risk + Trust_in_Scientists + Misinformation,
+                          train = training_set,
+                          test = validation_set,
+                          k = k)
+
+  # manual accuracy
+  accuracy_loocv <- mean(knn_model_predictions$fitted.values ==
+                           validation_set$Vaccine)
+  
+  return(accuracy_loocv)
+  
+}
+```
+
+```{r 5-fold CV map}
+K = 5
+loocv_accuracy <- vector("list", length = K)
+for (k in 1:K){
+  loocv_accuracy[[k]] <- purrr::map_dbl(misinf_loocv_tidy$splits, validation_results, k = k)
+}
+```
+
+```{r 5-fold CV highest k}
+overall_accuracy <- purrr::map_dbl(loocv_accuracy, mean)
+names(overall_accuracy) <- seq(1, 5)
+sort(overall_accuracy, decreasing = TRUE)
+```
+
+Both k = 4 and k = 5 have equally good accuracy so we choose 
+
 ### Part c (Code:  1.5 pts; Computation: 1 pt)
 
 Make your predictions on the holdout set. Then, obtain the confusion matrix for this model on the holdout set. Using the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the K-nearest neighbors model with your optimal value of K.
