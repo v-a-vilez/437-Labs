@@ -170,13 +170,13 @@ names(overall_accuracy) <- seq(1, 5)
 sort(overall_accuracy, decreasing = TRUE)
 ```
 
-Both k = 4 and k = 5 have equally good accuracy so we choose 5? (explain here)
+Both k = 4 and k = 5 have equally good accuracy so we choose 4 becuase its first? (explain here)
 
 ```{r final model}
 knn_model_predictions_final <- kknn(Vaccine ~ COVID_Risk + Trust_in_Scientists + Misinformation,
                           train = misinf_train,
                           test = misinf_test,
-                          k = 5)
+                          k = 4)
 
 knn_predictions_df_loocv <- misinf_test %>% mutate(
   .pred_class = knn_model_predictions_final$fitted.values,
@@ -185,8 +185,7 @@ knn_predictions_df_loocv <- misinf_test %>% mutate(
 )
 
 knn_predictions_df_loocv %>% dplyr::select(
-  Food, # dont know what this should be. Food is from other data
-  Vaccince, 
+  Vaccine, 
   .pred_class, 
   .pred_No_Vaccine,
   .pred_Vaccine
