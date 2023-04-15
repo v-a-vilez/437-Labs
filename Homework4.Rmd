@@ -92,6 +92,29 @@ Fisher starts by computing a "sum of squares and products" matrix S in each grou
 
 Using R, create the `S_setosa`, `S_versicolor`, and `S_overall` matrices.
 
+```{r conceptual 3a}
+#x1 = iris_sv$Sepal.Length
+#x2 = iris_sv$Sepal.Width
+#x3 = iris_sv$Petal.Length
+#x4 = iris_sv$Petal.Width
+
+iris_sv_s <- iris_sv %>% filter(Species == "setosa")
+iris_sv_v <- iris_sv %>% filter(Species == "versicolor")
+
+xs <- iris_sv_s[,-5]
+xv <- iris_sv_v[,-5]
+xo <- iris_sv[,-5]
+
+S_setosa <- cov(xs) *(50-1)
+S_setosa
+
+S_versicolor <- cov(xv)*(50-1)
+S_versicolor
+  
+S_overall <- cov(xo)*(100-1)
+S_overall
+```
+
 ### Part b (Code: 1 pt; Explanation: 0.5 pts)
 
 Fisher then solves a system of four linear equations in four unknowns ($\lambda_1$, $\lambda_2$, $\lambda_3$, $\lambda_4$) that relates $S$ to the vector of differences in sample means, i.e., $S \lambda = D$ where $D$ is the vector of differences in sample means.
