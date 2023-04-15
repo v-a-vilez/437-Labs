@@ -111,7 +111,7 @@ S_setosa
 S_versicolor <- cov(xv)*(50-1)
 S_versicolor
   
-S_overall <- cov(xo)*(100-1)
+S_overall <- S_setosa + S_versicolor
 S_overall
 ```
 
