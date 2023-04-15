@@ -123,6 +123,22 @@ The discriminant function is then the inner product of $\lambda$ and $x$. This s
 
 Using R, solve the matrix equation (`%*%` does matrix multiplication and `solve` does matrix inversion) and perform Fisher's suggested scaling, then write out the discriminant function as a linear function of $x_1$, $x_2$, $x_3$, $x_4$.
 
+```{r conceptual 3b}
+x1_bar = mean(iris_sv_s$Sepal.Length) - mean(iris_sv_v$Sepal.Length) 
+x2_bar = mean(iris_sv_s$Sepal.Width) - mean(iris_sv_v$Sepal.Width)
+x3_bar = mean(iris_sv_s$Petal.Length) - mean(iris_sv_v$Petal.Length)
+x4_bar = mean(iris_sv_s$Petal.Width) - mean(iris_sv_v$Petal.Width)
+
+D = matrix(data = c(x1_bar,x2_bar,x3_bar,x4_bar), nrow = 4)
+
+lambda = solve(S_overall, D)
+
+lambda_scale <- lambda * 1/lambda[1,1]
+lambda_scale
+```
+
+X = 1 * x_1 + 5.904 * x_2 + -7.130 * x_3 + -10.104 * x_4
+
 ### Part c (Code: 1 pt)
 
 Add a new variable to the `iris_sv` data frame, `discrim`, containing the values of the discriminant function for each flower. Create a dot plot showing the Species (response) vs. the discriminant function value (predictor). You may also want to color-code by Species.
