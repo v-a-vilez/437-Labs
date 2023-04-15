@@ -42,10 +42,18 @@ Read Chapter 4 of Introduction to Statistical Learning, Second Edition. Based on
 4. In *Bayes' Theorem* (Equation 4.15), what does $\pi_k$ represent about class $k$? What does $f_k(x)$ represent?
 5. Compare and contrast the assumptions about the predictor(s) in *linear discriminant analysis* vs. *quadratic discriminant analysis*. Which approach leads to more complex/flexible models?
 6. Use the *confusion matrix* in Table 4.5 to find the *sensitivity*, *specificity*,  *positive predictive value* and *negative predictive value* for this algorithm. It's okay to keep your answers as fractions.
+-> sensitivity: 9432/9667
+specificity: 195/333
+positive predictive value: 9432/9570
+negative predictive value: 195/430
 7. What do the x-axis and y-axis on a *receiver operating characteristic* (ROC) curve represent? What is the curve actually a function of? 
+-> The x-axis represents false positive rate and y-axis represents true positive rate. The curve is a function of displaying two types of error as we vary the threshold value for the posterior probability of default.
 8. Compare and contrast the assumptions about the predictors in *linear discriminant analysis* vs. *Naive Bayes*. When are they equivalent?
+-> In LDA, we assume that $f_k$ is the density function for a multivariate normal random variable with class-specific mean $\mu_k$, and shared covariance matrix $\sum$. In Naive Bayes, we assume that within the kth class, the p predictors are independent. They are equivalent when p is larger or n is smaller.
 9. Consider the five methods compared in Section 4.5.2: LDA, QDA, Naive Bayes, Logistic Regression, K-Nearest Neighbors. Which methods would you guess to perform best when you suspect the decision boundary to be (a) linear, (b) moderately nonlinear, (c) highly complex?
+->  LDA and logistic regression perform best when the decision boundary is linear. QDA and Naive Bayes perform best when the decision boundary is moderately nonlinear. K-nearest neighbors perform best when the decision boundary is highly complex.
 10. How does "regression" work in a *generalized linear model*?
+-> Regression works in GLM by modeling the response as coming from a particular member of the exponential family, and then transforming the mean of the response so that the transformed mean is a linear function of the predictors.
 
 # Conceptual Problems
 
@@ -208,6 +216,13 @@ Fit a logistic regression model on the training set predicting `Vaccine` from `C
 
 Use the `summary` or `coef` function to obtain the coefficient estimates, and write out the equation of the fitted logistic regression model. You can use either the log-odds formulation or the probability formulation, but please make sure you are describing what you are finding the log-odds or probability of.
 
+```{r glm}
+glm_vaccine <- glm(Vaccine ~ COVID_Risk + Trust_in_Scientists + Misinformation, family = "binomial", data = misinformation2)
+summary(glm_vaccine)
+```
+-> Log-odds formulation:
+logit(p) = -3.69 + 0.85(COVID_Risk) + 0.58(Trust_in_Scientists) + (-0.29)(Misinformation)
+
 ### Part e (Explanation: 2 pts)
 
 Write a sentence interpreting the coefficient corresponding to `Trust_in_Scientists` in the logistic regression model. It is easiest to exponentiate the coefficient and discuss a *multiplicative* increase in odds.
@@ -215,6 +230,12 @@ Write a sentence interpreting the coefficient corresponding to `Trust_in_Scienti
 ### Part f (Code: 0.5 pt; Explanation: 2 pts)
 
 Using the `confint` function, obtain 95% confidence intervals for the parameters of the population logistic regression model. Based on the confidence intervals, which of the researchers' suspicions about the relationship between `Vaccine` and the three predictors can you conclude are true?
+
+```{r confidence interval}
+confint_vaccine <- confint(glm_vaccine)
+suppressMessages(confint(glm_vaccine))
+```
+-> The researchers will think that patients will get a vaccine based on positive intervals for COVID_Risk and Trust_in_Scientists. Misinformation will affect the result because there is a negative interval.
 
 ### Part g (Code: 2 pts; Computation: 1 pt)
 
