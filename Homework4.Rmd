@@ -143,9 +143,28 @@ X = 1 * x_1 + 5.904 * x_2 + -7.130 * x_3 + -10.104 * x_4
 
 Add a new variable to the `iris_sv` data frame, `discrim`, containing the values of the discriminant function for each flower. Create a dot plot showing the Species (response) vs. the discriminant function value (predictor). You may also want to color-code by Species.
 
+```{r conceptual 3c}
+iris_sv2 <- iris_sv %>% mutate(
+  discrim = Sepal.Length + 5.903805*Sepal.Width + (-7.129981)*Petal.Length + (-10.103664)*Petal.Width
+  )
+
+
+ggplot(data = iris_sv2, aes(discrim,Species, color = Species)) +
+  geom_point(alpha = 0.25) +
+  # if you added arguments to geom_point, add the same arguments to geom_smooth
+  # otherwise don't touch these lines - they will run fine
+  geom_smooth(method = "lm", se = FALSE) + # regression line, no confidence bands
+  scale_color_manual(name = "Species",  # make legend nice
+                     labels = c(setosa = "Setosa", versicolor = "versicolor"),
+                     values = c(setosa = "red", versicolor = "blue"))
+
+```
+
 ### Part d (Code and/or Explanation: 2 pts)
 
 Explain how to use your results to classify a *new* iris flower to either *setosa* or *versicolor*. (Hint: think about where the decision boundary is...)
+
+Using the discriminate function, if the value is less then 0 then we would classify the new iris as a versicolor, but if the value is greater than zero then we would classify the new iris flower as a setosa. 
 
 # Applied Problems
 
