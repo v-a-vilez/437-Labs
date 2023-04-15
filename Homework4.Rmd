@@ -24,6 +24,7 @@ library(ISLR2)
 library(ggplot2)
 library(dplyr)
 library(tidymodels) 
+library(car)
 
 # You will need other packages to fit models in the Applied Problem
 # List them here or as you encounter the need for them
