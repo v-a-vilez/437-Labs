@@ -44,10 +44,22 @@ misinformation1 <- readr::read_csv("misinformation1.csv")
 Read Chapter 4 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
 
 1. Explain how to convert probabilities to *odds* and to *logits*.
+-> Given a set of probabilities, to obtain odds you would take the given probability and divide it by one minus that probability (p(x)/(1 - p(x))). For logits, you take the log of the odds.
+
 2. Write a sentence to interpret each Coefficient in Table 4.3.
+-> Students have 0.524 times the odds of non-students for defaulting. For a 1 unit increase in balance and income, the odds of defaulting is multiplied by 1.0057 and 1.003 respectively.
+
 3. Why is the choice of a *baseline* (or *reference level*) for the response variable critical when interpreting slopes in multinomial logistic regression, but not so much in (standard) logistic regression?
+-> For multinomial logistic regression, the baseline changes the coefficients since we are comparing changes in our predictors to a set variable. For standard logistic regression, the choice of baseline does not change coefficients the same way.
+
 4. In *Bayes' Theorem* (Equation 4.15), what does $\pi_k$ represent about class $k$? What does $f_k(x)$ represent?
+-> $pi_k$ represents the prior probability that a randomly chosen observation comes from the kth class. $f_k(x)$ represents the density function of X for an observation that comes from the kth class.
+
 5. Compare and contrast the assumptions about the predictor(s) in *linear discriminant analysis* vs. *quadratic discriminant analysis*. Which approach leads to more complex/flexible models?
+-> LDA Assumptions: sample measurements are independent, distributions are normal, and standard deviation is the same among each class. 
+   QDA Assumptions: sample measurements are independent, and distributions are normal.
+   QDA is more complex/flexible since LDA has fewer estimated parameters.
+
 6. Use the *confusion matrix* in Table 4.5 to find the *sensitivity*, *specificity*,  *positive predictive value* and *negative predictive value* for this algorithm. It's okay to keep your answers as fractions.
 -> sensitivity: 9432/9667
 specificity: 195/333
@@ -313,6 +325,8 @@ logit(p) = -3.69 + 0.85(COVID_Risk) + 0.58(Trust_in_Scientists) + (-0.29)(Misinf
 
 Write a sentence interpreting the coefficient corresponding to `Trust_in_Scientists` in the logistic regression model. It is easiest to exponentiate the coefficient and discuss a *multiplicative* increase in odds.
 
+When Trust_in_Scientists increases by 1 unit, holding all other predictors in the model constant, the multiplicative increase in odds of someone saying they will get the vaccine is 1.78.
+
 ### Part f (Code: 0.5 pt; Explanation: 2 pts)
 
 Using the `confint` function, obtain 95% confidence intervals for the parameters of the population logistic regression model. Based on the confidence intervals, which of the researchers' suspicions about the relationship between `Vaccine` and the three predictors can you conclude are true?
@@ -329,11 +343,35 @@ Let's make sure we understand how to make class predictions without using tidymo
 
 Use the `predict` function to obtain predictions for the validation set. Remember to include the argument `type = "response"` to output predictions as probabilities!  Note that `augment` is a bit finicky when passing in a `glm` object, so you should not use that function here.
 
+```{r 1g 1}
+glm.probs <- predict(glm.vaccine, newdata = misinf_test, type = "response")
+```
+
+
 Using similar code to Lab 4.7.2 or an `if_else` statement, classify each respondent in the validation set as either getting the vaccine ("Yes") or not ("No") using the estimated  Bayes decision boundary.
+
+```{r 1g 2}
+contrasts(misinformation2$Vaccine)
+glm.pred <- rep (" No ", 135)
+glm.pred[glm.probs > .5] = "Yes"
+table (glm.pred , misinf_test$Vaccine)
+```
+
 
 Use the `table` function to obtain the confusion matrix for this model on the holdout set. Based on the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the logistic regression model.
 
+Accuracy: 107/135
+Sensitivity: 16/35
+Specificity: 91/100
+PPV: 16/25
+NPV: 91/110
+
 Confirm your estimates using the `conf_mat` and `summary` functions in the `yardstick` package. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
+```{r 1g 3}
+
+vaccine_pred <- data.frame(predicted = glm.pred, actual = misinf_test$Vaccine)
+conf_mat(vaccine_pred, truth = actual, estimate = predicted)
+```
 
 ### Part h (Code: 2.5 pts; Computation: 1 pt)
 
