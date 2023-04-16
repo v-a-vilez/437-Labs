@@ -341,6 +341,11 @@ Confirm your estimates by summarizing the confusion matrix again. Remember to us
 
 Obtain the correlation matrix and vif for the predictors in the logistic regression model. Using your results, argue that the major assumption of naive Bayes is reasonably justified with these predictors.
 
+```{r part i cor and vif}
+#cor(glm_vaccine)
+vif(glm_vaccine)
+```
+
 ### Part j (Code: 2.5 pts; Computation: 1 pt)
 
 Fit a linear discriminant analysis (LDA) model on the training set predicting `Vaccine` from `COVID_Risk`, `Trust_in_Scientists`, and `Misinformation` and obtain predictions for the holdout set. You should use the `lda` function in the MASS package but can use it either by itself (as shown in the lab) or as the "engine" in the tidymodels workflow.
@@ -383,10 +388,101 @@ summary(confusion_lda, event_level = "second")
 
 For each of the four models, obtain the Matthews Correlation Coefficient, (mean) log-loss, and Brier score.
 
+The MCC for KNN is 0.4807740. The MCC for the logistic mode is . The MCC for the NB model is 0.4501294. The MCC for the LDA model is 0.3643989.
+
+```{r part k logloss}
+mn_log_loss(knn_predictions_df,
+            truth = Vaccine,
+            .pred_Vaccine,
+            event_level = "second"
+)
+
+#mn_log_loss(predictions_knn_df,
+#            truth = SubCategory,
+#            .pred_Vegetables,
+#            event_level = "second")
+
+mn_log_loss(mis_nb_assessment,
+            truth = Vaccine,
+            pred_Vaccine,
+            event_level = "second"
+)
+
+mn_log_loss(mis_lda_pred_table,
+            truth = Vaccine,
+            pred_Vaccince,
+            event_level = "second"
+)
+```
+
+```{r part k brier}
+brier_knn <- knn_predictions_df %>% mutate(
+  squared_error = case_when(
+    Vaccine == "No" ~ (1 - .pred_No_Vaccine)^2,
+    Vaccine == "Yes" ~ (1 - .pred_Vaccine)^2
+  )
+)
+mean(brier_knn$squared_error)
+
+brier_nb <- mis_nb_assessment %>% mutate(
+  squared_error = case_when(
+    Vaccine == "No" ~ (1 - pred_NoVaccine)^2,
+    Vaccine == "Yes" ~ (1 - pred_Vaccine)^2
+  )
+)
+mean(brier_nb$squared_error)
+
+brier_lda <- mis_lda_pred_table %>% mutate(
+  squared_error = case_when(
+    Vaccine == "No" ~ (1 - pred_noVaccine)^2,
+    Vaccine == "Yes" ~ (1 - pred_Vaccine)^2
+  )
+)
+mean(brier_lda$squared_error)
+```
+
+
 ### Part l (Code: 2 pts)
 
 For each of the four models, produce a plot of the receiver operating characteristic (ROC) curve, and obtain the area under the curve (AUC).
 
+```{r ROC AUC KNN}
+# Construct the ROC curve
+roc_tibble_knn <- roc_curve(knn_predictions_df, truth = Vaccine, .pred_No_Vaccine)
+
+# Plot the ROC curve
+autoplot(roc_tibble_knn) + labs(title = "ROC Curve for Test Set KNN")
+
+roc_auc(knn_predictions_df, truth = Vaccine, .pred_No_Vaccine)
+```
+
+```{r ROC AUC LOGISTIC}
+
+```
+
+```{r ROC AUC NB}
+# Construct the ROC curve
+roc_tibble_nb <- roc_curve(mis_nb_assessment, truth = Vaccine, pred_NoVaccine)
+
+# Plot the ROC curve
+autoplot(roc_tibble_nb) + labs(title = "ROC Curve for Test Set NB")
+
+roc_auc(mis_nb_assessment, truth = Vaccine,  pred_NoVaccine)
+```
+
+```{r ROC AUC LDA}
+# Construct the ROC curve
+roc_tibble_lda <- roc_curve(mis_lda_pred_table, truth = Vaccine, pred_noVaccine)
+
+# Plot the ROC curve
+autoplot(roc_tibble_lda) + labs(title = "ROC Curve for Test Set LDA")
+
+roc_auc(mis_lda_pred_table, truth = Vaccine, pred_noVaccine)
+```
+
 ### Part m (Explanation: 1.5 pts)
 
 Which of the four models you fit (k-nn, logistic regression, naive Bayes, or LDA) would you argue is the "best" model for predicting whether or not someone would get a COVID-19 vaccine? Justify your answer based on a metric *other* than accuracy.
+
+Based on MCC, Log-Loss, and Brier scores, Lda was the better model. Based on the scores, the LDA model was more accurate than the other four.  
+
