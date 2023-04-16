@@ -33,6 +33,7 @@ library(MASS)
 library(yardstick)
 library(kknn)
 library(car)
+library(e1071)
 
 misinformation1 <- readr::read_csv("misinformation1.csv")
 ```
@@ -341,6 +342,11 @@ Fit a naive Bayes model on the training set predicting `Vaccine` from `COVID_Ris
 Obtain the confusion matrix for this model on the holdout set. Using the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the naive Bayes model.
 
 Confirm your estimates by summarizing the confusion matrix again. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
+
+```{r naive Bayes}
+nb_misinf <- naiveBayes(Vaccine ~ ., data = misinf_train)
+nb_misinf
+```
 
 ### Part i (Code: 0.5 pts; Explanation: 1 pt)
 
