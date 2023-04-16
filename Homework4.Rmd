@@ -29,6 +29,10 @@ library(car)
 # You will need other packages to fit models in the Applied Problem
 # List them here or as you encounter the need for them
 
+library(MASS)
+library(yardstick)
+library(kknn)
+
 misinformation1 <- readr::read_csv("misinformation1.csv")
 ```
 
