@@ -315,17 +315,17 @@ Fit a logistic regression model on the training set predicting `Vaccine` from `C
 Use the `summary` or `coef` function to obtain the coefficient estimates, and write out the equation of the fitted logistic regression model. You can use either the log-odds formulation or the probability formulation, but please make sure you are describing what you are finding the log-odds or probability of.
 
 ```{r glm}
-glm_vaccine <- glm(Vaccine ~ COVID_Risk + Trust_in_Scientists + Misinformation, family = "binomial", data = misinformation2)
+glm_vaccine <- glm(Vaccine ~ COVID_Risk + Trust_in_Scientists + Misinformation, family = "binomial", data = misinf_train)
 summary(glm_vaccine)
 ```
--> Log-odds formulation:
-logit(p) = -3.69 + 0.85(COVID_Risk) + 0.58(Trust_in_Scientists) + (-0.29)(Misinformation)
+We consider the log-odds formulation:
+  logit(p) = -3.79 + 0.88(COVID_Risk) + 0.58(Trust_in_Scientists) - 0.31(Misinformation)
 
 ### Part e (Explanation: 2 pts)
 
 Write a sentence interpreting the coefficient corresponding to `Trust_in_Scientists` in the logistic regression model. It is easiest to exponentiate the coefficient and discuss a *multiplicative* increase in odds.
 
-When Trust_in_Scientists increases by 1 unit, holding all other predictors in the model constant, the multiplicative increase in odds of someone saying they will get the vaccine is 1.78.
+When Trust_in_Scientists increases by 1 unit, holding all other predictors in the model constant, the multiplicative increase in odds of someone saying they will get the vaccine is 2.23.
 
 ### Part f (Code: 0.5 pt; Explanation: 2 pts)
 
@@ -344,7 +344,7 @@ Let's make sure we understand how to make class predictions without using tidymo
 Use the `predict` function to obtain predictions for the validation set. Remember to include the argument `type = "response"` to output predictions as probabilities!  Note that `augment` is a bit finicky when passing in a `glm` object, so you should not use that function here.
 
 ```{r 1g 1}
-glm.probs <- predict(glm.vaccine, newdata = misinf_test, type = "response")
+glm.probs <- predict(glm_vaccine, newdata = misinf_test, type = "response")
 ```
 
 
@@ -383,17 +383,30 @@ Confirm your estimates by summarizing the confusion matrix again. Remember to us
 
 ```{r naive Bayes}
 nb_misinf <- naiveBayes(Vaccine ~ ., data = misinf_train)
-nb_misinf
+nb_misinf.class <- predict(nb_misinf, newdata = misinf_test, type = "class")
+misinf_nb_predictions <- data.frame(predicted = nb_misinf.class,
+                               actual = misinf_test$Vaccine )
+confusion_misinfnb <- conf_mat(misinf_nb_predictions, truth = actual, estimate = predicted)
+confusion_misinfnb
+summary(confusion_misinfnb, event_level = "second")
 ```
+Accuracy: 107/135
+Sensitivity: 20/35
+Specificity: 87/100
+PPV: 20/33
+NPV: 87/102
 
 ### Part i (Code: 0.5 pts; Explanation: 1 pt)
 
 Obtain the correlation matrix and vif for the predictors in the logistic regression model. Using your results, argue that the major assumption of naive Bayes is reasonably justified with these predictors.
 
 ```{r part i cor and vif}
-#cor(glm_vaccine)
-vif(glm_vaccine)
+predictors_mis <- data.frame(COVID_Risk = misinf_train$COVID_Risk, Trust_in_Scientists = misinf_train$Trust_in_Scientists, Misinformation = misinf_train$Misinformation)
+cor(predictors_mis)
+vif(glm.vaccine)
 ```
+
+-> The correlation between each of the predictors, while present, is low enough for us to consider independence, maintaining that assumption for naive Bayes.
 
 ### Part j (Code: 2.5 pts; Computation: 1 pt)
 
