@@ -368,9 +368,9 @@ NPV: 91/110
 
 Confirm your estimates using the `conf_mat` and `summary` functions in the `yardstick` package. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
 ```{r 1g 3}
-
-vaccine_pred <- data.frame(predicted = glm.pred, actual = misinf_test$Vaccine)
-conf_mat(vaccine_pred, truth = actual, estimate = predicted)
+vaccine_pred <- data.frame(predicted = factor(glm.pred, levels = c(" No ","Yes"), labels = c("No","Yes")), actual = misinf_test$Vaccine)
+mis_glm_confmat <- conf_mat(vaccine_pred, truth = actual, estimate = predicted)
+summary(mis_glm_confmat, event_level = "second")
 ```
 
 ### Part h (Code: 2.5 pts; Computation: 1 pt)
