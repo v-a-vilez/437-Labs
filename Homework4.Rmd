@@ -245,20 +245,6 @@ knn_model_predictions_final <- kknn(Vaccine ~ COVID_Risk + Trust_in_Scientists +
                           test = misinf_test,
                           k = 4)
 
-knn_predictions_df_loocv <- misinf_test %>% mutate(
-  .pred_class = knn_model_predictions_final$fitted.values,
-  .pred_No_Vaccine = knn_model_predictions_final$prob[,1],
-  .pred_Vaccine = knn_model_predictions_final$prob[,2]
-)
-
-knn_predictions_df_loocv %>% dplyr::select(
-  Vaccine, 
-  .pred_class, 
-  .pred_No_Vaccine,
-  .pred_Vaccine
-)
-
-accuracy(knn_predictions_df_loocv, truth = Vaccine, estimate = .pred_class)
 ```
 
 ### Part c (Code:  1.5 pts; Computation: 1 pt)
@@ -266,6 +252,41 @@ accuracy(knn_predictions_df_loocv, truth = Vaccine, estimate = .pred_class)
 Make your predictions on the holdout set. Then, obtain the confusion matrix for this model on the holdout set. Using the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the K-nearest neighbors model with your optimal value of K.
 
 Confirm your estimates by getting the `summary` of the confusion matrix. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
+
+```{r predictions}
+knn_predictions_df <- misinf_test %>% mutate(
+  .pred_class = knn_model_predictions_final$fitted.values,
+  .pred_No_Vaccine = knn_model_predictions_final$prob[,1],
+  .pred_Vaccine = knn_model_predictions_final$prob[,2]
+)
+
+knn_predictions_df %>% dplyr::select(
+  Vaccine, # dont know what this should be. Food is from other data
+  #Vaccine, 
+  .pred_class, 
+  .pred_No_Vaccine,
+  .pred_Vaccine
+) %>% head(10)
+
+```
+
+```{r confusion matrix}
+accuracy(knn_predictions_df, truth = Vaccine, estimate = .pred_class)
+
+confusion_knn <- conf_mat(knn_predictions_df, truth = Vaccine, estimate = .pred_class)
+confusion_knn 
+```
+
+accuracy = .81
+specificity = 21/(21+14) = .6
+sensitivity (recall) = 87 / (87+13) = .87
+negative predictive value = 21 / (21+13) = 0.6176471
+positive predictive value (precision) = 89 / 89 + 15 = 0.8557692
+
+```{r summary conf_mat flipped}
+summary(confusion_knn, event_level = "second")
+```
+
 
 ### Part d (Code: 1 pt; Explanation: 1 pt)
 
@@ -323,10 +344,40 @@ Obtain the correlation matrix and vif for the predictors in the logistic regress
 ### Part j (Code: 2.5 pts; Computation: 1 pt)
 
 Fit a linear discriminant analysis (LDA) model on the training set predicting `Vaccine` from `COVID_Risk`, `Trust_in_Scientists`, and `Misinformation` and obtain predictions for the holdout set. You should use the `lda` function in the MASS package but can use it either by itself (as shown in the lab) or as the "engine" in the tidymodels workflow.
+```{r part j fitting an LDA model}
+mis_lda <- lda(Vaccine ~ COVID_Risk + Trust_in_Scientists + Misinformation,
+                          data = misinf_train)
+
+mis_lda_predictions <- predict(mis_lda, newdata = misinf_test)
+str(mis_lda_predictions)
+```
 
 Obtain the confusion matrix for this model on the holdout set. Using the confusion matrix, estimate the accuracy, sensitivity (recall), specificity, positive predictive value (precision), and negative predictive value for the LDA model.
 
 Confirm your estimates by summarizing the confusion matrix again. Remember to use the argument `event_level = "second"` in the summary function because we want to predict whether someone *will* get a vaccine.
+
+```{r confusion matrix part j}
+mis_lda_pred_table <- tibble(Vaccine = misinf_test$Vaccine,
+                          pred_Vaccince = mis_lda_predictions$posterior[,2],
+                          pred_noVaccince = mis_lda_predictions$posterior[,1],
+                          pred_class = mis_lda_predictions$class)
+
+confusion_lda <- conf_mat(mis_lda_pred_table, truth = Vaccine, estimate = pred_class)
+confusion_lda
+
+accuracy(mis_lda_pred_table, truth = Vaccine, estimate = pred_class)
+```
+
+accuracy = .77
+specificity = 16/(16+19) = 0.4571429
+sensitivity (recall) = 88 / (88+12) = 0.88
+negative predictive value = 16 / (16+12) = 0.5714286
+positive predictive value (precision) = 88 / (88+19) = 0.8224299
+
+```{r summary conf matrix lda part j}
+summary(confusion_lda, event_level = "second")
+```
+
 
 ### Part k (Code: 3 pts)
 
