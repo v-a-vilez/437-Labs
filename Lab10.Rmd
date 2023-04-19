@@ -20,6 +20,7 @@ library(rpart)
 library(randomForest)
 library(gbm)
 library(insuranceData)
+library(ranger)
 # if you use ranger later you should include it here
 # if you use xgboost later you may want to include xgboost and/or tidymodels packages
 ```
@@ -210,12 +211,79 @@ AutoBi2 <- AutoBi %>% transmute(
 
 Divide the `AutoBi2` dataset into a training set and a test set. The test set should contain approximately 25% of the original dataset.
 
+```{r 2a}
+set.seed(437)
+auto_split <- initial_split(AutoBi2, prop = .75)
+
+auto_train <- training(auto_split)
+auto_test <- testing(auto_split)
+```
+
+
 ### Part b (Code: 3 pts)
 
 Using tidymodels with either the `randomForest` or `ranger` package, fit a random forest model on the training set. Make sure to use `set_args` to tell tidymodels you want to use permutation-based importance (you will need it for part d). Tune the value of `mtry` using cross-validation. Use values from 2 to 6 (6 = bagging). 
 
 Obtain predictions on the test set and compute the estimated test RMSE. 
 
+```{r 2b.1}
+RFautoR_model <- rand_forest(mode = "regression", engine = "ranger") %>%
+  set_args(seed = 437,
+           importance = "permutation",
+           mtry = tune())
+
+RFautoR_recipe <- recipe(
+  log_loss ~ ., 
+  data = auto_train
+)
+
+RFautoR_wflow <- workflow() %>%
+  add_model(RFautoR_model) %>%
+  add_recipe(RFautoR_recipe)
+```
+
+```{r 2b.2 Tuning}
+set.seed(437)
+auto_kfold <- vfold_cv(auto_train, v = 5, repeats = 3) 
+
+manual_grid <- expand.grid(mtry = seq(2, 6))
+
+RFauto_tune1 <- tune_grid(RFautoR_model, 
+                      RFautoR_recipe, 
+                      resamples = auto_kfold, 
+                      grid = manual_grid)
+```
+
+```{r 2b.3 Tuned mtry}
+RFauto_tune1 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(mapping = aes(x = mtry, y = mean)) + geom_point() + geom_line()
+```
+
+```{r 2b.4 select best rf}
+RFauto_best <- select_by_one_std_err(
+  RFauto_tune1,
+  metric = "rmse",
+  mtry
+)
+RFauto_best
+```
+
+```{r 2b.5 finalize workflow}
+RFauto_wflow_final <- finalize_workflow(RFautoR_wflow, parameters = RFauto_best) 
+
+RFauto_fit <- fit(RFauto_wflow_final, data = auto_train)
+RFauto_fit
+```
+```{r 2b.6 Predictions}
+predictions_RFauto <- broom::augment(RFauto_fit, new_data = auto_test)
+predictions_RFauto %>% dplyr::select(
+  log_loss, .pred
+)
+rmse(predictions_RFauto, truth = log_loss, estimate = .pred)
+ggplot(predictions_RFauto, aes(x = .pred, y = log_loss)) + geom_point()
+```
 ### Part c (Code and Explanation: 2 pts)
 
 Obtain the out-of-bag prediction error on the training set.
