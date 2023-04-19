@@ -231,6 +231,7 @@ ridge_fit
 ```{r look at ridge path}
 extract_fit_engine(ridge_fit) %>% plot(xvar = "lambda", label = TRUE)
 ```
+-> By using select by one standard error, we find that our penalty value lambda, 1389.495, finds the best RMSE.
 
 ### Part e (Code: 2 pts; Explanation: 1 pt)
 
