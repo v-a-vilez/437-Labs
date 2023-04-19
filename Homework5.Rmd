@@ -33,7 +33,7 @@ library(leaps)
 
 ```
 
-# Key Terms (5 pts)
+# Key Terms (5 pts) Michael: 1-3, Phuong: 4-7, Vanessa: 8-10
 
 Read Sections 6.1, 6.2, and 6.4 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
 
