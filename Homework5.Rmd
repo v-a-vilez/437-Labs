@@ -1,0 +1,334 @@
+---
+title: 'Homework Assignment #5'
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due April 28, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+You should submit either two or three files:
+
+1. You should write your solutions to the Applied Problems and Conceptual Problem 3 in this R Markdown file and submit the (.Rmd) file.
+2. You should knit the final solution file to pdf and submit the pdf. If you are having trouble getting code chunks to run, add `eval = FALSE` to the chunks that do not run. If you are having trouble getting R Studio to play nice with your LaTeX distribution, I will begrudgingly accept an HTML file instead. 
+3. Solutions to the Key Terms and the other Conceptual Problems can be submitted in a separate Word or pdf file or included in the same files as your solutions to Conceptual Problem 3 and the Applied Problems.
+
+This homework assignment is worth a total of **40 points**.
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+#library(ISLR2)
+library(ggplot2)
+library(dplyr)
+library(tidymodels) 
+
+# You will need other packages to fit models in the Applied Problem
+# List them here or as you encounter the need for them
+library(MASS)
+library(yardstick)
+library(kknn)
+library(car)
+library(e1071)
+library(olsrr)
+library(leaps)
+
+```
+
+# Key Terms (5 pts)
+
+Read Sections 6.1, 6.2, and 6.4 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
+
+1. Briefly explain what is meant by the term *feature selection* or *variable selection*.
+2. The book claims that we can use *deviance* instead of RSS when selecting among logistic regression models. Write the formula for deviance in terms of the maximized log-likelihood. Do smaller or larger values of deviance indicate a better fit?
+3. Explain why it is a bad idea to select the model with the lowest RSS on the training set.
+4. Does the AIC or BIC statistic tend to place a heavier penalty on bigger models? Why?
+5. In *ridge regression* and *LASSO*, what is the model when $\lambda = 0$? What about when $\lambda \rightarrow \infty$?
+6. Suppose that we have *centered* the predictors (i.e., set all predictors to have mean 0). What is the intercept estimate $\hat{\beta}_0$ in this case?
+7. Why should we also *scale* the predictors (i.e., set all predictors to have standard deviation 1) when doing penalized regression?
+8. When would we expect ridge regression to outperform the lasso? When would we expect the lasso to outperform ridge regression? In the real world, do we know which situation we are in?
+9. Explain why each of the following approaches to adjusting the training set RSS are *inappropriate* in high-dimensional ($p > n$ or $p \approx n$) settings: (a) traditional $R^2$ and adjusted $R^2$; (b) AIC, BIC, and Cp.
+10. Explain the *curse of dimensionality* in two ways: first, in terms of overfitting, and second, in terms of multicollinearity issues.
+
+# Conceptual Problems
+
+## Conceptual Problem 1 (3 pts) 
+
+Textbook Exercise 6.6.2.
+
+## Conceptual Problem 2 (8 pts total)
+
+In the textbook, it is claimed that if we define our prior distribution of the $\beta_j$ slopes to be $p(\beta) = \prod_{j=1}^p g(\beta_j)$, with $g(\beta_j)$ a Gaussian distribution with mean 0 and standard deviation a function of $\lambda$, then the ridge regression solution yields the posterior mode. 
+
+Let's investigate this in the simplest case. Suppose that we standardize both a single predictor $X$ and the response $Y$ such that the population model passes through (0, 0), i.e., $\beta_0 = 0$ and so $Y = \beta_1 X + \epsilon$ with $\epsilon \sim N(0, \sigma)$. 
+
+### Part a (2 pts)
+
+Find the ridge regression solution, i.e., the value of $\beta_1$ that minimizes
+
+$$
+\sum_{i=1}^n \left(y_i - \beta_1 x_i \right)^2 + \lambda \beta_1^2
+$$
+, in terms of the $y_i$'s, $x_i$'s, and $\lambda$.
+
+### Part b (1 pt)
+
+Write out the likelihood function $L(\beta_1 | x, y)$, where $x$ is the vector of $x_i$'s and $y$ is the vector of $y_i$'s.
+
+### Part c (1 pt)
+
+Suppose we define the prior distribution of $\beta_1$ as $\beta_1 \sim N(0, f(\lambda))$ as suggested in the textbook, i.e.,
+
+$$
+g(\beta_1) = \frac{1}{f(\lambda) \sqrt{2 \pi}} e^{-\frac{1}{2}(\frac{\beta_1}{f(\lambda)})^2}
+$$
+
+Under this assumption, find the posterior distribution of $\beta_1$ given $x$ and $y$. You may rewrite the integral in the denominator as "C", an arbitrary constant.
+
+### Part d (2 pts)
+
+Find the posterior mode, i.e., the value of $\beta_1$ that maximizes the posterior pdf of $\beta_1$ from part (c), in terms of the $x_i$'s, $y_i$'s, $\sigma$, and $f(\lambda)$. (HINT: It is much easier to maximize the logarithm of the posterior pdf instead.)
+
+### Part e (2 pts)
+
+Find a function $f(\lambda)$ for which the ridge regression solution equals the posterior mode. The function should be independent of the data ($x_i$'s and $y_i$'s) but may depend on $\sigma$. You may assume that $\lambda > 0$.
+
+# Simulation Problems
+
+## Simulation Problem 1 (9 pts)
+
+### Part a (Code: 0.5 pts)
+
+Textbook Exercise 6.6.8 part (a). When generating $X$, use `mean = 0` and `sd = 1` so that we don't need to worry about normalizing anything.
+
+### Part b (Code: 0.5 pts)
+
+Textbook Exercise 6.6.8 part (b).
+
+### Part c (Code: 2 pts)
+
+Textbook Exercise 6.6.8 part (c).
+
+### Part d (Explanation: 2 pts)
+
+Choose one model from part (c) as your final "best model" and justify your answer. Compare the coefficient estimates for that model to the known coefficients in the population model.
+
+### Part e (Code: 2 pts)
+
+Fit a LASSO model on the simulated data (again using $X, X^2, \ldots, X^{10}$ as predictors). Perform cross-validation using either `cv.glmnet` or `tune_grid` to determine the optimal value of $\lambda$, then fit the final model using that value of $\lambda$ on the entire dataset.
+
+### Part f (Explanation: 2 pts)
+
+How does shrinkage affect the coefficient estimates? Compare the coefficient estimates for your final LASSO model to *both* the coefficient estimates from the "best" model using subset selection *and* the known coefficients in the population model.  
+
+# Applied Problems
+
+## Applied Problem 1 (15 pts total)
+
+This exercise is *strongly* modeled on ISLR Exercise 6.6.9, in that we want to fit several models that predict the number of applications a college receives, using the `College` dataset.
+
+```{r load College, message = F, warning = F}
+library(ISLR2) # for college dataset
+```
+
+### Part a (Explanation: 1 pt)
+
+Look up the documentation for the `College` dataset (i.e., `?College`). There is at least one variable, and perhaps as many as four variables, that *should not* be used when fitting a model to predict the number of applications received. Which variable(s) are you going to not even consider including in the model? Why?
+
+We are not going to consider accept and enroll, because we do not know how many application were sent in so we cannot say we know how many students were accepted and who decided to enroll in the college. 
+
+### Part b (Code: 1 pt)
+
+Subset the College dataset to remove the offending variable(s). Then, randomly split the new dataset into a training set (containing approximately 75-80% of the data, your choice exactly how many rows) and a validation set (containing the remaining 20-25%).
+
+```{r  app part b}
+college_subset <- College[,-c(3,4)]
+
+set.seed(437)
+college_split <- initial_split(college_subset, prop = .80)
+
+college_train <- training(college_split)
+college_test <- testing(college_split)
+```
+
+### Part c (Code: 2 pts; Explanation: 1 pt)
+
+Use best subset selection to obtain an optimal least-squares linear regression model on the training set. If you use the `regsubsets` function, make sure that you set `nvmax` to the number of remaining predictors in your dataset. Justify your choice of model, then fit that final model on the training set.
+
+```{r app prt c again}
+regfit.full <- regsubsets(Apps ~ ., data = college_train, nvmax = 15, method = "backward")
+summary(regfit.full)
+```
+
+
+```{r app part c}
+#library(olsrr)
+college.fit <- lm(Apps ~ ., data = college_train)
+
+c.fit.back <- ols_step_backward_aic(college.fit)
+summary(c.fit.back$model)
+```
+
+we chose to do backward selection because foward works better with more variables being considered. backward selection took out five variables. 
+
+### Part d (Code: 2 pts; Explanation: 1 pt)
+
+Use cross-validation on the training set to find an optimal value of $\lambda$ for a ridge regression model. Justify your choice of $\lambda$, then fit a ridge regression model on the training set using that value of $\lambda$.
+
+```{r app ridge-tidy model part d}
+ridge_model <- linear_reg(mode = "regression", engine = "glmnet",
+                          penalty = tune(), # let's tune the lambda penalty term
+                          mixture = 0) # mixture = 0 specifies pure ridge regression
+
+ridge_wflow <- workflow() %>%
+  add_model(ridge_model)
+```
+
+```{r ridge-tidy recipe part d}
+ridge_recipe <- recipe(
+  Apps ~ .,# response ~ predictors 
+  data = college_train
+) %>%
+  step_normalize(all_numeric_predictors()) %>% # don't scale the response
+  step_dummy(all_nominal_predictors())
+
+ridge_wflow <- ridge_wflow %>%
+  add_recipe(ridge_recipe)
+```
+
+```{r tune model kfold 1 part d}
+set.seed(1332)
+college_kfold <- vfold_cv(college_train, v = 5, repeats = 3) 
+
+ridge_tune1 <- tune_grid(ridge_model, 
+                      ridge_recipe, 
+                      resamples = college_kfold, 
+                      grid = grid_regular(penalty(range = c(1, 6)), levels = 50))
+```
+
+```{r tune model kfold 2 part d}
+ridge_tune1 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(mapping = aes(x = penalty, y = mean)) + geom_point() + geom_line() +
+  scale_x_log10()
+```
+
+```{r select best ridge}
+ridge_best <- select_by_one_std_err(
+  ridge_tune1,
+  metric = "rmse",
+  desc(penalty) # order penalty from largest (highest bias = simplest model) to smallest
+)
+ridge_best
+```
+
+```{r fit ridge-tidy model}
+ridge_wflow_final <- finalize_workflow(ridge_wflow, parameters = ridge_best) 
+
+ridge_fit <- fit(ridge_wflow_final, data = college_train)
+ridge_fit
+```
+
+```{r look at ridge path}
+extract_fit_engine(ridge_fit) %>% plot(xvar = "lambda", label = TRUE)
+```
+
+### Part e (Code: 2 pts; Explanation: 1 pt)
+
+Use cross-validation on the training set to find an optimal value of $\lambda$ for a LASSO model. Justify your choice of $\lambda$, then fit a LASSO model on the training set using that value of $\lambda$. 
+
+```{r app LASSO-tidy model part C}
+lasso_model <- linear_reg(mode = "regression", engine = "glmnet",
+                          penalty = tune(), # let's tune the lambda penalty term
+                          mixture = 1) # mixture = 1 specifies pure lasso
+
+lasso_wflow <- workflow() %>%
+  add_model(lasso_model)
+```
+
+```{r LASSO-tidy recipe part C}
+lasso_recipe <- recipe(
+  Apps ~ .,# response ~ predictors 
+  data = college_train
+) %>%
+  step_normalize(all_numeric_predictors()) %>% # don't scale the response
+  step_dummy(all_nominal_predictors())
+
+lasso_wflow <- lasso_wflow %>%
+  add_recipe(lasso_recipe)
+```
+
+```{r tune model kfold 1 part C}
+set.seed(1332)
+college_kfold <- vfold_cv(college_train, v = 5, repeats = 3) 
+
+lasso_tune1 <- tune_grid(lasso_model, 
+                      lasso_recipe, 
+                      resamples = college_kfold, 
+                      grid = grid_regular(penalty(range = c(1, 6)), levels = 50))
+```
+
+```{r tune model kfold 2 part C}
+lasso_tune1 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(mapping = aes(x = penalty, y = mean)) + geom_point() + geom_line() +
+  scale_x_log10()
+```
+
+```{r select best LASSO part C}
+lasso_best <- select_by_one_std_err(
+  lasso_tune1,
+  metric = "rmse",
+  desc(penalty) # order penalty from largest (highest bias = simplest model) to smallest
+)
+lasso_best
+```
+
+```{r fit LASSO-tidy model part C}
+lasso_wflow_final <- finalize_workflow(lasso_wflow, parameters = lasso_best) 
+
+lasso_fit <- fit(lasso_wflow_final, data = college_train)
+lasso_fit
+```
+
+```{r look at LASSO path part C}
+extract_fit_engine(lasso_fit) %>% plot(xvar = "lambda", label = TRUE)
+```
+
+### Part f (Code: 2 pts)
+
+Predict the number of applications received for colleges in the validation set, using each of the three models from parts (c)-(e). 
+
+For each model, create a plot of the model residuals (y-axis) against the predicted values (x-axis), and report the estimated test MSE or RMSE obtained for each model.
+
+```{r predict + plot part cf}
+
+```
+
+```{r predict + plot part df}
+predictions_ridge <- broom::augment(ridge_fit, new_data = college_test)
+predictions_ridge %>% dplyr::select(
+  Apps, .pred
+)
+rmse(predictions_ridge, truth = Apps, estimate = .pred)
+
+ggplot(predictions_ridge, aes(x = .pred, y = Apps)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "blue")
+```
+
+```{r predict + plot part ef}
+predictions_lasso <- broom::augment(lasso_fit, new_data = college_test)
+predictions_lasso %>% dplyr::select(
+  Apps, .pred
+)
+rmse(predictions_lasso, truth = Apps, estimate = .pred)
+
+ggplot(predictions_lasso, aes(x = .pred, y = Apps)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "blue")
+```
+
+### Part g (Explanation: 2 pts)
+
+How accurately can we predict the number of college applications received? Looking at the three residual plots you created in part (f), do you notice any differences in the pattern of errors made by the three models? Any "obviously wrong" predictions?  Explain your reasoning.

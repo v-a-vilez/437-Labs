@@ -1,0 +1,164 @@
+---
+title: 'Lab Assignment #10'
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due April 19, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+The purpose of this lab is to introduce tree-based methods for classification and regression.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(dplyr)
+library(rpart)
+library(randomForest)
+library(gbm)
+library(insuranceData)
+# if you use ranger later you should include it here
+# if you use xgboost later you may want to include xgboost and/or tidymodels packages
+```
+
+This lab assignment is worth a total of **15 points**.
+
+# Problem 1: Book Code
+
+## Part a (Code: 0.5 pts; Explanation: 2.5 pts)
+
+In past years, students have complained that the tree package wasn't running on their version of R. So instead of doing Labs 8.3.1 and 8.3.2 we will run similar code using the `rpart` package.
+
+Run each of the following code chunks. When prompted, answer the questions. You may find reading the text in Labs 8.3.1 and 8.3.2 to be useful.
+
+```{r Carseats High}
+Carseats2 <- Carseats %>% mutate(High = if_else(Sales <= 8, "No", "Yes"))
+```
+
+```{r Carseats tree}
+tree.carseats <- rpart(High ~. - Sales, data = Carseats2)
+summary(tree.carseats)
+```
+
+```{r plot tree}
+plot(tree.carseats, uniform = TRUE, ylim = c(0, 1.2))
+text(tree.carseats, pretty = 0)
+```
+
+1. Briefly explain how to interpret this tree.
+At the first node, if ShelveLOC = bad, medium we go left if not then we go right.
+and simialr if price >= 92.5 we go left. we continue until we get to a terminal node. There are only 11 terminal nodes with two possible endings, either 'yes' or 'no'. so the yes or no tell us if we predict the sell is low or high. 
+
+
+```{r print tree}
+tree.carseats
+```
+
+2. What do the numbers in the parentheses mean? What do the stars mean?
+The probability of getting a no or yes at that node. The stars mean that that is a terminal node. 
+
+```{r tree model}
+set.seed(2)
+train <- sample(1:nrow(Carseats2), 200)
+Carseats.test <- Carseats2[-train,]
+
+tree.carseats <- rpart(High ~ . - Sales, data = Carseats2, subset = train, control = rpart.control(xval = 10))
+names(tree.carseats)
+```
+
+3. What does the argument `xval = 10` mean?
+the number of cross validations
+
+```{r tree prediction}
+tree.pred <- predict(tree.carseats, Carseats.test, type = "class")
+table(tree.pred, Carseats.test$High, dnn = c("Predicted", "Actual"))
+```
+
+```{r Boston}
+set.seed(1)
+n <- nrow(Boston)
+train <- sample(1:n, n/2)
+tree.boston <- rpart(medv~., Boston, subset = train, control = rpart.control(xval = 10))
+```
+
+```{r Boston regression}
+plot(tree.boston, uniform = TRUE, ylim = c(0, 1.4))
+text(tree.boston, pretty = 0)
+```
+
+4. Briefly explain how to interpret this tree.
+At the root node if rm < 6.96 then we go to the left of the tree and continue comparing the variables with the nubers at the node till we get to a terminal node. 
+the terminal node is the predicted median house value in the thousands. 
+
+```{r Boston prediction}
+yhat <- predict(tree.boston, Boston[-train,])
+boston.test <- Boston$medv[-train]
+plot(yhat, boston.test)
+abline(0,1)
+mean((yhat - boston.test)^2)
+```
+
+5. Why do we get this pattern - a bunch of vertical lines?
+We get this pattern because there are only seven nodes so there are only seven possible numbers that we could predict the numbers to be. 
+
+### Part b (Code: 1 pt)
+
+Run the code in ISLR Labs 8.3.3 and 8.3.4. Put each chunk from the textbook in its own chunk.
+
+### Part c (Explanation: 1 pt)
+
+Consider the following statement: the second decision tree that is fit does not depend on the first decision tree that is fit. Is that statement TRUE or FALSE for the random forest algorithm? What about for bootsted trees? Explain your reasoning.
+
+## Problem 2: Auto Insurance Claims
+
+The `AutoBi` dataset in the `insuranceData` package contains information about a sample of 1,340 automobile insurance claims from 2002.
+
+The response variable here is `LOSS`, the total economic loss (in thousands). We take the base 10 log of the claimed loss to make the regression a bit easier, and transform several predictors, to create the `AutoBi2` dataset.
+
+```{r insurance fix}
+data(AutoBi) # Auto insurance claim dataset
+
+AutoBi2 <- AutoBi %>% transmute(
+  attorney = if_else(ATTORNEY == 1, "yes", "no"),
+  gender = if_else(CLMSEX == 1, "male", "female"),
+  marital = case_when(MARITAL == 1 ~ "married",
+                      MARITAL == 2 ~ "single",
+                      MARITAL == 3 ~ "widowed",
+                      MARITAL == 4 ~ "divorced",
+                      TRUE ~ NA_character_),
+  driver_insured = if_else(CLMINSUR == 1, "yes", "no"),
+  seatbelt = if_else(SEATBELT == 1, "yes", "no"),
+  age = CLMAGE,
+  log_loss = log10(1000*LOSS) # log 10 of claimed loss in the claim
+) %>% filter(!is.na(gender), !is.na(marital), !is.na(driver_insured),
+                              !is.na(seatbelt), !is.na(age))
+```
+
+### Part a (Code: 1 pt)
+
+Divide the `AutoBi2` dataset into a training set and a test set. The test set should contain approximately 25% of the original dataset.
+
+### Part b (Code: 3 pts)
+
+Using tidymodels with either the `randomForest` or `ranger` package, fit a random forest model on the training set. Make sure to use `set_args` to tell tidymodels you want to use permutation-based importance (you will need it for part d). Tune the value of `mtry` using cross-validation. Use values from 2 to 6 (6 = bagging). 
+
+Obtain predictions on the test set and compute the estimated test RMSE. 
+
+### Part c (Code and Explanation: 2 pts)
+
+Obtain the out-of-bag prediction error on the training set.
+
+Compare MSE on the test set to the out-of-bag prediction error on the training set.
+
+### Part d (Code: 1 pt; Explanation: 1 pt)
+
+Obtain estimates of variable importance (use the `%IncMSE` column if you are using `randomForest`). Which predictor variables have the largest importance and are thus the most useful for making the predictions? Which predictor variables have negative importance, suggesting that randomly permuting that variable actually *decreases* MSE?
+
+### Part e (Code: 2 pts)
+
+Using tidymodels with the `xgboost` package, fit a gradient-boosted tree model on the training set. There are 8 different tuning parameters: we are just going to tune the 3 discussed in lecture: the number of trees to fit (`trees`), interaction depth (`tree_depth`), and learning rate (`learn_rate`). In your cross-validation, search over the following grid: 10, 25, 50 and 100 for `trees`, 1 and 2 for `tree_depth`, and a logarithmically spaced grid from 0.01 to 1 for `learn_rate`.
+
+Obtain predictions on the test set and compute the estimated test RMSE.
