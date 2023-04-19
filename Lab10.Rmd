@@ -178,6 +178,8 @@ mean (( yhat.boost - boston.test)^2)
 ### Part c (Explanation: 1 pt)
 
 Consider the following statement: the second decision tree that is fit does not depend on the first decision tree that is fit. Is that statement TRUE or FALSE for the random forest algorithm? What about for bootsted trees? Explain your reasoning.
+-> For random forests, this statement is true because each tree is created independent from each other. For boosted trees, this is false, because each tree uses residuals from the model using previous trees.
+
 
 ## Problem 2: Auto Insurance Claims
 
