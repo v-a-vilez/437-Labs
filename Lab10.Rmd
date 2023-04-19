@@ -108,6 +108,73 @@ We get this pattern because there are only seven nodes so there are only seven p
 
 Run the code in ISLR Labs 8.3.3 and 8.3.4. Put each chunk from the textbook in its own chunk.
 
+```{r 8.3.3 p1}
+set.seed (1)
+bag.boston <- randomForest(medv ~ ., data = Boston ,subset = train , mtry = 12, importance = TRUE)
+bag.boston
+```
+
+```{r 8.3.3 p2}
+yhat.bag <- predict(bag.boston , newdata = Boston[-train , ])
+plot(yhat.bag , boston.test)
+abline (0, 1)
+mean (( yhat.bag - boston.test)^2)
+```
+
+```{r 8.3.3 p3}
+bag.boston <- randomForest(medv ~ ., data = Boston ,
+subset = train , mtry = 12, ntree = 25)
+yhat.bag <- predict(bag.boston , newdata = Boston[-train , ])
+mean (( yhat.bag - boston.test)^2)
+```
+
+```{r 8.3.3 p4}
+set.seed (1)
+rf.boston <- randomForest(medv ~ ., data = Boston ,
+subset = train , mtry = 6, importance = TRUE)
+yhat.rf <- predict(rf.boston, newdata = Boston[-train , ])
+mean (( yhat.rf - boston.test)^2)
+```
+
+```{r 8.3.3 p5}
+importance(rf.boston)
+```
+
+```{r 8.3.3 p6}
+varImpPlot(rf.boston)
+```
+
+```{r 8.3.4 p1}
+set.seed (1)
+boost.boston <- gbm(medv ~ ., data = Boston[train , ],
+distribution = "gaussian", n.trees = 5000,
+interaction.depth = 4)
+```
+
+```{r 8.3.4 p2}
+summary(boost.boston)
+```
+
+```{r 8.3.4 p3}
+plot(boost.boston , i = "rm")
+plot(boost.boston , i = "lstat")
+```
+
+```{r 8.3.4 p4}
+yhat.boost <- predict(boost.boston ,
+newdata = Boston[-train , ], n.trees = 5000)
+mean (( yhat.boost - boston.test)^2)
+```
+
+```{r 8.3.4 p5}
+boost.boston <- gbm(medv ~ ., data = Boston[train , ],
+distribution = "gaussian", n.trees = 5000,
+interaction.depth = 4, shrinkage = 0.2, verbose = F)
+yhat.boost <- predict(boost.boston ,
+newdata = Boston[-train , ], n.trees = 5000)
+mean (( yhat.boost - boston.test)^2)
+```
+
 ### Part c (Explanation: 1 pt)
 
 Consider the following statement: the second decision tree that is fit does not depend on the first decision tree that is fit. Is that statement TRUE or FALSE for the random forest algorithm? What about for bootsted trees? Explain your reasoning.
