@@ -30,6 +30,9 @@ library(car)
 library(e1071)
 library(olsrr)
 library(leaps)
+library(tidyverse)
+
+
 
 ```
 
@@ -99,13 +102,45 @@ Find a function $f(\lambda)$ for which the ridge regression solution equals the 
 
 Textbook Exercise 6.6.8 part (a). When generating $X$, use `mean = 0` and `sd = 1` so that we don't need to worry about normalizing anything.
 
+```{r sim 1a}
+set.seed(100)
+x <- rnorm(n = 100, mean = 0, sd = 1)
+noise <- rnorm(n = 100, mean = 0, sd = 1)
+```
+
 ### Part b (Code: 0.5 pts)
 
 Textbook Exercise 6.6.8 part (b).
 
+```{r sim 1b}
+set.seed(100)
+beta = sample(-10:20, 4, replace = TRUE)
+y = beta[1] + beta[2]*x + beta[3]*x^2 + beta[4]*x^3 + noise
+```
+
 ### Part c (Code: 2 pts)
 
 Textbook Exercise 6.6.8 part (c).
+
+```{r sim 1c}
+best.fit = regsubsets(y ~ x + I(x^2) + I(x^3) +I(x^4)+ I(x^5) + I(x^6) + I(x^7) + I(x^8) + I(x^9) + I(x^10), data = data.frame(x = x, y = y ), nvmax = 10)
+best.summary = summary(best.fit)
+par(mfrow = c(1,3))
+
+plot(1:10, best.summary$adjr2,xlab = "Number of Predictors", ylab = "Adjusted R Square",
+type = "l")
+adjr2.max = max(best.summary$adjr2)
+points(c(1:10)[best.summary$adjr2==adjr2.max], adjr2.max, pch = 2, col = "red")
+
+plot(1:10, best.summary$bic, xlab = "Number of Predictors", ylab="BIC", type = "l")
+bic.min = min(best.summary$bic)
+2
+points(c(1:10)[best.summary$bic==bic.min], bic.min, pch = 2, col = "blue")
+
+plot(1:10, best.summary$cp, xlab = "Number of Predictors", ylab="Cp", type = "l")
+cp.min = min(best.summary$cp)
+points(c(1:10)[best.summary$cp==cp.min], cp.min, pch = 2, col = "green")
+```
 
 ### Part d (Explanation: 2 pts)
 
@@ -114,6 +149,60 @@ Choose one model from part (c) as your final "best model" and justify your answe
 ### Part e (Code: 2 pts)
 
 Fit a LASSO model on the simulated data (again using $X, X^2, \ldots, X^{10}$ as predictors). Perform cross-validation using either `cv.glmnet` or `tune_grid` to determine the optimal value of $\lambda$, then fit the final model using that value of $\lambda$ on the entire dataset.
+
+```{r Lasso-tidy model}
+lasso_model <- linear_reg(mode = "regression", engine = "glmnet",
+                          penalty = tune(), # let's tune the lambda penalty term
+                          mixture = 1) # mixture = 1 specifies pure LASSO
+
+lasso_wflow <- workflow() %>%
+  add_model(lasso_model)
+```
+
+```{r ridge-tidy recipe}
+
+ridge_recipe <- recipe(
+  y ~ x, # response ~ predictors
+  data = data.frame(x = x, y = y) 
+) %>%
+  step_normalize(all_numeric_predictors()) %>% # don't scale the response
+  step_dummy(all_nominal_predictors()) %>%
+  step_poly(x, degree=10)
+
+lasso_wflow <- lasso_wflow %>%
+  add_recipe(ridge_recipe)
+```
+
+```{r tune model kfold lasso}
+lasso_tune1 <- tune_grid(lasso_model, 
+                      ridge_recipe, 
+                      resamples = data.frame(x = x, y = y), 
+                      grid = grid_regular(penalty(range = c(-5, 2)), levels = 50))
+```
+
+```{r tune model kfold lasso 2}
+lasso_tune1 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  ggplot(mapping = aes(x = penalty, y = mean)) + geom_point() + geom_line() +
+  scale_x_log10()
+```
+
+```{r select best lasso}
+lasso_best <- select_by_one_std_err(
+  lasso_tune1,
+  metric = "rmse",
+  desc(penalty) # order penalty from largest (highest bias = simplest model) to smallest
+)
+lasso_best
+```
+
+```{r fit lasso-tidy model}
+lasso_wflow_final <- finalize_workflow(lasso_wflow, parameters = lasso_best) 
+
+lasso_fit <- fit(lasso_wflow_final, data = batting_train)
+lasso_fit
+```
 
 ### Part f (Explanation: 2 pts)
 
