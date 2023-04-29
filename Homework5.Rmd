@@ -146,21 +146,15 @@ points(c(1:10)[best.summary$cp==cp.min], cp.min, pch = 2, col = "green")
 
 Choose one model from part (c) as your final "best model" and justify your answer. Compare the coefficient estimates for that model to the known coefficients in the population model.
 
-### Part e (Code: 2 pts)
-
-Fit a LASSO model on the simulated data (again using $X, X^2, \ldots, X^{10}$ as predictors). Perform cross-validation using either `cv.glmnet` or `tune_grid` to determine the optimal value of $\lambda$, then fit the final model using that value of $\lambda$ on the entire dataset.
-
 ```{r Lasso-tidy model}
 lasso_model <- linear_reg(mode = "regression", engine = "glmnet",
                           penalty = tune(), # let's tune the lambda penalty term
                           mixture = 1) # mixture = 1 specifies pure LASSO
-
 lasso_wflow <- workflow() %>%
   add_model(lasso_model)
 ```
 
 ```{r ridge-tidy recipe}
-
 ridge_recipe <- recipe(
   y ~ x, # response ~ predictors
   data = data.frame(x = x, y = y) 
@@ -174,10 +168,12 @@ lasso_wflow <- lasso_wflow %>%
 ```
 
 ```{r tune model kfold lasso}
+df_kfold <- vfold_cv(data.frame(x = x, y = y), v = 5, repeats = 3)
+
 lasso_tune1 <- tune_grid(lasso_model, 
                       ridge_recipe, 
-                      resamples = data.frame(x = x, y = y), 
-                      grid = grid_regular(penalty(range = c(-5, 2)), levels = 50))
+                      resamples = df_kfold, 
+                      grid = grid_regular(penalty(range = c(-1, 2)), levels = 50))
 ```
 
 ```{r tune model kfold lasso 2}
@@ -199,8 +195,7 @@ lasso_best
 
 ```{r fit lasso-tidy model}
 lasso_wflow_final <- finalize_workflow(lasso_wflow, parameters = lasso_best) 
-
-lasso_fit <- fit(lasso_wflow_final, data = batting_train)
+lasso_fit <- fit(lasso_wflow_final, data = data.frame(x = x, y = y))
 lasso_fit
 ```
 
