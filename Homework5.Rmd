@@ -44,9 +44,14 @@ Read Sections 6.1, 6.2, and 6.4 of Introduction to Statistical Learning, Second 
 2. The book claims that we can use *deviance* instead of RSS when selecting among logistic regression models. Write the formula for deviance in terms of the maximized log-likelihood. Do smaller or larger values of deviance indicate a better fit?
 3. Explain why it is a bad idea to select the model with the lowest RSS on the training set.
 4. Does the AIC or BIC statistic tend to place a heavier penalty on bigger models? Why?
+-> BIC statistic tends to place a heavier penalty on bigger models because BIC takes on a small value for a model with a
+low test error.
 5. In *ridge regression* and *LASSO*, what is the model when $\lambda = 0$? What about when $\lambda \rightarrow \infty$?
+-> When $\lambda = 0$, the penalty term has no effect, and ridge regression will produce the least squares estimates. When $\lambda \rightarrow \infty$, the impact of the shrinkage penalty grows, and the ridge regression coefficient estimates will approach zero.
 6. Suppose that we have *centered* the predictors (i.e., set all predictors to have mean 0). What is the intercept estimate $\hat{\beta}_0$ in this case?
+-> $\hat{\beta}_0$ = $\bar{y}$ = $\sum_{i=1}^{n} {y}_i/n}$
 7. Why should we also *scale* the predictors (i.e., set all predictors to have standard deviation 1) when doing penalized regression?
+-> We should also scale the predictors when doing penalized regression because they will all be on the same scale instead of ending up with different measures.
 8. When would we expect ridge regression to outperform the lasso? When would we expect the lasso to outperform ridge regression? In the real world, do we know which situation we are in?
 9. Explain why each of the following approaches to adjusting the training set RSS are *inappropriate* in high-dimensional ($p > n$ or $p \approx n$) settings: (a) traditional $R^2$ and adjusted $R^2$; (b) AIC, BIC, and Cp.
 10. Explain the *curse of dimensionality* in two ways: first, in terms of overfitting, and second, in terms of multicollinearity issues.
@@ -127,7 +132,7 @@ best.fit = regsubsets(y ~ x + I(x^2) + I(x^3) +I(x^4)+ I(x^5) + I(x^6) + I(x^7) 
 best.summary = summary(best.fit)
 par(mfrow = c(1,3))
 
-plot(1:10, best.summary$adjr2,xlab = "Number of Predictors", ylab = "Adjusted R Square",
+plot(1:10, best.summary$adjr2,xlab = "Number of Predictors", ylab = "Adjusted R Squared",
 type = "l")
 adjr2.max = max(best.summary$adjr2)
 points(c(1:10)[best.summary$adjr2==adjr2.max], adjr2.max, pch = 2, col = "red")
@@ -145,6 +150,12 @@ points(c(1:10)[best.summary$cp==cp.min], cp.min, pch = 2, col = "green")
 ### Part d (Explanation: 2 pts)
 
 Choose one model from part (c) as your final "best model" and justify your answer. Compare the coefficient estimates for that model to the known coefficients in the population model.
+
+-> I choose the model with adjusted R squared because it has a high value of 1. Since the known coefficients in the population model are between -10 and 20, this result demonstrates the best model.
+
+### Part e (Code: 2 pts)
+
+Fit a LASSO model on the simulated data (again using $X, X^2, \ldots, X^{10}$ as predictors). Perform cross-validation using either `cv.glmnet` or `tune_grid` to determine the optimal value of $\lambda$, then fit the final model using that value of $\lambda$ on the entire dataset.
 
 ```{r Lasso-tidy model}
 lasso_model <- linear_reg(mode = "regression", engine = "glmnet",
@@ -202,6 +213,8 @@ lasso_fit
 ### Part f (Explanation: 2 pts)
 
 How does shrinkage affect the coefficient estimates? Compare the coefficient estimates for your final LASSO model to *both* the coefficient estimates from the "best" model using subset selection *and* the known coefficients in the population model.  
+
+-> Shrinkage affects the coefficient estimates by reducing the coefficients towards 0. The penalty is 0.27; the lower the value, the better the model. Since the the known coefficients in the population model are between -10 and 20, the adjusted R squared has a value of 1, which is high, but still a good result. As long as the LASSO model has a small value close to 0.
 
 # Applied Problems
 
