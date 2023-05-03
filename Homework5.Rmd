@@ -41,8 +41,14 @@ library(tidyverse)
 Read Sections 6.1, 6.2, and 6.4 of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
 
 1. Briefly explain what is meant by the term *feature selection* or *variable selection*.
+-> Feature or Variable selection incorporates deciding which variables to exclude in a multiple regression model.
+
 2. The book claims that we can use *deviance* instead of RSS when selecting among logistic regression models. Write the formula for deviance in terms of the maximized log-likelihood. Do smaller or larger values of deviance indicate a better fit?
+-> deviance = -2 time the maximized log-likelihood. Smaller values of deviance indicate a better fit.
+
 3. Explain why it is a bad idea to select the model with the lowest RSS on the training set.
+-> The model containing all of the predictors will always have the lowest RSS since these are related to the training error. Training error subsequently can be a poor estimate of test error.
+
 4. Does the AIC or BIC statistic tend to place a heavier penalty on bigger models? Why?
 -> BIC statistic tends to place a heavier penalty on bigger models because BIC takes on a small value for a model with a
 low test error.
@@ -62,6 +68,13 @@ low test error.
 
 Textbook Exercise 6.6.2.
 
+-> a) Correct answer: iii. LASSO can generate more accurate predictions due to their reduction in variance at the expense of a small increase in bias when the least squares estimates have excessively high variance. 
+
+b) Correct answer: iii. This explanation is similar to LASSO. As lambda, our shrinkage penalty, increases, we lose flexibility in our ridge regression model, leading to more more bias, but less variance.
+
+c) Correct answer: ii. Non-linear models tend to be more flexible and generally have less bias compared to least squares. 
+
+
 ## Conceptual Problem 2 (8 pts total)
 
 In the textbook, it is claimed that if we define our prior distribution of the $\beta_j$ slopes to be $p(\beta) = \prod_{j=1}^p g(\beta_j)$, with $g(\beta_j)$ a Gaussian distribution with mean 0 and standard deviation a function of $\lambda$, then the ridge regression solution yields the posterior mode. 
@@ -70,16 +83,25 @@ Let's investigate this in the simplest case. Suppose that we standardize both a 
 
 ### Part a (2 pts)
 
-Find the ridge regression solution, i.e., the value of $\beta_1$ that minimizes
+  Find the ridge regression solution, i.e., the value of $\beta_1$ that minimizes
 
 $$
 \sum_{i=1}^n \left(y_i - \beta_1 x_i \right)^2 + \lambda \beta_1^2
 $$
 , in terms of the $y_i$'s, $x_i$'s, and $\lambda$.
 
+$$
+\beta_1 = \frac{\sum_{i=1}^n \left(x_i y_i \right)}{\sum_{i=1}^nx_i^2 + \lambda}  
+$$
+
+
 ### Part b (1 pt)
 
 Write out the likelihood function $L(\beta_1 | x, y)$, where $x$ is the vector of $x_i$'s and $y$ is the vector of $y_i$'s.
+
+$$
+L(\beta_1 | x,y) = (2\pi\sigma^2)^\frac{n}{2}e^{\frac{-1}{2}\sum_{i=1}^n(\frac{y_i-b_ix_i}{\sigma})^2}
+$$
 
 ### Part c (1 pt)
 
@@ -91,13 +113,28 @@ $$
 
 Under this assumption, find the posterior distribution of $\beta_1$ given $x$ and $y$. You may rewrite the integral in the denominator as "C", an arbitrary constant.
 
+$$
+f(\beta_1 | x,y) = C'e^{-\frac{1}{2}(\frac{\beta_1 - \mu}{\sigma})^2}
+$$
+Where C' is the constant that normalizes the distribution with mean $\mu$ and s.d. $\sigma$.
+
+
 ### Part d (2 pts)
 
 Find the posterior mode, i.e., the value of $\beta_1$ that maximizes the posterior pdf of $\beta_1$ from part (c), in terms of the $x_i$'s, $y_i$'s, $\sigma$, and $f(\lambda)$. (HINT: It is much easier to maximize the logarithm of the posterior pdf instead.)
 
+$$
+\beta_1 = \frac {\sum\left (x_i y_i \right)}{\sigma^2[f(\lambda)^{-2}+\sum \frac{x_i^2}{\sigma^2}]}
+$$
+
 ### Part e (2 pts)
 
 Find a function $f(\lambda)$ for which the ridge regression solution equals the posterior mode. The function should be independent of the data ($x_i$'s and $y_i$'s) but may depend on $\sigma$. You may assume that $\lambda > 0$.
+
+$$
+f(\lambda) = \frac {\sigma^2}{\lambda}
+$$
+
 
 # Simulation Problems
 
