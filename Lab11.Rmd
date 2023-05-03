@@ -1,0 +1,263 @@
+---
+title: 'Lab Assignment #11'
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
+date: "Due Sometime After Midterm 2"
+output: pdf_document
+---
+
+# Instructions
+
+The purpose of this lab is to introduce neural networks using the `keras` package. In lecture we saw a single-hidden-layer model, but more complicated neural networks (such as CNNs, deep learning, etc.) are usually custom-built using the keras interface.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(ISLR2)
+library(dplyr)
+library(ggplot2)
+library(keras)
+library(glmnet)
+
+#use_python("~/miniforge3/bin/python")
+#use_condaenv("tf_env")
+```
+
+This lab assignment is worth a total of **10 points**.
+
+# Problem 1: Book Code
+
+## Part a (Code: 3 pts)
+
+Get `keras` installed on your computer. Then run the example code in Labs 10.9.1, 10.9.2, 10.9.3, and 10.9.4. Notes:
+
+* The first time you try to set up keras, you will have to run `install_keras()` to actually install keras, Tensorflow, and their dependencies. If you do not have Python with Anaconda (or Miniconda) installed already on your device, you may want to follow the instructions in the error messages. If you cannot interpret an error message, please call me over.
+* You probably cannot run GPU-based `keras` on your machine and will get a bunch of error messages when you first try to do anything with it. I was able to run the whole lab with CPU-based `keras`. 
+* In Lab 10.9.2, `predict_classes()` is deprecated and may throw an error. If you cannot figure out how to interpret the error message to get around it, please call me over.
+* For Lab 10.9.4, I have found that if I put the `book_images` folder (unzipped) as a subfolder of the directory the lab is in, then everything will work as intended. If you get a "Permission denied" error, then you probably need to change the `img_dir` or move the folder around.
+* If all else fails, try running the `torch` version of the lab, which can be found at <https://www.statlearning.com/resources-second-edition>.
+
+```{r 10.9.1 part a}
+#library (ISLR2)
+Gitters <- na.omit (Hitters)
+n <- nrow (Gitters)
+set.seed (13)
+ntest <- trunc (n / 3)
+testid <- sample (1:n, ntest)
+```
+
+```{r 10.9.1 part b}
+lfit <- lm(Salary ~ ., data = Gitters[-testid , ])
+lpred <- predict(lfit , Gitters[testid , ])
+with(Gitters[testid, ], mean(abs(lpred - Salary)))
+```
+
+```{r 10.9.1 part c}
+x <- scale ( model.matrix (Salary ~ . - 1, data = Gitters))
+y <- Gitters$Salary
+```
+
+```{r 10.9.1 part d}
+#library (glmnet)
+cvfit <- cv.glmnet(x[-testid , ], y[-testid], type.measure = "mae")
+cpred <- predict (cvfit , x[testid , ], s = "lambda.min")
+mean ( abs (y[testid] - cpred))
+```
+
+```{r 10.9.1 part e}
+#library (keras)
+modnn <- keras_model_sequential () %>%
+  layer_dense (units = 50, activation = "relu",input_shape = ncol (x)) %>%
+  layer_dropout (rate = 0.4) %>%
+  layer_dense (units = 1)
+```
+
+```{r 10.9.1 part f}
+modnn %>% compile (loss = "mse",
+  optimizer = optimizer_rmsprop(),
+  metrics = list ("mean_absolute_error")
+)
+```
+
+```{r 10.9.1 part g}
+history <- modnn %>% fit (
+x[-testid , ], y[-testid], epochs = 1500, batch_size = 32,
+validation_data = list (x[testid , ], y[testid])
+)
+```
+
+```{r 10.9.1 part h}
+plot (history)
+```
+
+```{r 10.9.1 part i}
+npred <- predict(modnn , x[testid , ])
+mean(abs(y[testid] - npred))
+```
+
+```{r 10.9.2 part a}
+mnist <- dataset_mnist()
+x_train <- mnist$train$x
+g_train <- mnist$train$y
+x_test <- mnist$test$x
+g_test <- mnist$test$y
+dim (x_train)
+dim (x_test)
+```
+
+```{r 10.9.2 part b}
+x_train <- array_reshape (x_train , c( nrow (x_train), 784))
+x_test <- array_reshape (x_test , c( nrow (x_test), 784))
+y_train <- to_categorical (g_train , 10)
+y_test <- to_categorical (g_test , 10)
+```
+
+```{r 10.9.2 part c}
+x_train <- x_train / 255
+x_test <- x_test / 255
+```
+
+```{r 10.9.2 part d}
+modelnn <- keras_model_sequential()
+modelnn %>%
+  layer_dense (units = 256, activation = "relu", input_shape = c (784)) %>%
+  layer_dropout (rate = 0.4) %>%
+  layer_dense (units = 128, activation = "relu") %>%
+  layer_dropout (rate = 0.3) %>%
+  layer_dense (units = 10, activation = "softmax")
+```
+
+```{r 10.9.2 part e}
+summary (modelnn)
+```
+
+```{r 10.9.2 part f}
+modelnn %>% compile (loss = "categorical_crossentropy", optimizer = optimizer_rmsprop(), metrics = c("accuracy")
+)
+```
+
+```{r 10.9.2 part h}
+system.time(
+  history <- modelnn %>%
+  fit (x_train , y_train , epochs = 30, batch_size = 128, validation_split = 0.2)
+  )
+plot (history , smooth = FALSE)
+```
+
+```{r 10.9.2 part i}
+accuracy <- function(pred,truth) (
+  mean(drop(pred) == drop(truth))
+  )
+modelnn %>% 
+  predict(x_test) %>% k_argmax() %>% 
+  accuracy(g_test)
+```
+
+```{r 10.9 part }
+ modellr <- keras _ model _ sequential () %>%
++ layer _ dense (input_shape = 784, units = 10,
+activation = " softmax ")
+> summary (modellr)
+```
+
+```{r 10.9 part }
+modellr %>% compile (loss = " categorical _ crossentropy ",
+optimizer = optimizer _ rmsprop (), metrics = c(" accuracy "))
+> modellr %>% fit (x_train , y_train , epochs = 30,
+batch_size = 128, validation_split = 0.2)
+> modellr %>% predict _ classes (x_test) %>% accuracy (g_test)
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+```{r 10.9 part }
+
+```
+
+
+## Part b (Explanation: 1 pt)
+
+In Lab 10.9.2, it is claimed that their neural network with zero hidden layers is equivalent to a multinomial logistic regression model. Explain why this is the case.
+
+## Part c (Code and/or Explanation: 1 pt)
+
+Using the ideas in part (b), how would you revise the code creating `modellr` to perform *linear* regression instead? (HINT: look up the documentation for `layer_dense`)
+
+## Part d (Explanation: 1 pt)
+
+Briefly explain what the `to_categorical` function does, and the types of problems in which it would be useful.
+
+# Problem 2: Understanding the Math
+
+## Part a (Computation and Explanation: 2 pts)
+
+Consider two predictors, $x_1$ and $x_2$, feeding into a two-unit hidden layer. Suppose that the hidden layer uses ReLU activation functions with $w_{kj}$ given in Equation (10.6) of the book and the output layer uses a linear activation function with $\beta_j$ given in equation (10.6).
+
+Find the activation functions $A_1(x_1, x_2)$ and $A_2(x_1, x_2)$. Then, find $f(x_1, x_2)$ explicitly in terms of $x_1$ and $x_2$. Note: $f(x_1, x_2)$ should be a piecewise function.
+
+## Part b (Computation and Explanation: 2 pts)
+
+Consider the following 5x5 matrix:
+
+```{r A 5x5}
+A <- matrix(c(5, 5, 5, 5, 5,
+              0, 4, 4, 4, 4,
+              0, 0, 3, 3, 3,
+              0, 0, 0, 2, 2,
+              0, 0, 0, 0, 1),
+            nrow = 5, byrow = T
+            )
+print(A)
+```
+
+Without running anything in R, find the output of convolving A with the 2x2 convolution filter
+
+```{r conv}
+conv <- matrix(c(1, 0, 0, 1), nrow = 2)
+print(conv)
+```
+
+followed by a $2 \times 2$ max pool.
