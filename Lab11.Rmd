@@ -223,6 +223,7 @@ summary (model)
 
 ```
 
+#going to take ten mins to run part e here
 ```{r 10.9.3 part e}
 model %>% compile (loss = "categorical_crossentropy", optimizer = optimizer_rmsprop(), metrics = c("accuracy"))
 history <- model %>% fit (x_train , y_train , epochs = 30, batch_size = 128, validation_split = 0.2)
