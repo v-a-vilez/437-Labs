@@ -1,7 +1,7 @@
 ---
 title: 'Lab Assignment #11'
 author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
-date: "Due Sometime After Midterm 2"
+date: "Due May 5, 2023"
 output: pdf_document
 ---
 
@@ -19,6 +19,13 @@ library(dplyr)
 library(ggplot2)
 library(keras)
 library(glmnet)
+
+#library(torch)
+#library(luz) # high-level interface for torch
+#library(torchvision) # for datasets and image transformation
+#library(torchdatasets) # for datasets we are going to use
+#library(zeallot)
+#torch_manual_seed(13)
 
 #use_python("~/miniforge3/bin/python")
 #use_condaenv("tf_env")
@@ -71,6 +78,8 @@ modnn <- keras_model_sequential () %>%
   layer_dense (units = 50, activation = "relu",input_shape = ncol (x)) %>%
   layer_dropout (rate = 0.4) %>%
   layer_dense (units = 1)
+
+
 ```
 
 ```{r 10.9.1 part f}
@@ -151,84 +160,121 @@ accuracy <- function(pred,truth) (
   )
 modelnn %>% 
   predict(x_test) %>% k_argmax() %>% 
+  as.numeric() %>%
   accuracy(g_test)
 ```
 
-```{r 10.9 part }
- modellr <- keras _ model _ sequential () %>%
-+ layer _ dense (input_shape = 784, units = 10,
-activation = " softmax ")
-> summary (modellr)
+```{r 10.9.2 part j}
+modellr <- keras_model_sequential () %>%
+  layer_dense (input_shape = 784, units = 10, activation = "softmax")
+summary (modellr)
 ```
 
-```{r 10.9 part }
-modellr %>% compile (loss = " categorical _ crossentropy ",
-optimizer = optimizer _ rmsprop (), metrics = c(" accuracy "))
-> modellr %>% fit (x_train , y_train , epochs = 30,
-batch_size = 128, validation_split = 0.2)
-> modellr %>% predict _ classes (x_test) %>% accuracy (g_test)
+```{r 10.9.3 part k}
+modellr %>% compile(loss = "categorical_crossentropy", optimizer = optimizer_rmsprop(), metrics = c("accuracy"))
+modellr %>% fit (x_train , y_train , epochs = 30, batch_size = 128, validation_split = 0.2)
+modellr %>% 
+  predict(x_test) %>% k_argmax() %>% 
+  as.numeric() %>%
+  accuracy(g_test)
 ```
 
-```{r 10.9 part }
-
+```{r 10.9.3 part a}
+cifar100 <- dataset_cifar100()
+names (cifar100)
+x_train <- cifar100$train$x
+g_train <- cifar100$train$y
+x_test <- cifar100$test$x
+g_test <- cifar100$test$y
+dim (x_train)
+range (x_train[1,,, 1])
 ```
 
-```{r 10.9 part }
-
+```{r 10.9.3 part b}
+x_train <- x_train / 255
+x_test <- x_test / 255
+y_train <- to_categorical (g_train , 100)
+dim (y_train)
 ```
 
-```{r 10.9 part }
-
+```{r 10.9.3 part c}
+library(jpeg)
+par (mar = c(0, 0, 0, 0), mfrow = c(5, 5))
+index <- sample ( seq(50000), 25)
+for (i in index) plot (as.raster (x_train[i,,, ]))
 ```
 
-```{r 10.9 part }
+```{r 10.9.3 part d}
+model <- keras_model_sequential () %>%
+  layer_conv_2d(filters = 32, kernel_size = c(3, 3), padding = "same", activation = "relu", input_shape = c(32, 32, 3)) %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_conv_2d(filters = 64, kernel_size = c(3, 3),padding = "same", activation = "relu") %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_conv_2d(filters = 128, kernel_size = c(3, 3),padding = "same", activation = "relu") %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_conv_2d(filters = 256, kernel_size = c(3, 3),padding = "same", activation = "relu") %>%
+  layer_max_pooling_2d(pool_size = c(2, 2)) %>%
+  layer_flatten() %>%
+  layer_dropout(rate = 0.5) %>%
+  layer_dense (units = 512, activation = "relu") %>%
+  layer_dense (units = 100, activation = "softmax")
 
-```
-
-```{r 10.9 part }
-
-```
-
-```{r 10.9 part }
-
-```
-
-```{r 10.9 part }
-
-```
-
-```{r 10.9 part }
-
-```
-
-```{r 10.9 part }
-
-```
-
-```{r 10.9 part }
-
-```
-
-```{r 10.9 part }
-
-```
-
-```{r 10.9 part }
+summary (model)
 
 ```
 
+```{r 10.9.3 part e}
+model %>% compile (loss = "categorical_crossentropy", optimizer = optimizer_rmsprop(), metrics = c("accuracy"))
+history <- model %>% fit (x_train , y_train , epochs = 30, batch_size = 128, validation_split = 0.2)
+model %>% predict_classes(x_test) %>% accuracy (g_test)
+```
+
+```{r 10.9.4 part a}
+img_dir <- "book_images"
+image_names <- list.files(img_dir)
+num_images <- length(image_names)
+x <- array(dim = c(num_images , 224, 224, 3))
+for (i in 1:num_images) {
+  img_path <- paste (img_dir , image_names[i], sep = "/")
+  img <- image_load (img_path, target_size = c(224, 224))
+  x[i,,, ] <- image_to_array(img)
+}
+x <- imagenet_preprocess_input(x)
+```
+
+```{r 10.9.4 part b}
+model <- application_resnet50 (weights = "imagenet")
+summary (model)
+```
+
+```{r 10.9.4 part c}
+pred6 <- model %>% predict (x) %>%
+  imagenet_decode_predictions (top = 3)
+names (pred6) <- image_names
+print (pred6)
+```
 
 ## Part b (Explanation: 1 pt)
 
 In Lab 10.9.2, it is claimed that their neural network with zero hidden layers is equivalent to a multinomial logistic regression model. Explain why this is the case.
+If there is no hidden layer then when predicting the added summation is 0 since the activation is 0, so the predictions will be the same as a multinomial logistic regression model. 
 
 ## Part c (Code and/or Explanation: 1 pt)
 
 Using the ideas in part (b), how would you revise the code creating `modellr` to perform *linear* regression instead? (HINT: look up the documentation for `layer_dense`)
 
+```{r 10.9.2 part j, eval = FALSE}
+modellr <- keras_model_sequential () %>%
+  layer_dense (input_shape = 784, units = 10, activation = NULL)
+summary (modellr)
+```
+
+The default of activation in layer_dense assumes that no activation is applied which makes the model linear.  
+
 ## Part d (Explanation: 1 pt)
 
 Briefly explain what the `to_categorical` function does, and the types of problems in which it would be useful.
+`to_categorical` function converts a class vector to binary class matrix. This would be helpful when there is multiple classes or when you need the output to be of a certain data type, that could be specified in the `dtype` in the function. 
 
 # Problem 2: Understanding the Math
 
@@ -237,6 +283,47 @@ Briefly explain what the `to_categorical` function does, and the types of proble
 Consider two predictors, $x_1$ and $x_2$, feeding into a two-unit hidden layer. Suppose that the hidden layer uses ReLU activation functions with $w_{kj}$ given in Equation (10.6) of the book and the output layer uses a linear activation function with $\beta_j$ given in equation (10.6).
 
 Find the activation functions $A_1(x_1, x_2)$ and $A_2(x_1, x_2)$. Then, find $f(x_1, x_2)$ explicitly in terms of $x_1$ and $x_2$. Note: $f(x_1, x_2)$ should be a piecewise function.
+
+hidden layer 1: 
+$$
+A_1(x_1, x_2) = g(w_{10} + (w_{11} A_1+w_{12}A_2)) = g(0 + 1(x_1) + 1(x_2)) = g(x_1+x_2) =
+\begin{cases}
+0, x_1+x_2 < 0 \\
+x_1+x_2, x_1+x_2 \geq 0 \\
+\end{cases}
+$$
+
+$$
+A_2(x_1, x_2) = g(w_{20} + (w_{21} A_1+w_{22}A_2)) = g(0 + 1(x_1) - 1(x_2)) = g(x_1-x_2) =
+\begin{cases}
+0, x_1-x_2 < 0 \\
+x_1-x_2, x_1-x_2 \geq 0 \\
+\end{cases}
+$$
+
+hidden layer 2:
+$$
+A_1(x_1, x_2) = g(w_{10} + (w_{11} A_1+w_{12}A_2)) = g(0 + 1(x_1+x_2) + 1(x_1-x_2)) = g(2x_1) =
+\begin{cases}
+0, x_1 < 0 \\
+2x_1, x_1 \geq 0 \\
+\end{cases}
+$$
+
+$$
+A_2(x_1, x_2) = g(w_{20} + (w_{21} A_1+w_{22}A_2)) = g(0 + 1(x_1+x_2) - 1(x_1-x_2)) = g(2x_2) =
+\begin{cases}
+0, x_2 < 0 \\
+2x_2, x_2 \geq 0 \\
+\end{cases}
+$$
+
+$$
+f(x) = \beta_0 + \beta_1A_1 + \beta_2A_2 = 0 + \frac{1}{4}(2x_1) - \frac{1}{4}(2x_2) = \begin{cases}
+0, x_1,x_2 < 0 \\
+\frac{1}{2}x_1-\frac{1}{2}x_2, x_1,x_2 \geq 0 \\
+\end{cases}
+$$
 
 ## Part b (Computation and Explanation: 2 pts)
 
@@ -261,3 +348,12 @@ print(conv)
 ```
 
 followed by a $2 \times 2$ max pool.
+
+```{r A conv}
+matrix(c(9,9,9,9,0,7,7,7,0,0,5,5,0,0,0,3),nrow =4, byrow = TRUE)
+```
+
+```{r A pool}
+matrix(c(9,9,0,5),nrow=2)
+```
+
