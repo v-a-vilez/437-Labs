@@ -92,7 +92,12 @@ library(ISLR2) # for Default dataset
 
 Divide the Default dataset into a training set of 8000 observations (80% of the data) and a test set containing the remaining 2000 observations.
 
-
+```{r 1a Default split}
+set.seed(100)
+default_split <- initial_split(Default, prop = 0.80)
+default_train_tidy <- training(default_split)
+default_test_tidy <- testing(default_split)
+```
 
 ### Part b (Code: 3 pts; Explanation: 2 pts)
 
