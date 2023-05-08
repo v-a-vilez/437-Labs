@@ -1,0 +1,117 @@
+---
+title: 'Homework Assignment #6'
+author: "Math 437 - Modern Data Analysis"
+date: "Due May 12, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+You should submit either two or three files:
+
+1. You should write your solutions to the Applied Problem in this R Markdown file and submit the (.Rmd) file.
+2. You should knit the final solution file to pdf and submit the pdf. If you are having trouble getting code chunks to run, add `eval = FALSE` to the chunks that do not run. If you are having trouble getting R Studio to play nice with your LaTeX distribution, I will begrudgingly accept an HTML file instead. 
+3. Solutions to the Key Terms and Conceptual Problem can be submitted in a separate Word or pdf file or included in the same files as your solutions to the Applied Problem.
+
+This homework assignment is worth a total of **35 points**.
+
+# Key Terms (13 pts)
+ch 8 & 10.2:
+Ch 10.3-.4 &10.6-.7:
+ch 12:
+
+Read Chapters 8 (Sections 8.1-8.2.3), 10 (Sections 10.1-10.4, 10.6-10.7), and 12 (Sections 12.1-12.4) of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
+
+ch 8
+1. How do you determine whether a node in a tree is a *terminal node* or an *internal node*?
+2. Briefly explain what is meant by the term *recursive binary splitting*.
+3. Explain the similarity between *cost-complexity pruning* and the *lasso* model.
+4. Write out the equations for two different measures of *node purity* (or node impurity). Why are these measures preferred over simpler accuracy/inaccuracy measures?
+5. Do decision trees perform better when there is a linear boundary or a highly nonlinear boundary? Why?
+6. Describe the basic procedure in *bagging*. Could we use *bagging* with models that aren't trees (linear models, generative models, etc.)? Why or why not?
+7. Why might we use the *out-of-bag* prediction error to estimate the test error rate instead of using cross-validation? Describe how to compute it.
+8. Explain how to read the bar graph in Figure 8.9.
+9. When would we expect *random forests* to improve over a "regular" bagged trees model and why?
+10. Briefly explain how *boosted trees* are grown.
+
+ch 10
+11. Briefly explain what is meant by the terms *hidden unit* and *hidden layer*.
+12. What is an *activation*? Give two examples of activation functions.
+13. The machine learning community refers to *weights* and *bias* terms in neural networks. In statistical language, what do these terms correspond to?
+14. In convolutional neural networks, what is the purpose of a *convolution layer*? What is the purpose of a *pooling layer*?
+15. Briefly explain how and why *data augmentation* is performed in image classification.
+16. Section 10.6 poses the question: "Should we discard all our older tools, and use deep learning on every problem with data?" Answer this question and explain your reasoning.
+17. In the example in Section 10.6, the authors first used a lasso model to perform variable selection, then fit a linear model with the predictors selected. How did they use their final model to answer *inference* questions? Why did they do it that way?
+18. Briefly explain how *gradient descent* methods work. Why is estimating the gradient relatively straightforward when (scaled) MSE is used as the objective function $R(\theta)$?
+
+ch 12
+19. What is a principal component *score* vector? How are the associated *loadings* computed?
+20. The book mentions that eigen decomposition can be used to obtain the loadings (in practice most algorithms use a related technique, singular value decomposition, which is faster). What do the eigenvalues of the covariance matrix correspond to? What do the eigenvectors correspond to?
+21. What is a scree plot? Why is it useful?
+22. What is the difference between data *missing at random* and *missing not at random* (or "not missing at random")? Is it appropriate to impute data that is missing at random? What about data that is not missing at random?
+23. Give two application areas in which clustering techniques may be useful. You may use the ones identified in the book or describe your own.
+24. Why is it important to run k-means clustering from many different random initializations?
+25. Briefly explain how to read a *dendrogram*.
+26. Many of the techniques we learned in this class have been rather "automatic" in the sense that there are fairly well-defined rules for selecting the "best" model and all we need "human judgment" for is determining which of several models "close enough to the best" we should actually use. This does not work for cluster analysis. Give at least two reasons why cluster analysis requires us to think a lot harder before settling on a "best" model.
+
+# Conceptual Problems
+
+## Conceptual Problem 1 (3 pts)
+
+Consider the random variables $Y_1, Y_2, \ldots, Y_n$ to be independent (but not identically distributed) random variables with pmf given by
+
+$$
+P(Y_i = m|X = x) =
+\begin{cases}
+f_m(x_i), m = 0, 1, \ldots, 9\\
+0, \text{otherwise}
+\end{cases}
+$$
+
+where $f_m(x_i)$ are a collection of $m+1$ functions of predictor variables $X$ evaluated for observation $i$. The joint pmf of the $Y_i$'s is then:
+
+$$
+P(Y_1 = m_1, Y_2 = m_2, \ldots, Y_n = m_n) = \prod_{i=1}^n \prod_{m=0}^9 \left(f_m(x_i)\right)^{y_{im}}
+$$
+
+where $y_im$ is an indicator variable taking the value 1 if $Y_i = m$ and 0 otherwise.
+
+Prove that maximizing the joint pmf is equivalent to minimizing the cross-entropy given in Equation (10.14). (HINT: take the logarithm and use properties of logs.)
+
+# Applied Problems
+
+## Applied Problem 1 (19 pts total)
+
+Using the `Default` dataset, we wish to predict whether a customer will default on their debt.
+
+```{r load ISLR2, message = FALSE, warning = FALSE}
+library(ISLR2) # for Default dataset
+```
+
+### Part a (Code: 1 pt)
+
+Divide the Default dataset into a training set of 8000 observations (80% of the data) and a test set containing the remaining 2000 observations.
+
+
+
+### Part b (Code: 3 pts; Explanation: 2 pts)
+
+Fit a k-means clustering model on the training set using the three predictors (`student`, `balance`, and `income`). Either pick a reasonably small (3-4) number of clusters or tune the number of clusters.
+
+Describe the general characteristics of each of the clusters identified. Supplement your description by producing a scatterplot of income and balance showing each cluster in a different color.
+
+### Part b (Code: 3 pts)
+
+Fit a random forest model (using either `randomForest` or `ranger`) on the training set. Use cross-validation to determine whether `mtry` should be set to 1, 2, or 3. 
+
+### Part c (Code: 3 pts)
+
+Fit a gradient-boosted trees model on the training set (using either `gbm` or `xgboost`). Use a learning rate of $\lambda = 0.01$ and an interaction depth of $d = 2$. You can either tune the number of trees or use a reasonably large number.
+
+### Part d (Code: 3 pts)
+
+Fit a neural network on the training set. Either follow the instructions in Textbook Exercise 10.10.7 or adapt the example code in the "Single Hidden Layer Neural Network" activity.
+
+### Part e (Code: 2 pts; Explanation: 2 pts)
+
+For each of the models in parts (b)-(d), predict on the test set and obtain the confusion matrix. Which model is making the best predictions? Why?

@@ -1,0 +1,223 @@
+---
+title: 'Lab Assignment #12'
+author: "Math 437 - Modern Data Analysis"
+date: "Due May 12, 2023"
+output: pdf_document
+---
+
+# Instructions
+
+The purpose of this lab is to introduce unsupervised learning methods.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries and data, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(recipes) # only main part of tidymodels you might need
+library(broom)
+library(tidyclust)
+library(mclust)
+
+madden17_QB <- readr::read_csv("madden17_QB.csv")
+cereal3 <- readr::read_csv("cereal3.csv")
+```
+
+This lab assignment is worth a total of **20 points**.
+
+# Problem 1: Principal Components Analysis
+
+## Part a (Code: 1 pt)
+
+Run the code in ISLR Lab 12.5.1. 
+
+```{r 12.5.1 p1}
+states <- row.names(USArrests)
+states
+```
+
+```{r 12.5.1 p2}
+names(USArrests)
+```
+
+```{r 12.5.1 p3}
+apply(USArrests, 2 ,mean)
+```
+
+```{r 12.5.1 p4}
+apply(USArrests, 2, var)
+```
+
+```{r 12.5.1 p5}
+pr.out <- prcomp (USArrests , scale = TRUE)
+```
+
+```{r 12.5.1 p6}
+names (pr.out)
+```
+
+```{r 12.5.1 p7}
+pr.out$center
+pr.out$scale
+```
+
+```{r 12.5.1 p8}
+pr.out$rotation
+```
+
+```{r 12.5.1 p9}
+dim(pr.out$x)
+```
+
+```{r 12.5.1 p10}
+biplot (pr.out , scale = 0)
+```
+
+```{r 12.5.1 p11}
+pr.out$rotation = -pr.out$rotation
+pr.out$x = -pr.out$x
+biplot (pr.out , scale = 0)
+```
+
+```{r 12.5.1 p12}
+pr.out$sdev
+```
+
+```{r 12.5.1 p13}
+pr.var <- pr.out$sdev^2
+pr.var
+```
+
+```{r 12.5.1 p14}
+pve <- pr.var / sum (pr.var)
+pve
+```
+
+```{r 12.5.1 p15}
+par (mfrow = c(1, 2))
+plot (pve , xlab = " Principal Component ",
+ylab = " Proportion of Variance Explained ", ylim = c(0, 1),
+type = "b")
+plot ( cumsum (pve), xlab = " Principal Component ",
+ylab = " Cumulative Proportion of Variance Explained ",
+ylim = c(0, 1), type = "b")
+```
+
+```{r 12.5.1 p16}
+a <- c(1, 2, 8, -3)
+cumsum (a)
+```
+
+## Part b (Code: 0.5 pts)
+
+The madden17_QB dataset contains the overall rating (`OVR`) and individual skill ratings for 112 quarterbacks in the Madden NFL 2017 video game. According to an article on fivethirtyeight.com, the overall rating for quarterbacks is a linear combination of the following skill ratings: `AWR`, `THP`, `SAC`, `MAC`, `DAC`, `PAC`, `SPD`, `AGI`, `RUN`, and `ACC`. The other 34 skill ratings are not relevant.
+
+Subset the dataset to contain only the 10 skill ratings used to create the overall rating. Call the new dataset `madden`.
+
+```{r subset madden}
+madden <- madden17_QB %>% select(AWR,THP,SAC,MAC,DAC,PAC,SPD,AGI,RUN,ACC)
+```
+
+
+## Part c (Code: 1 pt)
+
+Perform principal component analysis on the `madden` dataset. Remember to scale the data (either beforehand or using the argument `scale = TRUE` in `prcomp`). You can use either the "Base R" or tidyverse version.
+
+```{r base r version}
+pr.out <- prcomp (madden , scale = TRUE)
+```
+
+
+## Part d (Code: 2 pts; Explanation: 1 pt)
+
+Find the proportion of variance explained by each component and the cumulative proportion of variance explained. Produce a scree plot showing either the proportion of variance explained or the cumulative proportion of variance explained. Suggest an appropriate number of principal components to use to visualize or interpret the data and justify your decision based on the scree plot.
+
+```{r prop var part d}
+pr.var <- pr.out$sdev^2
+pve <- pr.var / sum (pr.var)
+pve
+cum_pve <- cumsum(pve)
+cum_pve
+
+par (mfrow = c(1, 2))
+plot (pve , xlab = " Principal Component ",
+ylab = " Proportion of Variance Explained ", ylim = c(0, 1),
+type = "b")
+plot ( cumsum (pve), xlab = " Principal Component ",
+ylab = " Cumulative Proportion of Variance Explained ",
+ylim = c(0, 1), type = "b")
+
+```
+The appropriate number of components should be around 3. Based on the Principal Component vs. Proportion of Variance Explained, the slope begins leveling out around 3 princial compents. 
+
+## Part e (Code: 0.5 pts; Explanation: 1 pt)
+
+Produce a biplot showing the first two principal components. Which of the ten variables being investigated contribute mainly to PC1, which ones contribute mainly to PC2, and which contribute to both? Explain your reasoning based on the biplot and/or the loadings matrix `rotation`.
+
+```{r bipolt part e}
+biplot (pr.out , scale = 0)
+```
+PAC, AWR, SAC, MAC, and DAC contribute mainly to PC1. ACC, AGI, and SPD contribute more to PC2. THP and RUN are in the middle but do contribute more to PC2 than PC1. 
+
+# Problem 2: Clustering
+
+## Part a (Code: 2 pts)
+
+Run the code in ISLR Lab 12.5.3.
+
+# Part b (Code: 1 pt; Explanation: 1 pt)
+
+The `cereal3` dataset on Canvas contains information about 88 cereals being sold at an Albertson's in Irvine. This data was collected by Dr. Wynne in 2019.
+
+We want to cluster cereals based on their nutritional information. The chunk below creates a matrix of relevant variables (we use `model.matrix` to simultaneously convert categorical variables into dummy variables, should we have any).
+
+```{r create nutritional matrix}
+cereal <- cereal3 %>%
+  mutate(Complex.Carbs = Total.Carbohydrate - Dietary.Fiber - Sugar) %>%
+  select(Cereal.Abb, Total.Fat, Sodium, Complex.Carbs, Dietary.Fiber,
+          Sugar, Protein) 
+
+x.matrix <- model.matrix(~ Total.Fat + Sodium +
+                           Complex.Carbs + Dietary.Fiber + 
+                           Sugar + Protein, data = cereal)[,-1]
+```
+
+Perform k-means clustering on the nutritional variables (i.e., the `x.matrix`) *without* scaling the variables. Use 4 clusters and `nstart = 20`. 
+
+Using the `pairs` function, produce a plot of the clusters, color-coded by the cluster number.
+
+Looking at the cluster `centers` or the plot, which variable appears to be the most important for distinguishing between the clusters? Why? Is this what you expected?
+
+## Part c (Code: 1 pt; Explanation: 2 pts)
+
+Scale the nutritional variables and re-run k-means clustering with 4 clusters and `nstart = 20`. Using the `pairs` function, produce a plot of the clusters (on the original scale), color-coded by the new cluster number.
+
+How does this plot compare to the plot you made in part (b)? What does this suggest about the importance of scaling the variables before running k-means clustering?
+
+Looking at the cluster `centers` (remember, a mean of 0 is average after scaling) or the plot, try to assign a meaning to each cluster of cereals. For example, you should find that one of your clusters contains cereals that are high in fat.
+
+## Part d (Code and Explanation: 1.5 pts)
+
+Using the `augment` function from the broom package, augment the `cereal` or `cereal3` dataset with the information from the k-means clustering in part (b). 
+
+Obtain the size of each cluster. For one of the smaller clusters, filter the augmented dataset to look at only observations from that cluster. What cereals are in that cluster? Do they appear to have anything in common (think about the cereal names and anything you might know about them)?
+
+## Part e (Code: 1 pt)
+
+Use the scaled version of `x.matrix` to perform hierarchical clustering on the dataset. Use complete linkage (the default). Plot the dendogram using the arguments `labels = cereal$Cereal.Abb, cex = 0.7`. (You don't need to use the `dendextend` package to make things fancier, just get the plot out.)
+
+## Part f (Explanation: 1 pt)
+
+88 cereals is a bit too much to get a good look, so you may want to zoom in on the dendrogram to answer these questions.
+
+* Which cereal or cereals are most similar to Cheerios? 
+* Which cereal or cereals are most similar to Honey Nut Cheerios (CheeriosHN)?
+
+## Part g (Code: 1.5 pts; Explanation: 1 pt)
+
+Fit a Gaussian mixture model on `x.matrix` (scaled or unscaled, it doesn't matter, you should get basically the same results) using the `Mclust` function. Use 4 clusters (`G = 4`). Produce a "classification" plot of the resulting clusters. 
+
+Augment the dataset from part (d) with the information from the Gaussian mixture model. Produce a table showing the cluster assignments from the k-means vs. Gaussian mixture models.
+
+Do the two models mostly agree on the clusters? If not, which types of cereals do they tend to agree about, and which do they not agree about?
