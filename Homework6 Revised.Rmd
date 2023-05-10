@@ -90,6 +90,7 @@ library(tidyverse)
 library(tidymodels)
 library(tidyclust)
 library(dendextend)
+library(GGally)
 ```
 
 ### Part a (Code: 1 pt)
@@ -109,11 +110,39 @@ Fit a k-means clustering model on the training set using the three predictors (`
 
 Describe the general characteristics of each of the clusters identified. Supplement your description by producing a scatterplot of income and balance showing each cluster in a different color.
 
-```{r Ab.1}
-d.matrix <- model.matrix(~ student + balance +
-                           income, data = Default)[,-1]
-km_D <- kmeans(d.matrix, 4, nstart = 20)
-pairs(d.matrix, col = (km_D$cluster + 1))
+```{r set up kmeans}
+km_model <- k_means(num_clusters = 4) %>%
+  set_args(nstart = 20)
+
+km_recipe_default <- recipe(~ student + balance + income, data = default_train_tidy) %>%
+  step_dummy(student) %>%
+  step_normalize(all_numeric_predictors()) 
+
+km_wflow_default <- workflow() %>%
+  add_model(km_model) %>%
+  add_recipe(km_recipe_default)
+```
+
+```{r finalize kmeans workflow}
+km_default_4clusters <- km_wflow_default %>% 
+  finalize_workflow_tidyclust(parameters = list(num_clusters = 4))
+```
+
+```{r fit 4 cluster model}
+set.seed(437) 
+# always reset the seed before you re-fit, just in case something weird happens
+
+km_default_fit <- km_default_4clusters %>%
+  fit(data = default_train_tidy)
+```
+
+```{r ggpairs}
+default_clu <- bind_cols(
+  default_train_tidy,
+  km_default_fit %>% extract_cluster_assignment()
+)
+ggpairs(default_clu, columns = c("student", "balance", "income"),
+        aes(color = .cluster))
 
 ```
 
