@@ -19,6 +19,7 @@ library(recipes) # only main part of tidymodels you might need
 library(broom)
 library(tidyclust)
 library(mclust)
+library(tidymodels)
 
 madden17_QB <- readr::read_csv("madden17_QB.csv")
 cereal3 <- readr::read_csv("cereal3.csv")
@@ -175,7 +176,7 @@ We want to cluster cereals based on their nutritional information. The chunk bel
 ```{r create nutritional matrix}
 cereal <- cereal3 %>%
   mutate(Complex.Carbs = Total.Carbohydrate - Dietary.Fiber - Sugar) %>%
-  select(Cereal.Abb, Total.Fat, Sodium, Complex.Carbs, Dietary.Fiber,
+  dplyr::select(Cereal.Abb, Total.Fat, Sodium, Complex.Carbs, Dietary.Fiber,
           Sugar, Protein) 
 
 x.matrix <- model.matrix(~ Total.Fat + Sodium +
@@ -184,35 +185,117 @@ x.matrix <- model.matrix(~ Total.Fat + Sodium +
 ```
 
 Perform k-means clustering on the nutritional variables (i.e., the `x.matrix`) *without* scaling the variables. Use 4 clusters and `nstart = 20`. 
-
 Using the `pairs` function, produce a plot of the clusters, color-coded by the cluster number.
 
+```{r 2b.1}
+kmeans_model <- kmeans(x.matrix, 4, nstart = 20)
+pairs(x.matrix, col = (kmeans_model$cluster + 1))
+```
+
 Looking at the cluster `centers` or the plot, which variable appears to be the most important for distinguishing between the clusters? Why? Is this what you expected?
+-> Sodium is the most important for distinguishing between the clusters, because the distinctions between the clusters is much clearer in the sodium plots compared to the other variables.
+
 
 ## Part c (Code: 1 pt; Explanation: 2 pts)
 
 Scale the nutritional variables and re-run k-means clustering with 4 clusters and `nstart = 20`. Using the `pairs` function, produce a plot of the clusters (on the original scale), color-coded by the new cluster number.
 
+```{r 2c.1}
+kmeans_model_scaled <- k_means(num_clusters = 4) %>%
+  set_args(nstart = 20)
+
+kmeans_recipe_nv <- recipe(~ Total.Fat + Sodium +
+                           Complex.Carbs + Dietary.Fiber + 
+                           Sugar + Protein, data = cereal) %>%
+  step_normalize(all_numeric_predictors()) # deal with different variances
+
+kmeans_wflow_nv <- workflow() %>%
+  add_model(kmeans_model_scaled) %>%
+  add_recipe(kmeans_recipe_nv)
+
+km_cereal_scaled <- kmeans_wflow_nv %>% fit(data = cereal)
+cereal_clu <- bind_cols(
+  cereal,
+  km_cereal_scaled %>% extract_cluster_assignment())
+ggpairs(cereal_clu, columns = c("Total.Fat", "Sodium", "Complex.Carbs", "Dietary.Fiber", "Sugar", "Protein"),
+        aes(color = .cluster))
+```
+
+
 How does this plot compare to the plot you made in part (b)? What does this suggest about the importance of scaling the variables before running k-means clustering?
 
 Looking at the cluster `centers` (remember, a mean of 0 is average after scaling) or the plot, try to assign a meaning to each cluster of cereals. For example, you should find that one of your clusters contains cereals that are high in fat.
+
+-> This plot makes it so that sodium is not dominating the clustering. Scaling our variables can greatly improve our interpretation of the clustering and differentiating them. Cluster 1 (red) is high in sodium and roughly average in everything else. Cluster 2 (green) is low sodium, low fat, low sugar, high everything else. Cluter 3 (blue) is low everything. Cluster 4 (purple) is somewhat high everything.
 
 ## Part d (Code and Explanation: 1.5 pts)
 
 Using the `augment` function from the broom package, augment the `cereal` or `cereal3` dataset with the information from the k-means clustering in part (b). 
 
+```{r 2d.1}
+cereal_aug <- broom::augment(kmeans_model, cereal)
+cereal_aug
+cereal_aug %>% group_by(.cluster) %>%
+  summarize(n_clusters = n())
+cereal_aug %>% filter(.cluster == 2)
+```
+
+
 Obtain the size of each cluster. For one of the smaller clusters, filter the augmented dataset to look at only observations from that cluster. What cereals are in that cluster? Do they appear to have anything in common (think about the cereal names and anything you might know about them)?
+-> Cluster 1: 12, Cluster 2: 39, Cluster 3: 27, Cluster 4: 10.
+  Looking at cluster 2, they appear to have similar sodium, low dietary fiber, and average to high sugar. 
+
 
 ## Part e (Code: 1 pt)
 
 Use the scaled version of `x.matrix` to perform hierarchical clustering on the dataset. Use complete linkage (the default). Plot the dendogram using the arguments `labels = cereal$Cereal.Abb, cex = 0.7`. (You don't need to use the `dendextend` package to make things fancier, just get the plot out.)
+
+```{r preprocessing recipes}
+cereal_recipe <- recipe( ~ Total.Fat + Sodium +
+                           Complex.Carbs + Dietary.Fiber + 
+                           Sugar + Protein, data = cereal
+) %>%
+  step_normalize(all_numeric_predictors())
+# Same recipe as in part c but redoing it just in case
+```
+
+```{r run the clustering}
+cereal_hc_complete <- hier_clust(linkage_method = "complete") # default
+
+cereal_hc1 <- workflow() %>%
+  add_model(cereal_hc_complete) %>%
+  add_recipe(cereal_recipe)
+```
+
+```{r fit the hc complete}
+cereal_hc_complete_fit <- fit(cereal_hc1, data = cereal)
+```
+
+```{r plot dendrogram}
+cereal_dendrogram <- extract_fit_engine(cereal_hc_complete_fit) %>% as.dendrogram()
+plot(cereal_dendrogram)
+```
+
+```{r customize dendrogram2}
+cereal_dendrogram_clusters <- cereal_dendrogram %>% 
+  set("labels", cereal$Cereal.Abb[labels(cereal_dendrogram)]) %>%
+  set("labels_cex", 0.7) %>%
+  set("branches_lwd", 0.7) %>%
+  color_branches(k = 3, col = c("black","blue", "red")) %>%
+  color_labels(k = 3, col = c("black", "blue", "red"))
+
+plot(cereal_dendrogram_clusters)
+```
 
 ## Part f (Explanation: 1 pt)
 
 88 cereals is a bit too much to get a good look, so you may want to zoom in on the dendrogram to answer these questions.
 
 * Which cereal or cereals are most similar to Cheerios? 
+-> Cheerios is most similar to Total, Kix, and Wheaties.
+
 * Which cereal or cereals are most similar to Honey Nut Cheerios (CheeriosHN)?
+-> Lucky Charms is the most similar to Honey Nut Cheerios
 
 ## Part g (Code: 1.5 pts; Explanation: 1 pt)
 
@@ -221,3 +304,18 @@ Fit a Gaussian mixture model on `x.matrix` (scaled or unscaled, it doesn't matte
 Augment the dataset from part (d) with the information from the Gaussian mixture model. Produce a table showing the cluster assignments from the k-means vs. Gaussian mixture models.
 
 Do the two models mostly agree on the clusters? If not, which types of cereals do they tend to agree about, and which do they not agree about?
+
+```{r run the clustering}
+mclust1 <- mclust::Mclust(x.matrix, G = 4)
+summary(mclust1)
+plot(mclust1, "BIC")
+```
+
+```{r classification plot}
+plot(mclust1, "classification")
+```
+```{r 2g.1}
+augmented.mclust1 <- broom::augment(mclust1, cereal_aug)
+augmented.mclust1
+```
+-> Both models mostly agree with Cluster 2 and some of Cluster 1, but they do not agree on most of the other clusters
