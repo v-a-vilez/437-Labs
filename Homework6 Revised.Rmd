@@ -86,6 +86,10 @@ Using the `Default` dataset, we wish to predict whether a customer will default 
 
 ```{r load ISLR2, message = FALSE, warning = FALSE}
 library(ISLR2) # for Default dataset
+library(tidyverse)
+library(tidymodels)
+library(tidyclust)
+library(dendextend)
 ```
 
 ### Part a (Code: 1 pt)
@@ -104,6 +108,14 @@ default_test_tidy <- testing(default_split)
 Fit a k-means clustering model on the training set using the three predictors (`student`, `balance`, and `income`). Either pick a reasonably small (3-4) number of clusters or tune the number of clusters.
 
 Describe the general characteristics of each of the clusters identified. Supplement your description by producing a scatterplot of income and balance showing each cluster in a different color.
+
+```{r Ab.1}
+d.matrix <- model.matrix(~ student + balance +
+                           income, data = Default)[,-1]
+km_D <- kmeans(d.matrix, 4, nstart = 20)
+pairs(d.matrix, col = (km_D$cluster + 1))
+
+```
 
 ### Part b (Code: 3 pts)
 
