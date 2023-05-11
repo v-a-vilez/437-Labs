@@ -1,6 +1,6 @@
 ---
 title: 'Lab Assignment #12'
-author: "Math 437 - Modern Data Analysis"
+author: "Vanessa Avilez, Michael Bryant, Phuong Traceyle"
 date: "Due May 12, 2023"
 output: pdf_document
 ---
@@ -166,6 +166,88 @@ PAC, AWR, SAC, MAC, and DAC contribute mainly to PC1. ACC, AGI, and SPD contribu
 ## Part a (Code: 2 pts)
 
 Run the code in ISLR Lab 12.5.3.
+
+```{r 12.5.3 p1}
+set.seed (2)
+x <- matrix(rnorm (50 * 2), ncol = 2)
+x[1:25, 1] <- x[1:25, 1] + 3
+x[1:25, 2] <- x[1:25, 2] - 4
+```
+
+```{r 12.5.3 p2}
+km.out <- kmeans(x, 2, nstart = 20)
+```
+
+```{r 12.5.3 p3}
+km.out$cluster
+```
+
+```{r 12.5.3 p4}
+par(mfrow = c(1, 2))
+plot(x, col = (km.out$cluster + 1),
+main = "K-Means Clustering Results with K = 2",
+xlab = "", ylab = "", pch = 20, cex = 2)
+```
+
+```{r 12.5.3 p5}
+set.seed (4)
+km.out <- kmeans(x, 3, nstart = 20)
+km.out
+plot(x, col = (km.out$cluster + 1),
+main = "K-Means Clustering Results with K = 3",
+xlab = "", ylab = "", pch = 20, cex = 2)
+```
+
+```{r 12.5.3 p6}
+set.seed (4)
+km.out <- kmeans(x, 3, nstart = 1)
+km.out$tot.withinss
+km.out <- kmeans(x, 3, nstart = 20)
+km.out$tot.withinss
+```
+
+```{r 12.5.3 p7}
+hc.complete <- hclust(dist(x), method = "complete")
+```
+
+```{r 12.5.3 p8}
+hc.average <- hclust(dist(x), method = "average")
+hc.single <- hclust(dist(x), method = "single")
+```
+
+```{r 12.5.3 p9}
+par(mfrow = c(1, 3))
+plot(hc.complete , main = "Complete Linkage",
+xlab = "", sub = "", cex = .9)
+plot(hc.average , main = "Average Linkage",
+xlab = "", sub = "", cex = .9)
+plot(hc.single, main = "Single Linkage",
+xlab = "", sub = "", cex = .9)
+```
+
+```{r 12.5.3 p10}
+cutree(hc.complete , 2)
+cutree(hc.average , 2)
+cutree(hc.single, 2)
+```
+
+```{r 12.5.3 p11}
+cutree(hc.single, 4)
+```
+
+```{r 12.5.3 p12}
+xsc <- scale(x)
+plot(hclust(dist(xsc), method = "complete"),
+main = "Hierarchical Clustering with Scaled Features")
+```
+
+```{r 12.5.3 p13}
+x <- matrix(rnorm (30 * 3), ncol = 3)
+dd <- as.dist (1 - cor(t(x)))
+plot(hclust(dd, method = "complete"),
+main = "Complete Linkage with Correlation -Based Distance",
+xlab = "", sub = "")
+```
 
 # Part b (Code: 1 pt; Explanation: 1 pt)
 
