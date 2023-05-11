@@ -154,6 +154,62 @@ Fit a random forest model (using either `randomForest` or `ranger`) on the train
 
 Fit a gradient-boosted trees model on the training set (using either `gbm` or `xgboost`). Use a learning rate of $\lambda = 0.01$ and an interaction depth of $d = 2$. You can either tune the number of trees or use a reasonably large number.
 
+```{r xgboost R p1}
+xgboostC_model_de <- boost_tree(mode = "classification", engine = "xgboost",
+                            trees = tune(), tree_depth = 2,
+                            learn_rate = 0.01)
+
+xgboostC_recipe_de <- recipe(
+  default ~ student +  balance + income,
+  data = default_train_tidy
+) %>%
+  step_dummy(all_nominal_predictors())
+
+xgboostC_wflow_de <- workflow() %>%
+  add_model(xgboostC_model_de) %>%
+  add_recipe(xgboostC_recipe_de)
+```
+
+```{r tune parameters xgboostR p2}
+set.seed(100)
+default_kfold <- vfold_cv(default_train_tidy, v = 5, repeats = 3) 
+
+manual_gridC <- expand.grid(trees = c(100,500))
+
+xgboostC_tune_de <- tune_grid(xgboostC_model_de, 
+                      xgboostC_recipe_de, 
+                      resamples = default_kfold,
+                      metrics = metric_set(accuracy, mn_log_loss),
+                      grid = manual_gridC)
+```
+
+```{r tune model kfold xgboostC p3}
+xgboostC_tune_de %>%
+  collect_metrics() %>%
+  filter(.metric == "accuracy") %>%
+  arrange(desc(mean)) # best accuracy
+
+xgboostC_tune_de %>%
+  collect_metrics() %>%
+  filter(.metric == "mn_log_loss") %>%
+  arrange(mean)
+```
+
+```{r select best xgboostC p4}
+xgboostC_best_de <- select_by_one_std_err(
+  xgboostC_tune_de,
+  metric = "mn_log_loss",
+ tree_depth, trees, desc(learn_rate)
+)
+```
+
+```{r fit xgboostC-tidy model p5}
+xgboostC_wflow_final_de <- finalize_workflow(xgboostC_wflow_de, parameters = xgboostC_best_de) 
+
+xgboostC_fit_de <- fit(xgboostC_wflow_final_de, data = default_train_tidy)
+xgboostC_fit_de
+```
+
 ### Part d (Code: 3 pts)
 
 Fit a neural network on the training set. Either follow the instructions in Textbook Exercise 10.10.7 or adapt the example code in the "Single Hidden Layer Neural Network" activity.
