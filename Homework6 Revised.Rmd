@@ -24,15 +24,26 @@ Read Chapters 8 (Sections 8.1-8.2.3), 10 (Sections 10.1-10.4, 10.6-10.7), and 12
 
 ch 8
 1. How do you determine whether a node in a tree is a *terminal node* or an *internal node*?
+-> Terminal nodes are leaves that are at the bottom of the tree. The points along the tree where the predictor space is split are internal nodes.
 2. Briefly explain what is meant by the term *recursive binary splitting*.
+-> Recursive binary splitting is a top-down, greedy approach. The approach is top-down because it begins at the top of the tree and then successively splits the predictor space; each split is indicated via two new branches further down on the tree. It is greedy because at each step of the tree-building process, the best split is made at that particular step, rather than looking ahead and picking a split that will lead to a better tree in some future step.
 3. Explain the similarity between *cost-complexity pruning* and the *lasso* model.
+-> Equation 8.4 of the cost-complexity pruning is similar to the lasso model, in which a similar formulation that was used in order to control the complexity of a linear model.
 4. Write out the equations for two different measures of *node purity* (or node impurity). Why are these measures preferred over simpler accuracy/inaccuracy measures?
+-> $G = \sum_{k=1}^{K} \hat{p}_{mk} (1-\hat{p}_{mk})$ and $D = -\sum_{k=1}^{K} \hat{p}_{mk} \log\hat{p}_{mk}$
+These measures are preferred over simpler accuracy/inaccuracy measures because they are more sensitive to node purity.
 5. Do decision trees perform better when there is a linear boundary or a highly nonlinear boundary? Why?
+-> It depends on the problem at hand. If the relationship between the features and the response is well approximated by a linear model, then an approach such as linear regression will likely work well, and will outperform a method such as a regression tree that does not exploit this linear structure. If instead there is a highly nonlinear and complex relationship between the features and the response as indicated by model.
 6. Describe the basic procedure in *bagging*. Could we use *bagging* with models that aren't trees (linear models, generative models, etc.)? Why or why not?
+-> Bagging is a general-purpose procedure for reducing the variance of a statistical learning method. A natural way to reduce the variance and increase the test set accuracy of a statistical learning method is to take many training sets from the population, build a separate prediction model using each training set, and average the resulting predictions. We could not use bagging with models that aren't trees because a procedure with low variance will yield similar results if applied repeatedly to distinct data sets.
 7. Why might we use the *out-of-bag* prediction error to estimate the test error rate instead of using cross-validation? Describe how to compute it.
+-> The out-of-bag approach for estimating the test error is particularly convenient when performing bagging on large data sets for which cross-validation would be computationally onerous. We can predict the response for the ith observation using each of the trees in which that observation was OOB. This will yield around B/3 predictions for the ith observation. In order to obtain a single prediction for the ith observation, we can average the predicted responses or can take a majority vote. This leads to a single OOB prediction for the ith observation.
 8. Explain how to read the bar graph in Figure 8.9.
+-> The bar graph in Figure 8.9 is a graphical representation of the variable importances in the Heart data. We see the mean decrease in Gini index for each variable, relative to the largest. The variables with the largest mean decrease in Gini index are Thal, Ca, and ChestPain.
 9. When would we expect *random forests* to improve over a "regular" bagged trees model and why?
+-> Random forests using $m = \sqrt{p}$ leads to a reduction in both test error and OOB error over bagging.
 10. Briefly explain how *boosted trees* are grown.
+-> Each tree is grown using information from previously grown trees. Boosting does not involve bootstrap sampling; instead each tree is fit on a modified version of the original data set. Boosting involves combining a large number of decision trees. Since the growth of a particular tree takes into account the other trees that have already been grown, smaller trees are typically sufficient.
 
 ch 10
 11. Briefly explain what is meant by the terms *hidden unit* and *hidden layer*.
