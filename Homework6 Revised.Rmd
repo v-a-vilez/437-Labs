@@ -56,14 +56,32 @@ These measures are preferred over simpler accuracy/inaccuracy measures because t
 -> They used their final model the see what the least squares coefficient estimates and the mean absolute error to see how well the model perform. They used the test set to make sure there is no selection bias affecting the model. 
 18. Briefly explain how *gradient descent* methods work. Why is estimating the gradient relatively straightforward when (scaled) MSE is used as the objective function $R(\theta)$?
 -> Gradient descent methods starts with an initial guess and starts going in one direction, against the gradient to get to the lowest point that it can. Estimating the gradient is straightforward when using a scale MSE because it is a closed form solution so computations are easier. 
+
+
 19. What is a principal component *score* vector? How are the associated *loadings* computed?
+-> A principal component score vector is a vector of the linear combinations of the sample feature values for their respective principal component. The associated loadings are computed using eigen decomposition.
+
 20. The book mentions that eigen decomposition can be used to obtain the loadings (in practice most algorithms use a related technique, singular value decomposition, which is faster). What do the eigenvalues of the covariance matrix correspond to? What do the eigenvectors correspond to?
+-> The eigenvalues correspond to the scale of the matrix while the eigenvectors correspond to the direction. 
+
 21. What is a scree plot? Why is it useful?
+-> A scree plot depicts the proportion of variance explained by each principal component. We use a scree plot to gauge how many principal components are required to visualize data.
+
 22. What is the difference between data *missing at random* and *missing not at random* (or "not missing at random")? Is it appropriate to impute data that is missing at random? What about data that is not missing at random?
+-> Missing at random involves missing data due to chance events rather than missing data due to inconvenience or informative reasons. It is appropriate to impute data missing at random to fill in gaps; however, imputing on not missing at random data is not suitable due to an informative reason behind the loss of data.
+
 23. Give two application areas in which clustering techniques may be useful. You may use the ones identified in the book or describe your own.
+-> One from the book is trying to cluster tissue samples from patients with breast cancer to discover subgroups of breast cancer. Another one could include market segmentation to identify subgroups of people who could be receptive to various types of advertising.
+
 24. Why is it important to run k-means clustering from many different random initializations?
+-> Since k-means chooses values randomly, successive runs can lead to varying results to potentially get better findings.
+
 25. Briefly explain how to read a *dendrogram*.
+-> The top of a dendrogram includes all of the observations and considering them similar at that point. With each branch, the observations' similarity gets finer and finer until they have as few similar observations as possible. Observations within one major branch are more similar to each other than observations between differing branches.
+
 26. Many of the techniques we learned in this class have been rather "automatic" in the sense that there are fairly well-defined rules for selecting the "best" model and all we need "human judgment" for is determining which of several models "close enough to the best" we should actually use. This does not work for cluster analysis. Give at least two reasons why cluster analysis requires us to think a lot harder before settling on a "best" model.
+-> Cluster analysis has many considerations that greatly impact the final results, such as type of linkage used or how many clusters to consider. This leads us to put an emphasis on finding the most useful and interpretable solution. Another consideration is how validated the final clusters are, and if they represent more noise than necessary.
+
 
 # Conceptual Problems
 
@@ -231,6 +249,8 @@ rfC_fit
 rfC_engine <- rfC_fit %>% extract_fit_engine()
 rfC_fit %>% extract_fit_engine() %>% pluck("prediction.error")
 ```
+-> The clusters are split up into 2 clusters for students and 2 clusters for non-students, with a few observations in both groups. For students, we have the salmon group and the green group. The red group has a high average balance and a high income. The green group has a low average balance but a high income. For non-students, we have the purple and blue group. The purple group has high average balance, but low income. Finally, the blue group has low average balance and low income.
+
 
 ### Part c (Code: 3 pts)
 
