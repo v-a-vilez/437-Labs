@@ -16,13 +16,9 @@ You should submit either two or three files:
 This homework assignment is worth a total of **35 points**.
 
 # Key Terms (13 pts)
-ch 8 & 10.2:
-Ch 10.3-.4 &10.6-.7:
-ch 12:
 
 Read Chapters 8 (Sections 8.1-8.2.3), 10 (Sections 10.1-10.4, 10.6-10.7), and 12 (Sections 12.1-12.4) of Introduction to Statistical Learning, Second Edition. Based on your reading, answer the following questions.
 
-ch 8
 1. How do you determine whether a node in a tree is a *terminal node* or an *internal node*?
 -> Terminal nodes are leaves that are at the bottom of the tree. The points along the tree where the predictor space is split are internal nodes.
 2. Briefly explain what is meant by the term *recursive binary splitting*.
@@ -44,18 +40,22 @@ These measures are preferred over simpler accuracy/inaccuracy measures because t
 -> Random forests using $m = \sqrt{p}$ leads to a reduction in both test error and OOB error over bagging.
 10. Briefly explain how *boosted trees* are grown.
 -> Each tree is grown using information from previously grown trees. Boosting does not involve bootstrap sampling; instead each tree is fit on a modified version of the original data set. Boosting involves combining a large number of decision trees. Since the growth of a particular tree takes into account the other trees that have already been grown, smaller trees are typically sufficient.
-
-ch 10
 11. Briefly explain what is meant by the terms *hidden unit* and *hidden layer*.
+-> A hidden unit is represnts the information that is not observed in the data. A hidden layer is where all of the activations of the hidden units are computed so they can be treated as inputs to determine the output.
 12. What is an *activation*? Give two examples of activation functions.
+-> An activation is a function of the inputs but it is more like a transformation of the original features in the hidden layer. Two activation functions are the sigmoid function and the RELU function. 
 13. The machine learning community refers to *weights* and *bias* terms in neural networks. In statistical language, what do these terms correspond to?
+-> Weights corresponds to the coefficients of the predictors and the bias refers to the intercept. 
 14. In convolutional neural networks, what is the purpose of a *convolution layer*? What is the purpose of a *pooling layer*?
+-> In convolutional neural networks, the convolution layer searches for patterns in the images. In convolutional neural networks, the pooling layer downsamples the patterns to select a prominent subset. 
 15. Briefly explain how and why *data augmentation* is performed in image classification.
+-> Data augmentation takes each image in the training set and replicates it many time while distoring the image in some way. This is to increase the training set with different example of the samr picture to help avoid the model from overfitting. 
 16. Section 10.6 poses the question: "Should we discard all our older tools, and use deep learning on every problem with data?" Answer this question and explain your reasoning.
+-> We should nto discard older tools and just use deep learning. In cases with a small data set, it will be easier to go with a simpler model that we can interpret well. There is no need to reinvent the wheel as they say, as the simpler model may be the best to go with if the deep learning model will end up peforming about the same. 
 17. In the example in Section 10.6, the authors first used a lasso model to perform variable selection, then fit a linear model with the predictors selected. How did they use their final model to answer *inference* questions? Why did they do it that way?
+-> They used their final model the see what the least squares coefficient estimates and the mean absolute error to see how well the model perform. They used the test set to make sure there is no selection bias affecting the model. 
 18. Briefly explain how *gradient descent* methods work. Why is estimating the gradient relatively straightforward when (scaled) MSE is used as the objective function $R(\theta)$?
-
-ch 12
+-> Gradient descent methods starts with an initial guess and starts going in one direction, against the gradient to get to the lowest point that it can. Estimating the gradient is straightforward when using a scale MSE because it is a closed form solution so computations are easier. 
 19. What is a principal component *score* vector? How are the associated *loadings* computed?
 20. The book mentions that eigen decomposition can be used to obtain the loadings (in practice most algorithms use a related technique, singular value decomposition, which is faster). What do the eigenvalues of the covariance matrix correspond to? What do the eigenvectors correspond to?
 21. What is a scree plot? Why is it useful?
@@ -97,10 +97,12 @@ Using the `Default` dataset, we wish to predict whether a customer will default 
 
 ```{r load ISLR2, message = FALSE, warning = FALSE}
 library(ISLR2) # for Default dataset
+library(Lahman)
 library(tidyverse)
 library(tidymodels)
+library(vip)
+library(xgboost) 
 library(tidyclust)
-library(dendextend)
 library(GGally)
 ```
 
@@ -161,6 +163,75 @@ ggpairs(default_clu, columns = c("student", "balance", "income"),
 
 Fit a random forest model (using either `randomForest` or `ranger`) on the training set. Use cross-validation to determine whether `mtry` should be set to 1, 2, or 3. 
 
+`mtry` should be set to 1 based on mean_log_loss.
+
+```{r rfC-tidy model}
+rfC_model <- rand_forest(mode = "classification", engine = "ranger") %>%
+  set_args(seed = 395,
+           importance = "permutation",
+           mtry = tune()
+  )
+
+rfC_recipe <- recipe(
+  default ~ student + balance + income,
+  data = default_train_tidy
+)
+
+
+rfC_wflow <- workflow() %>%
+  add_model(rfC_model) %>%
+  add_recipe(rfC_recipe) 
+```
+
+```{r tune model kfold rfC}
+set.seed(1332)
+default_kfold <- vfold_cv(default_train_tidy, v = 5, repeats = 3) 
+
+# I'm sure there's a better way, but this works
+n_predictorsC <- sum(rfC_recipe$var_info$role == "predictor")
+manual_gridC <- expand.grid(mtry = seq(1, n_predictorsC))
+
+
+
+rfC_tune1 <- tune_grid(rfC_model, 
+                      rfC_recipe, 
+                      resamples = default_kfold, 
+                      metrics = metric_set(accuracy, mn_log_loss),
+                      grid = manual_gridC)
+```
+
+```{r tune model kfold rf2C}
+rfC_tune1 %>%
+  collect_metrics() %>%
+  filter(.metric == "accuracy") %>%
+  ggplot(mapping = aes(x = mtry, y = mean)) + geom_point() + geom_line()
+
+rfC_tune1 %>%
+  collect_metrics() %>%
+  filter(.metric == "mn_log_loss") %>%
+  ggplot(mapping = aes(x = mtry, y = mean)) + geom_point() + geom_line()
+```
+
+```{r select best rfC}
+rfC_best <- select_best(
+  rfC_tune1,
+  metric = "mn_log_loss",
+  mtry
+)
+```
+
+```{r fit rfC-tidy model}
+rfC_wflow_final <- finalize_workflow(rfC_wflow, parameters = rfC_best) 
+
+rfC_fit <- fit(rfC_wflow_final, data = default_train_tidy)
+rfC_fit
+```
+
+```{r rfC get OOB Brier Score}
+rfC_engine <- rfC_fit %>% extract_fit_engine()
+rfC_fit %>% extract_fit_engine() %>% pluck("prediction.error")
+```
+
 ### Part c (Code: 3 pts)
 
 Fit a gradient-boosted trees model on the training set (using either `gbm` or `xgboost`). Use a learning rate of $\lambda = 0.01$ and an interaction depth of $d = 2$. You can either tune the number of trees or use a reasonably large number.
@@ -185,7 +256,7 @@ xgboostC_wflow_de <- workflow() %>%
 set.seed(100)
 default_kfold <- vfold_cv(default_train_tidy, v = 5, repeats = 3) 
 
-manual_gridC <- expand.grid(trees = c(100,500))
+manual_gridC <- expand.grid(trees = seq(from=500,to=2000,by=100))
 
 xgboostC_tune_de <- tune_grid(xgboostC_model_de, 
                       xgboostC_recipe_de, 
@@ -210,7 +281,7 @@ xgboostC_tune_de %>%
 xgboostC_best_de <- select_by_one_std_err(
   xgboostC_tune_de,
   metric = "mn_log_loss",
- tree_depth, trees, desc(learn_rate)
+ trees
 )
 ```
 
@@ -225,6 +296,149 @@ xgboostC_fit_de
 
 Fit a neural network on the training set. Either follow the instructions in Textbook Exercise 10.10.7 or adapt the example code in the "Single Hidden Layer Neural Network" activity.
 
+```{r nnnC}
+neuralnetC_model <- mlp(mode = "classification", engine = "keras",
+                        hidden_units = tune(),
+                        dropout = tune(),
+                        epochs = 25,
+                        activation = "relu") %>%
+  set_args(seeds = c(1, 2, 3)) # we need to set 3 seeds 
+# let's tune the dropout parameter instead
+
+neuralnetC_recipe <- recipe(
+  default ~ student + balance + income,
+  data = default_train_tidy
+) %>%
+  step_YeoJohnson(all_numeric_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+# no nominal predictors here so won't do anything
+
+neuralnetC_wflow <- workflow() %>%
+  add_model(neuralnetC_model) %>%
+  add_recipe(neuralnetC_recipe)
+```
+
+```{r check defaults nnC}
+extract_parameter_set_dials(neuralnetC_model) %>%
+  pull("object")
+```
+
+```{r tune parameters nnC}
+set.seed(1332)
+default_kfold <- vfold_cv(default_train_tidy, v = 5, repeats = 1) 
+
+
+neuralnetC_tune <- tune_grid(neuralnetC_model, 
+                      neuralnetC_recipe, 
+                      resamples = default_kfold, 
+                      metrics = metric_set(mn_log_loss),
+                      grid = grid_regular(hidden_units(range = c(16,32)),
+                                          dropout(range = c(0, 0.1)),
+                                          levels = 2)
+)
+```
+
+
+```{r select best nnC}
+collect_metrics(neuralnetC_tune)
+
+neuralnetC_best <- select_by_one_std_err(
+  neuralnetC_tune,
+  metric = "mn_log_loss",
+  hidden_units, desc(dropout)
+)
+neuralnetC_best
+
+neuralnetC_wflow_final <- finalize_workflow(neuralnetC_wflow, 
+                                            parameters = neuralnetC_best) 
+
+```
+
+```{r fit nnC}
+neuralnetC_fit <- fit(neuralnetC_wflow_final, data = default_train_tidy)
+neuralnetC_fit
+```
+
+
 ### Part e (Code: 2 pts; Explanation: 2 pts)
 
 For each of the models in parts (b)-(d), predict on the test set and obtain the confusion matrix. Which model is making the best predictions? Why?
+
+All the models have about the same accuracy, but by MCC, the gradient-boosted trees model is making the best predictions. 
+
+```{r plot everything 3 clusters}
+predictions3 <- augment(km_default_fit, new_data = default_test_tidy)
+names(predictions3)
+ggpairs(predictions3, columns = c("student", "balance", "income"),
+         aes(color = .pred_cluster))
+
+
+assignments3 <- bind_cols(
+  default_train_tidy,
+  km_default_fit %>% extract_cluster_assignment())
+
+all_clusters3 <- bind_rows(
+  assignments3,
+  predictions3 %>% rename(.cluster = .pred_cluster) # rename cluster variable name
+)
+ggpairs(all_clusters3, columns = c("student", "balance", "income"),
+        aes(color = .cluster))
+```
+
+```{r augment baggingR fit part b2}
+predictions_rfc <- broom::augment(rfC_fit, new_data = default_test_tidy)
+#names(predictions_rfc)
+
+predictions_rfc %>% dplyr::select(
+  default, student, balance, income, .pred_class
+)
+
+#mn_log_loss(predictions_rfc, truth = default, estimate = .pred_class)
+#accuracy(predictions_rfc, truth = default, estimate = .pred_class)
+
+rfc_conf_mat <- conf_mat(predictions_rfc,
+                            truth = default,
+                            estimate = .pred_class
+                            )
+
+rfc_conf_mat
+
+summary(rfc_conf_mat)
+```
+
+```{r fit and predict xgboostC part c}
+xgboostC_predict <- augment(xgboostC_fit_de, new_data = default_test_tidy)
+#names(xgboostC_predict)
+xgboostC_predict %>%
+  dplyr::select(default, student,balance,income, .pred_class, .pred_No, .pred_Yes)
+
+#accuracy(xgboostC_predict, truth = default, estimate = .pred_class)
+
+xgboost_conf_mat <- conf_mat(xgboostC_predict,
+                            truth = default,
+                            estimate = .pred_class
+                            )
+
+xgboost_conf_mat
+
+summary(xgboost_conf_mat)
+```
+
+```{r augment neuralnetC fit part d}
+predictions_neuralnetC <- broom::augment(neuralnetC_fit, new_data = default_test_tidy)
+#names(predictions_neuralnetC)
+
+predictions_neuralnetC %>% dplyr::select(
+ default, student,balance, income, .pred_class, .pred_No
+)
+
+nnc_conf_mat <- conf_mat(predictions_neuralnetC,
+                            truth = default,
+                            estimate = .pred_class
+                            )
+
+nnc_conf_mat
+
+summary(nnc_conf_mat)
+```
